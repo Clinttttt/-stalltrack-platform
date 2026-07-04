@@ -47,7 +47,7 @@ export class RequestAssessmentModal {
 
   readonly facilities: ReadonlyArray<string> = [
     'Public Market — daily stalls',
-    'Commercial Center / spaces — monthly rental',
+    'Commercial Center / monthly rental',
     'Barbecue / food stalls',
     'Iceplant / cold storage',
     'Slaughterhouse — per head',
