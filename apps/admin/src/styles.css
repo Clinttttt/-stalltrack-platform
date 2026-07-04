@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply font-sans text-ink bg-mist antialiased;
+}
+
+@layer components {
+  .eyebrow {
+    @apply inline-block text-[11px] font-bold uppercase leading-none tracking-[0.18em] text-gold;
+  }
+  .a-card {
+    @apply rounded-2xl border border-line bg-white shadow-soft;
+  }
+  .a-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .a-btn-navy {
+    @apply a-btn bg-navy text-white hover:bg-navy-600;
+  }
+  .a-btn-gold {
+    @apply a-btn bg-gold text-navy hover:bg-gold-light;
+  }
+  .a-btn-ghost {
+    @apply a-btn border border-line bg-white text-navy/80 hover:border-gold/60 hover:text-navy;
+  }
+  .a-btn-danger {
+    @apply a-btn border border-[#e6c4c4] bg-red-bg text-red hover:brightness-95;
+  }
+  .a-label {
+    @apply text-[11px] font-bold uppercase tracking-[0.1em] text-muted;
+  }
+  .a-input {
+    @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-navy outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/20;
+  }
+}
+
+/* Thin scrollbars for panels */
+.a-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #9aabb9 transparent;
+}
+.a-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.a-scroll::-webkit-scrollbar-thumb {
+  background: #9aabb9;
+  border-radius: 999px;
+}

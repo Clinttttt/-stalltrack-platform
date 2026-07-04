@@ -1,0 +1,223 @@
+<div
+  class="fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-navy/75 p-4 backdrop-blur-sm sm:p-8"
+  role="presentation"
+  (mousedown)="close.emit()"
+>
+  <div
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="assessment-title"
+    class="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:max-h-[calc(100vh-4rem)]"
+    (mousedown)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="flex shrink-0 items-start justify-between gap-5 border-b border-line px-6 py-5 sm:px-8">
+      <div>
+        <span class="eyebrow">LGU Assessment Request</span>
+        <h2 id="assessment-title" class="mt-2 font-display text-2xl font-bold text-navy sm:text-3xl">
+          {{ heading() }}
+        </h2>
+        <p class="mt-1 text-sm text-muted">Province of Surigao del Sur · CARCANMADCARLAN Cluster</p>
+      </div>
+      <button
+        type="button"
+        (click)="close.emit()"
+        aria-label="Close assessment request form"
+        class="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-line text-navy transition hover:bg-mist"
+      >
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="m6 6 12 12M18 6 6 18" />
+        </svg>
+      </button>
+    </div>
+
+    <form
+      action="https://formsubmit.co/founder@stalltrack.site"
+      method="POST"
+      (submit)="handleSubmit($event)"
+      class="min-h-0 overflow-y-auto px-6 pb-6 pt-5 sm:px-8 sm:pb-8 sm:pt-6"
+    >
+      <!-- FormSubmit configuration -->
+      <input type="hidden" name="_subject" [value]="subject()" />
+      <input type="hidden" name="_template" value="table" />
+      <input type="hidden" name="_next" [value]="confirmationUrl()" />
+      <input type="text" name="_honey" class="hidden" tabindex="-1" autocomplete="off" />
+      <input type="hidden" name="Municipality" [value]="municipalityName()" />
+      <input type="hidden" name="Province" value="Surigao del Sur" />
+      <input type="hidden" name="Facilities managed" [value]="facilitiesManaged()" />
+      <input type="hidden" name="Requesting office" [value]="resolvedOffice()" />
+
+      <!-- Requesting office & focal person -->
+      <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-gold">Requesting office &amp; focal person</p>
+      <div class="mt-3 grid gap-5 sm:grid-cols-2">
+        <div class="sm:col-span-2">
+          <app-assessment-select
+            label="Requesting office / department"
+            [required]="true"
+            placeholder="Select the responsible office"
+            [options]="requestingOffices"
+            [value]="office()"
+            (valueChange)="setOffice($event)"
+            [error]="errors()['office']"
+          />
+        </div>
+
+        @if (office() === 'Other') {
+          <label class="block text-sm font-semibold text-navy sm:col-span-2">
+            Office name (please specify) *
+            <input
+              [value]="otherOffice()"
+              (input)="setOtherOffice($any($event.target).value)"
+              placeholder="Name of the responsible LGU office"
+              class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20"
+              [class.border-red-400]="errors()['otherOffice']"
+            />
+            @if (errors()['otherOffice']) {
+              <span class="mt-1.5 block text-xs font-medium text-red-600">{{ errors()['otherOffice'] }}</span>
+            }
+          </label>
+        }
+
+        <label class="block text-sm font-semibold text-navy">
+          Focal person (full name) *
+          <input required name="Focal person" autocomplete="name" placeholder="e.g. Juan D. Dela Cruz" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
+        </label>
+        <label class="block text-sm font-semibold text-navy">
+          Position / designation *
+          <input required name="Position" autocomplete="organization-title" placeholder="e.g. Market Administrator / EEMO Head" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
+        </label>
+        <label class="block text-sm font-semibold text-navy">
+          Official email *
+          <input required type="email" name="Official email" autocomplete="email" placeholder="office@lgu.gov.ph" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
+        </label>
+        <label class="block text-sm font-semibold text-navy">
+          Contact number *
+          <input required type="tel" name="Contact number" autocomplete="tel" placeholder="09XX XXX XXXX" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
+        </label>
+      </div>
+
+      <!-- Facilities / revenue activities -->
+      <p class="mt-7 text-[11px] font-bold uppercase tracking-[0.16em] text-gold">Facilities &amp; revenue activities managed</p>
+      <p class="mt-1 text-xs text-muted">Select all that apply. This helps map each facility to the right collection model.</p>
+      <div class="mt-3 grid gap-2.5 sm:grid-cols-2">
+        @for (facility of facilities; track facility) {
+          <button
+            type="button"
+            (click)="toggleFacility(facility)"
+            [attr.aria-pressed]="selectedFacilities().includes(facility)"
+            class="flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left text-sm font-medium transition"
+            [class]="selectedFacilities().includes(facility) ? 'border-gold bg-gold/10 text-navy' : 'border-line bg-white text-navy/80 hover:border-gold/50'"
+          >
+            <span
+              class="grid h-5 w-5 shrink-0 place-items-center rounded-md border transition"
+              [class]="selectedFacilities().includes(facility) ? 'border-navy bg-navy text-white' : 'border-line bg-white'"
+            >
+              @if (selectedFacilities().includes(facility)) {
+                <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m20 6-11 11-5-5" />
+                </svg>
+              }
+            </span>
+            {{ facility }}
+          </button>
+        }
+      </div>
+
+      <!-- Scale -->
+      <p class="mt-7 text-[11px] font-bold uppercase tracking-[0.16em] text-gold">Approximate scale</p>
+      <div class="mt-3 grid gap-5 sm:grid-cols-3">
+        <app-assessment-select
+          label="Vendors / stallholders"
+          name="Approx. vendors"
+          placeholder="Select range"
+          [options]="vendorScale"
+          [value]="vendorScaleValue()"
+          (valueChange)="vendorScaleValue.set($event)"
+        />
+        <label class="block text-sm font-semibold text-navy">
+          Facilities to onboard
+          <input type="number" min="1" name="Facilities to onboard" placeholder="e.g. 4" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
+        </label>
+        <label class="block text-sm font-semibold text-navy">
+          Field collectors
+          <input type="number" min="0" name="Collectors" placeholder="e.g. 3" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
+        </label>
+      </div>
+
+      <!-- Authorization -->
+      <p class="mt-7 text-[11px] font-bold uppercase tracking-[0.16em] text-gold">Authorization &amp; readiness</p>
+      <div class="mt-3">
+        <app-assessment-select
+          label="LGU authorization status"
+          [required]="true"
+          name="Authorization status"
+          placeholder="Select current status"
+          [options]="authStatusOptions"
+          [value]="authStatus()"
+          (valueChange)="setAuthStatus($event)"
+          [error]="errors()['authStatus']"
+        />
+      </div>
+
+      <label class="mt-5 block text-sm font-semibold text-navy">
+        Additional notes
+        <textarea
+          name="Notes"
+          rows="3"
+          placeholder="Local ordinance references, target timeline, or anything else we should know."
+          class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20 resize-y"
+        ></textarea>
+      </label>
+
+      <!-- Consent -->
+      <div class="mt-6 space-y-1 rounded-2xl border border-line bg-mist/60 p-4 sm:p-5">
+        <label class="flex cursor-pointer items-start gap-3 rounded-xl p-2 text-xs leading-relaxed text-navy/70 transition hover:bg-white/70">
+          <span class="relative mt-0.5 grid h-[18px] w-[18px] shrink-0 place-items-center">
+            <input
+              required
+              type="checkbox"
+              name="Authorization acknowledgement"
+              value="Confirmed"
+              class="peer absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-md border border-line bg-white transition checked:border-navy checked:bg-navy focus-visible:ring-2 focus-visible:ring-gold/40"
+            />
+            <svg viewBox="0 0 24 24" class="pointer-events-none relative h-3.5 w-3.5 text-white opacity-0 transition peer-checked:opacity-100" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m20 6-11 11-5-5" />
+            </svg>
+          </span>
+          <span>
+            I confirm this request is made on behalf of the LGU, and that formal authorization and signed
+            documents will be provided during the secure onboarding step. <span class="font-semibold text-gold">*</span>
+          </span>
+        </label>
+        <label class="flex cursor-pointer items-start gap-3 rounded-xl p-2 text-xs leading-relaxed text-navy/70 transition hover:bg-white/70">
+          <span class="relative mt-0.5 grid h-[18px] w-[18px] shrink-0 place-items-center">
+            <input
+              required
+              type="checkbox"
+              name="Data privacy consent"
+              value="Agreed"
+              class="peer absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-md border border-line bg-white transition checked:border-navy checked:bg-navy focus-visible:ring-2 focus-visible:ring-gold/40"
+            />
+            <svg viewBox="0 0 24 24" class="pointer-events-none relative h-3.5 w-3.5 text-white opacity-0 transition peer-checked:opacity-100" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m20 6-11 11-5-5" />
+            </svg>
+          </span>
+          <span>
+            I consent to StallTrack processing these details to respond to this request, in accordance with the
+            Data Privacy Act of 2012 (RA 10173) and the
+            <a href="/privacy" target="_blank" rel="noreferrer" class="font-semibold text-navy hover:underline">Privacy Policy</a>. <span class="font-semibold text-gold">*</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+        <button type="button" (click)="close.emit()" class="inline-flex items-center justify-center gap-2 rounded-xl border border-line px-5 py-3 text-sm font-semibold text-navy/80 transition hover:bg-mist">
+          Cancel
+        </button>
+        <button type="submit" class="btn-navy">
+          Submit Assessment Request
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

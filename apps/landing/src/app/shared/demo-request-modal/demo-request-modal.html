@@ -1,0 +1,74 @@
+<div
+  class="fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-navy/75 p-4 backdrop-blur-sm sm:p-8"
+  role="presentation"
+  (mousedown)="close.emit()"
+>
+  <div
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="product-inquiry-title"
+    class="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:max-h-[calc(100vh-4rem)]"
+    (mousedown)="$event.stopPropagation()"
+  >
+    <div class="flex shrink-0 items-start justify-between gap-5 border-b border-line px-6 py-5 sm:px-8">
+      <div>
+        <span class="eyebrow text-green">Let's get started</span>
+        <h2 id="product-inquiry-title" class="mt-2 font-display text-3xl font-bold text-navy">Tell us about your operations.</h2>
+        <p class="mt-1 text-sm text-muted">Share a little about your office or facility and see how StallTrack can support your team.</p>
+      </div>
+      <button
+        type="button"
+        (click)="close.emit()"
+        aria-label="Close inquiry form"
+        class="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-line text-navy transition hover:bg-mist"
+      >
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="m6 6 12 12M18 6 6 18" />
+        </svg>
+      </button>
+    </div>
+
+    <form action="https://formsubmit.co/founder@stalltrack.site" method="POST" class="min-h-0 overflow-y-auto p-6 sm:p-8">
+      <input type="hidden" name="_subject" value="New StallTrack product inquiry" />
+      <input type="hidden" name="_template" value="table" />
+      <input type="hidden" name="_next" [value]="confirmationUrl()" />
+      <input type="text" name="_honey" class="hidden" tabindex="-1" autocomplete="off" />
+
+      <p class="text-sm text-muted">Fields marked with * are required.</p>
+      <div class="mt-5 grid gap-5 sm:grid-cols-2">
+        <label class="block text-sm font-semibold text-navy">
+          Full name *
+          <input required name="name" autocomplete="name" placeholder="Your name" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
+        </label>
+        <label class="block text-sm font-semibold text-navy">
+          Work email *
+          <input required type="email" name="email" autocomplete="email" placeholder="you@organization.gov.ph" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
+        </label>
+        <label class="block text-sm font-semibold text-navy">
+          Organization or LGU *
+          <input required name="organization" autocomplete="organization" placeholder="e.g. City Government of ..." class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
+        </label>
+        <label class="block text-sm font-semibold text-navy">
+          Your role *
+          <input required name="role" autocomplete="organization-title" placeholder="e.g. Economic Enterprise Head" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
+        </label>
+        <app-facility-type-select />
+        <label class="block text-sm font-semibold text-navy">
+          Phone number
+          <input type="tel" name="phone" autocomplete="tel" placeholder="Optional" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
+        </label>
+      </div>
+      <label class="mt-5 block text-sm font-semibold text-navy">
+        What would you like to improve?
+        <textarea name="message" rows="4" placeholder="Tell us about your current process, reporting needs, or demo questions." class="mt-2 w-full resize-y rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20"></textarea>
+      </label>
+      <div class="mt-6 flex flex-col gap-4 border-t border-line pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <p class="max-w-sm text-xs leading-relaxed text-muted">
+          By submitting, you agree that StallTrack may use these details to respond to your request, as described in our
+          <a href="/privacy" class="font-semibold text-green hover:underline">Privacy Policy</a>.
+        </p>
+        <button type="submit" class="btn-navy shrink-0">Send inquiry</button>
+      </div>
+    </form>
+  </div>
+</div>

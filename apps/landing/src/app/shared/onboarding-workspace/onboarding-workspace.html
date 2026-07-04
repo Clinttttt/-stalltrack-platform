@@ -1,0 +1,478 @@
+@if (submitted()) {
+  <div class="overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-600 p-8 text-white shadow-card sm:p-10">
+    <span class="grid h-12 w-12 place-items-center rounded-2xl bg-gold text-navy">
+      <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+    </span>
+    <h2 class="mt-4 font-display text-2xl font-bold sm:text-3xl">Submitted for validation — thank you, {{ municipalityName() }}.</h2>
+    <p class="mt-3 max-w-2xl text-base leading-relaxed text-white/70">
+      Your configuration ({{ facilities().length }} {{ facilities().length === 1 ? 'facility' : 'facilities' }}) has been sent to your
+      onboarding coordinator for the validation dry-run. Once it passes review, {{ municipalityName() }}&rsquo;s portal is approved
+      for activation and the administrator receives a private registration link.
+    </p>
+    <button (click)="editSubmission()" class="btn-ghost mt-6">Edit submission</button>
+  </div>
+} @else {
+  <div>
+    <!-- Progress -->
+    <div class="sticky top-[4.25rem] z-20 -mx-1 mb-6 rounded-2xl border border-line bg-white/95 px-4 py-3 shadow-soft backdrop-blur">
+      <div class="flex items-center justify-between gap-4">
+        <div class="text-sm font-semibold text-navy">Configuration progress</div>
+        <div class="text-sm font-semibold text-muted">{{ doneCount() }} of {{ sectionFlags().length }} sections · {{ pct() }}%</div>
+      </div>
+      <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-mist">
+        <div class="h-full rounded-full bg-gold transition-all duration-500" [style.width.%]="pct()"></div>
+      </div>
+    </div>
+
+    <div class="space-y-5">
+      <!-- ── Facilities pipeline (Section) ──────────────────────────────── -->
+      <div class="rounded-2xl border border-line bg-white p-5 shadow-soft sm:p-6">
+        <div class="flex items-start gap-3">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" [class]="facilitiesDone() ? 'bg-green/10 text-green' : 'bg-navy text-gold'">
+            @if (facilitiesDone()) {
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+            } @else {
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18" /><path d="M5 21V7l8-4v18" /><path d="M19 21V11l-6-4" /></svg>
+            }
+          </span>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <h3 class="font-display text-xl font-bold text-navy">Facilities &amp; fees</h3>
+              @if (facilitiesDone()) {
+                <span class="rounded-full bg-green-bg px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-green">Ready</span>
+              }
+              <span class="ml-auto rounded-full bg-mist px-2.5 py-0.5 text-[11px] font-bold text-muted">{{ doneFacilities() }}/{{ facilities().length }} configured</span>
+            </div>
+            <p class="mt-0.5 text-sm text-muted">Configure each facility you selected during assessment. Each is marked Done once its rate is set.</p>
+          </div>
+        </div>
+        <div class="mt-5">
+          <div class="mb-4 flex items-start gap-2 rounded-xl border border-dashed border-line bg-mist/50 px-3.5 py-2.5 text-xs text-muted">
+            <svg viewBox="0 0 24 24" class="mt-0.5 h-4 w-4 shrink-0 text-navy" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 8h.01M11 12h1v4h1" /></svg>
+            <span>These reflect the facilities you selected in your assessment. Open each to set its rate, add <strong>sections</strong> (e.g. Fish, Meat, Vegetables) or <strong>animal types</strong> (for a slaughterhouse), and any <strong>optional fees</strong>.</span>
+          </div>
+
+          <div class="space-y-3">
+            @for (f of facilities(); track f.id) {
+              <div [class]="'overflow-hidden rounded-xl border transition ' + (expandedId() === f.id ? 'border-gold/60 shadow-soft' : isFacilityDone(f) ? 'border-green/40' : 'border-line')">
+                <button type="button" (click)="toggleExpanded(f.id)" class="flex w-full items-center gap-3 bg-white px-4 py-3.5 text-left transition hover:bg-mist/40">
+                  <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg" [class]="isFacilityDone(f) ? 'bg-green/10 text-green' : 'bg-navy text-gold'">
+                    @if (isFacilityDone(f)) {
+                      <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+                    } @else {
+                      <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18" /><path d="M5 21V7l8-4v18" /><path d="M19 21V11l-6-4" /></svg>
+                    }
+                  </span>
+                  <div class="min-w-0 flex-1">
+                    <div class="truncate font-display text-base font-bold text-navy">{{ f.name || 'New facility' }}</div>
+                    <div class="text-xs text-muted">{{ f.type }}{{ summaryFor(f) ? ' · ' + summaryFor(f) : '' }}</div>
+                  </div>
+                  <span [class]="'rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + (isFacilityDone(f) ? 'bg-green-bg text-green' : 'bg-amber-bg text-amber')">{{ isFacilityDone(f) ? 'Done' : 'To configure' }}</span>
+                  <svg viewBox="0 0 24 24" [class]="'h-4 w-4 text-muted transition-transform ' + (expandedId() === f.id ? 'rotate-180' : '')" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                </button>
+
+                @if (expandedId() === f.id) {
+                  <div class="border-t border-line bg-mist/30 p-4">
+                    <div class="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label [class]="LABEL">Facility name</label>
+                        <input [class]="INPUT" [value]="f.name" (input)="setFacility(f.id, 'name', $any($event.target).value)" placeholder="e.g. New Public Market" />
+                        <p class="mt-1 text-[11px] leading-snug text-muted/80">The facility&rsquo;s official name as it appears on records.</p>
+                      </div>
+                      <div>
+                        <label [class]="LABEL">Billing type</label>
+                        <app-polished-select [options]="billingTypes" [value]="f.type" (valueChange)="setFacility(f.id, 'type', $event)" />
+                        <p class="mt-1 text-[11px] leading-snug text-muted/80">How this facility charges (daily, monthly, per head…).</p>
+                      </div>
+
+                      @if (!isPerHead(f)) {
+                        <div>
+                          <div class="grid grid-cols-2 gap-3">
+                            <div>
+                              <label [class]="LABEL">Base rate</label>
+                              <div class="relative">
+                                <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
+                                <input type="number" min="0" [value]="f.rateAmount" (input)="setFacility(f.id, 'rateAmount', $any($event.target).value)" [placeholder]="ratePlaceholderFor(f.type)" [class]="MONEY_INPUT" />
+                              </div>
+                            </div>
+                            <div>
+                              <label [class]="LABEL">Per</label>
+                              <app-polished-select [options]="rateUnits" [value]="f.rateUnit" (valueChange)="setFacility(f.id, 'rateUnit', $event)" />
+                            </div>
+                          </div>
+                          <p class="mt-1 text-[11px] leading-snug text-muted/80">The standard fee and how often it&rsquo;s charged.</p>
+                        </div>
+                      }
+
+                      <div>
+                        <label [class]="LABEL">Unit label</label>
+                        <input [class]="INPUT" [value]="f.unitLabel" (input)="setFacility(f.id, 'unitLabel', $any($event.target).value)" placeholder="e.g. stalls" />
+                        <p class="mt-1 text-[11px] leading-snug text-muted/80">What one space is called — stalls, spaces, trips, heads…</p>
+                      </div>
+                      <div>
+                        <label [class]="LABEL">Ordinance reference <span class="font-normal normal-case text-muted/70">(optional)</span></label>
+                        <input [class]="INPUT" [value]="f.ordinance" (input)="setFacility(f.id, 'ordinance', $any($event.target).value)" placeholder="e.g. Municipal Ordinance No. 2019-05" />
+                        <p class="mt-1 text-[11px] leading-snug text-muted/80">The ordinance or revenue code that authorizes this fee (for audit &amp; receipts).</p>
+                      </div>
+                      <div [class]="isPerHead(f) ? '' : 'sm:col-span-2'">
+                        <label [class]="LABEL">Notes <span class="font-normal normal-case text-muted/70">(optional)</span></label>
+                        <input [class]="INPUT" [value]="f.notes" (input)="setFacility(f.id, 'notes', $any($event.target).value)" placeholder="e.g. market days, exemptions, special rules…" />
+                      </div>
+                    </div>
+
+                    @if (isPerHead(f)) {
+                      <!-- Per-head: animal types -->
+                      <div class="mt-5 border-t border-line pt-4">
+                        <div class="flex items-center gap-2">
+                          <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82" /></svg>
+                          <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Animal types &amp; per-head rates</span>
+                        </div>
+                        <p class="mt-1 text-xs text-muted">Add each animal type and its slaughter fee per head (e.g. Hog ₱250, Cattle/Carabao ₱365). Add custom types as needed.</p>
+                        <div class="mt-3 space-y-2">
+                          @for (r of f.rateItems; track r.id) {
+                            <div class="grid gap-3 rounded-lg border border-line bg-white p-3 sm:grid-cols-[1.6fr,1fr,auto] sm:items-end">
+                              <div>
+                                <label [class]="LABEL">Animal type</label>
+                                <input [class]="INPUT" [value]="r.label" (input)="setRateItem(f.id, r.id, 'label', $any($event.target).value)" placeholder="e.g. Hog" />
+                              </div>
+                              <div>
+                                <label [class]="LABEL">Rate (per head)</label>
+                                <div class="relative">
+                                  <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
+                                  <input type="number" min="0" [value]="r.amount" (input)="setRateItem(f.id, r.id, 'amount', $any($event.target).value)" placeholder="250" [class]="MONEY_INPUT" />
+                                </div>
+                              </div>
+                              <button type="button" (click)="removeRateItem(f.id, r.id)" class="mb-0.5 inline-flex items-center justify-center rounded-lg border border-line px-2.5 py-2.5 text-muted transition hover:border-red/40 hover:text-red">
+                                <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+                              </button>
+                            </div>
+                          }
+                        </div>
+                        <button type="button" (click)="addRateItem(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
+                          <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add animal type
+                        </button>
+                      </div>
+                    } @else {
+                      <!-- Sections -->
+                      <div class="mt-5 border-t border-line pt-4">
+                        <div class="flex items-center gap-2">
+                          <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+                          <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Sections (optional)</span>
+                        </div>
+                        <p class="mt-1 text-xs text-muted">
+                          If divided (e.g. Fish, Meat, Vegetables), add each with its stall count and any section fee (like fish ₱/kg).
+                          The count is the number of <strong>spaces</strong> — not the vendors (added later). Otherwise set total units below.
+                        </p>
+                        @if (f.sections.length > 0) {
+                          <div class="mt-3 space-y-2">
+                            @for (s of f.sections; track s.id) {
+                              <div class="rounded-lg border border-line bg-white p-3">
+                                <div class="grid gap-3 sm:grid-cols-[1.4fr,0.8fr,auto] sm:items-end">
+                                  <div>
+                                    <label [class]="LABEL">Section name</label>
+                                    <input [class]="INPUT" [value]="s.name" (input)="setSection(f.id, s.id, 'name', $any($event.target).value)" placeholder="e.g. Fish" />
+                                  </div>
+                                  <div>
+                                    <label [class]="LABEL">No. of {{ f.unitLabel || 'units' }}</label>
+                                    <input [class]="INPUT" type="number" min="0" [value]="s.units" (input)="setSection(f.id, s.id, 'units', $any($event.target).value)" placeholder="e.g. 40" />
+                                  </div>
+                                  <button type="button" (click)="removeSection(f.id, s.id)" class="mb-0.5 inline-flex items-center justify-center rounded-lg border border-line px-2.5 py-2.5 text-muted transition hover:border-red/40 hover:text-red">
+                                    <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+                                  </button>
+                                </div>
+                                @if (s.fees.length > 0) {
+                                  <div class="mt-3 space-y-2 border-t border-line pt-3">
+                                    @for (z of s.fees; track z.id) {
+                                      <div class="grid gap-3 sm:grid-cols-[1.6fr,0.9fr,1fr,auto] sm:items-end">
+                                        <div>
+                                          <label [class]="LABEL">Section fee name</label>
+                                          <input [class]="INPUT" [value]="z.label" (input)="setSecFee(f.id, s.id, z.id, 'label', $any($event.target).value)" placeholder="e.g. Fish per kilo" />
+                                        </div>
+                                        <div>
+                                          <label [class]="LABEL">Amount</label>
+                                          <div class="relative">
+                                            <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
+                                            <input type="number" min="0" [value]="z.amount" (input)="setSecFee(f.id, s.id, z.id, 'amount', $any($event.target).value)" placeholder="1" [class]="MONEY_INPUT" />
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <label [class]="LABEL">Unit</label>
+                                          <app-polished-select [options]="feeUnits" [value]="z.unit" (valueChange)="setSecFee(f.id, s.id, z.id, 'unit', $event)" />
+                                        </div>
+                                        <button type="button" (click)="removeSecFee(f.id, s.id, z.id)" class="mb-0.5 inline-flex items-center justify-center rounded-lg border border-line px-2.5 py-2.5 text-muted transition hover:border-red/40 hover:text-red">
+                                          <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+                                        </button>
+                                      </div>
+                                    }
+                                  </div>
+                                }
+                                <button type="button" (click)="addSecFee(f.id, s.id)" class="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-navy/70 transition hover:text-navy">
+                                  <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add section fee
+                                </button>
+                              </div>
+                            }
+                            <div class="text-right text-xs font-semibold text-muted">Total: {{ sectionTotal(f) }} {{ f.unitLabel }}</div>
+                          </div>
+                        }
+                        <button type="button" (click)="addSection(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
+                          <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add section
+                        </button>
+                        <div class="mt-4 max-w-[16rem]">
+                          <label [class]="LABEL">Total units <span class="font-normal normal-case text-muted/70">(optional)</span></label>
+                          <input [class]="INPUT" type="number" min="0" [value]="f.units" (input)="setFacility(f.id, 'units', $any($event.target).value)" placeholder="e.g. 120" />
+                          <p class="mt-1 text-[11px] leading-snug text-muted/80">{{ f.sections.length > 0 ? 'Sections above total ' + sectionTotal(f) + ' ' + f.unitLabel + '. Leave blank to use that.' : 'Number of stall spaces — not vendors.' }}</p>
+                        </div>
+                      </div>
+                    }
+
+                    <!-- Facility-level fees -->
+                    <div class="mt-5 border-t border-line pt-4">
+                      <div class="flex items-center gap-2">
+                        <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82" /></svg>
+                        <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Additional fees (optional)</span>
+                      </div>
+                      <p class="mt-1 text-xs text-muted">Facility-wide add-ons like electricity or water. Utilities can be <strong>metered</strong> (billed per consumption) instead of a fixed amount.</p>
+                      @if (f.addOns.length > 0) {
+                        <div class="mt-3 space-y-2">
+                          @for (a of f.addOns; track a.id) {
+                            <div class="rounded-lg border border-line bg-white p-3">
+                              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                <div>
+                                  <label [class]="LABEL">Fee name</label>
+                                  <input [class]="INPUT" [value]="a.label" (input)="setFee(f.id, a.id, 'label', $any($event.target).value)" placeholder="e.g. Electricity, Water" />
+                                </div>
+                                <div>
+                                  <label [class]="LABEL">Charge basis</label>
+                                  <app-polished-select [options]="feeBasis" [value]="a.basis" (valueChange)="setFee(f.id, a.id, 'basis', $event)" />
+                                </div>
+                                @if (a.basis === 'Per consumption') {
+                                  <div class="lg:col-span-1">
+                                    <label [class]="LABEL">Amount</label>
+                                    <div class="flex items-center gap-2 rounded-xl border border-dashed border-line bg-mist/50 px-3 py-2.5 text-xs text-muted">
+                                      <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 text-navy" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4" /><path d="M3.34 19a10 10 0 1 1 17.32 0" /></svg> Metered — per reading
+                                    </div>
+                                  </div>
+                                } @else {
+                                  <div>
+                                    <label [class]="LABEL">Amount</label>
+                                    <div class="relative">
+                                      <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
+                                      <input type="number" min="0" [value]="a.amount" (input)="setFee(f.id, a.id, 'amount', $any($event.target).value)" placeholder="150" [class]="MONEY_INPUT" />
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label [class]="LABEL">Unit</label>
+                                    <app-polished-select [options]="feeUnits" [value]="a.unit" (valueChange)="setFee(f.id, a.id, 'unit', $event)" />
+                                  </div>
+                                }
+                                <div>
+                                  <label [class]="LABEL">Applies to</label>
+                                  <app-polished-select [options]="feeModes" [value]="a.mode" (valueChange)="setFee(f.id, a.id, 'mode', $event)" />
+                                </div>
+                              </div>
+                              <div class="mt-2 flex justify-end">
+                                <button type="button" (click)="removeFee(f.id, a.id)" class="inline-flex items-center gap-1 text-xs font-semibold text-muted transition hover:text-red">
+                                  <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg> Remove fee
+                                </button>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      }
+                      <button type="button" (click)="addFee(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
+                        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add fee
+                      </button>
+                    </div>
+
+                    <!-- Card actions -->
+                    <div class="mt-5 flex items-center justify-between gap-2 border-t border-line pt-4">
+                      <button type="button" (click)="removeFacility(f.id)" class="inline-flex items-center gap-1 text-xs font-semibold text-muted transition hover:text-red">
+                        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg> Remove facility
+                      </button>
+                      <button type="button" (click)="expandedId.set(null)" [disabled]="!isFacilityDone(f)" class="btn-navy !py-2" [class.cursor-not-allowed]="!isFacilityDone(f)" [class.opacity-50]="!isFacilityDone(f)">
+                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> {{ isFacilityDone(f) ? 'Done — collapse' : isPerHead(f) ? 'Add a rate to finish' : 'Set a base rate to finish' }}
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="mt-4">
+            @if (picking()) {
+              <div class="rounded-xl border border-line bg-mist/40 p-3">
+                <div class="mb-2 flex items-center justify-between">
+                  <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Add a facility</span>
+                  <button type="button" (click)="picking.set(false)" class="text-xs font-semibold text-muted hover:text-navy">Cancel</button>
+                </div>
+                <div class="grid gap-2 sm:grid-cols-2">
+                  @for (c of catalog; track c.key) {
+                    <button type="button" (click)="addFromCatalog(c)" class="group flex items-center gap-3 rounded-xl border border-line bg-white px-3.5 py-2.5 text-left transition hover:border-gold/60 hover:shadow-soft">
+                      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-mist text-navy transition group-hover:bg-navy group-hover:text-gold">
+                        @switch (catalogIcon(c.type)) {
+                          @case ('coins') {
+                            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82" /></svg>
+                          }
+                          @case ('grid') {
+                            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+                          }
+                          @default {
+                            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18" /><path d="M5 21V7l8-4v18" /><path d="M19 21V11l-6-4" /></svg>
+                          }
+                        }
+                      </span>
+                      <div class="min-w-0 flex-1">
+                        <div class="truncate text-sm font-semibold text-navy">{{ c.label.split(' — ')[0].split(' / ')[0].trim() }}</div>
+                        <div class="text-xs text-muted">{{ c.type }}</div>
+                      </div>
+                      <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 text-muted transition group-hover:text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                    </button>
+                  }
+                </div>
+              </div>
+            } @else {
+              <button type="button" (click)="picking.set(true)" class="btn-navy">
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add facility
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Administrator account (Section) ────────────────────────────── -->
+      <div class="rounded-2xl border border-line bg-white p-5 shadow-soft sm:p-6">
+        <div class="flex items-start gap-3">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" [class]="adminDone() ? 'bg-green/10 text-green' : 'bg-navy text-gold'">
+            @if (adminDone()) {
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+            } @else {
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+            }
+          </span>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <h3 class="font-display text-xl font-bold text-navy">Administrator account (Super Admin)</h3>
+              @if (adminDone()) {
+                <span class="rounded-full bg-green-bg px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-green">Ready</span>
+              }
+            </div>
+            <p class="mt-0.5 text-sm text-muted">Designate the LGU administrator who will own the portal. They receive the private registration link after activation.</p>
+          </div>
+        </div>
+        <div class="mt-5">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label [class]="LABEL">Full name</label>
+              <input [class]="INPUT" [value]="admin().name" (input)="setAdmin('name', $any($event.target).value)" placeholder="e.g. Juan Dela Cruz" />
+            </div>
+            <div>
+              <label [class]="LABEL">Position / title</label>
+              <input [class]="INPUT" [value]="admin().position" (input)="setAdmin('position', $any($event.target).value)" placeholder="e.g. Municipal Treasurer / LEEO Head" />
+            </div>
+            <div class="sm:col-span-2">
+              <label [class]="LABEL">Official email</label>
+              <input [class]="INPUT" type="email" [value]="admin().email" (input)="setAdmin('email', $any($event.target).value)" placeholder="e.g. treasury@lgu.gov.ph" />
+              <p class="mt-1 text-[11px] leading-snug text-muted/80">The registration link is sent here after activation.</p>
+            </div>
+          </div>
+          <div class="mt-3 flex items-start gap-2 rounded-xl border border-dashed border-line bg-mist/50 px-3.5 py-2.5 text-xs text-muted">
+            <svg viewBox="0 0 24 24" class="mt-0.5 h-4 w-4 shrink-0 text-navy" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 8h.01M11 12h1v4h1" /></svg>
+            <span>The administrator sets their own password via a secure link — never entered here — then creates and manages their own staff (admins and collectors) inside the portal.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Branding (Section) ─────────────────────────────────────────── -->
+      <div class="rounded-2xl border border-line bg-white p-5 shadow-soft sm:p-6">
+        <div class="flex items-start gap-3">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" [class]="brandingDone() ? 'bg-green/10 text-green' : 'bg-navy text-gold'">
+            @if (brandingDone()) {
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+            } @else {
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" /><path d="M8 7h8M8 11h8M8 15h5" /></svg>
+            }
+          </span>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <h3 class="font-display text-xl font-bold text-navy">Branding &amp; receipts</h3>
+              @if (brandingDone()) {
+                <span class="rounded-full bg-green-bg px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-green">Ready</span>
+              }
+            </div>
+            <p class="mt-0.5 text-sm text-muted">How reports and Official Receipts are labeled.</p>
+          </div>
+        </div>
+        <div class="mt-5">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="sm:col-span-2">
+              <label [class]="LABEL">Office name (report header)</label>
+              <input [class]="INPUT" [value]="branding().officeName" (input)="setBranding('officeName', $any($event.target).value)" placeholder="e.g. Local Economic Enterprise Office" />
+              <p class="mt-1 text-[11px] leading-snug text-muted/80">Appears as the header on reports and receipts.</p>
+            </div>
+            <div>
+              <label [class]="LABEL">OR series prefix</label>
+              <input [class]="INPUT" [value]="branding().orPrefix" (input)="setBranding('orPrefix', $any($event.target).value)" placeholder="e.g. CANTILAN-2026-" />
+            </div>
+            <div>
+              <label [class]="LABEL">OR starting number</label>
+              <input [class]="INPUT" type="number" min="1" [value]="branding().orStart" (input)="setBranding('orStart', $any($event.target).value)" placeholder="e.g. 000001" />
+            </div>
+            <div class="sm:col-span-2">
+              <label [class]="LABEL">Logo / seal <span class="font-normal normal-case text-muted/70">(optional)</span></label>
+              <div class="flex flex-wrap items-center gap-3">
+                @if (logoPreview()) {
+                  <img [src]="logoPreview()" alt="Logo preview" class="h-12 w-12 rounded-lg border border-line bg-white object-contain p-1" />
+                } @else {
+                  <span class="grid h-12 w-12 place-items-center rounded-lg border border-dashed border-line bg-mist text-muted"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" /><path d="M8 7h8M8 11h8M8 15h5" /></svg></span>
+                }
+                <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
+                  <input type="file" accept="image/png,image/jpeg,image/svg+xml" class="hidden" (change)="onLogo($event)" />
+                  <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5-5 5 5" /><path d="M12 5v12" /></svg> {{ branding().logoName ? 'Change logo' : 'Upload logo' }}
+                </label>
+                @if (branding().logoName) {
+                  <span class="max-w-[12rem] truncate text-xs text-muted">{{ branding().logoName }}</span>
+                }
+              </div>
+              <p class="mt-1 text-[11px] leading-snug text-muted/80">PNG, JPG, or SVG of your municipal seal/logo — appears on reports and receipts.</p>
+            </div>
+          </div>
+          <div class="mt-3 flex items-start gap-2 rounded-xl border border-dashed border-line bg-mist/50 px-3.5 py-2.5 text-xs text-muted">
+            <svg viewBox="0 0 24 24" class="mt-0.5 h-4 w-4 shrink-0 text-navy" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 8h.01M11 12h1v4h1" /></svg>
+            <span>Signed authorization documents (e.g. the Mayor&rsquo;s endorsement) are collected securely with your coordinator — not uploaded from this page.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Operational-data note -->
+      <div class="flex items-start gap-3 rounded-2xl border border-line bg-white p-5 shadow-soft">
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-mist text-navy"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 8h.01M11 12h1v4h1" /></svg></span>
+        <div>
+          <h3 class="font-display text-base font-bold text-navy">Vendors &amp; daily collections come later</h3>
+          <p class="mt-1 text-sm leading-relaxed text-muted">
+            Stallholders/payors, daily collections, and utility readings are entered inside your live portal after activation —
+            just like day-to-day operations. Onboarding only sets up your facilities, fees, administrator, and branding.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="mt-6 overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-600 p-6 text-white shadow-card sm:p-8">
+      <div class="grid items-center gap-6 lg:grid-cols-[1.4fr,0.6fr]">
+        <div>
+          <span class="text-[11px] font-bold uppercase tracking-[0.22em] text-gold">Next step</span>
+          <h2 class="mt-2 font-display text-2xl font-bold sm:text-3xl">Submit {{ municipalityName() }}&rsquo;s configuration for validation.</h2>
+          <p class="mt-2 max-w-2xl text-sm leading-relaxed text-white/68">
+            {{ allDone() ? 'All sections are ready. Submitting sends your configuration to the coordinator for the validation dry-run.' : 'Complete all ' + sectionFlags().length + ' sections to submit (' + doneCount() + '/' + sectionFlags().length + ' ready).' }}
+          </p>
+        </div>
+        <div class="lg:justify-self-end">
+          <button type="button" (click)="submit()" [disabled]="!allDone()" class="btn-gold w-full" [class.cursor-not-allowed]="!allDone()" [class.opacity-50]="!allDone()">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> Submit for validation
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

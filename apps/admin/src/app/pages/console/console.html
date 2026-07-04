@@ -1,0 +1,272 @@
+<div class="flex h-full flex-col">
+  <div class="mb-4 grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-4">
+    @for (s of stats(); track s.label) {
+      <div class="a-card px-4 py-3.5">
+        <div class="font-display text-2xl font-bold text-navy">{{ s.value }}</div>
+        <div class="text-[11px] font-semibold uppercase tracking-wide text-muted">{{ s.label }}</div>
+      </div>
+    }
+  </div>
+
+  <div class="flex flex-col gap-5 lg:min-h-0 lg:flex-1 lg:flex-row">
+    <!-- List -->
+    <aside class="a-card flex flex-col overflow-hidden lg:min-h-0 lg:w-[22rem] lg:shrink-0 xl:w-[24rem]">
+      <div class="flex border-b border-line bg-mist/60">
+        @for (t of TABS; track t) {
+          <button
+            (click)="setTab(t)"
+            [class]="'flex-1 inline-flex items-center justify-center gap-1 whitespace-nowrap border-b-2 px-2 py-2.5 text-[12px] font-semibold transition ' + (tab() === t ? 'border-gold text-navy' : 'border-transparent text-muted hover:text-navy')"
+          >
+            {{ t }}
+            <span [class]="'rounded-full px-1.5 text-[10px] ' + (tab() === t ? 'bg-gold text-navy' : 'bg-line text-navy/70')">
+              {{ count(t) }}
+            </span>
+          </button>
+        }
+      </div>
+
+      <div class="a-scroll max-h-[22rem] overflow-y-auto lg:max-h-none lg:flex-1">
+        @if (filtered().length === 0) {
+          <div class="px-4 py-10 text-center text-sm text-muted">No requests in this view.</div>
+        } @else {
+          @for (r of filtered(); track r.id) {
+            <button
+              (click)="select(r)"
+              [class]="'block w-full border-b border-line px-4 py-3.5 text-left transition ' + (selectedId() === r.id ? 'bg-green-bg shadow-[inset_3px_0_0_#c8a84b]' : 'hover:bg-mist')"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-display text-base font-bold text-navy">{{ r.municipality }}</span>
+                <span [class]="'rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + TONE[statusTone(r.status)]">
+                  {{ statusLabel(r.status) }}
+                </span>
+              </div>
+              <div class="mt-0.5 text-xs text-muted">{{ r.requestingOffice }}</div>
+              <div class="mt-1 text-[11px] text-muted/80">{{ fmtLog(r.submittedAt) }}</div>
+            </button>
+          }
+        }
+      </div>
+    </aside>
+
+    <!-- Detail -->
+    <section class="a-card a-scroll p-6 sm:p-7 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+      @if (!selected()) {
+        <div class="flex min-h-[18rem] flex-col items-center justify-center gap-3 text-center text-muted">
+          <app-icon name="file" className="h-10 w-10 opacity-40" />
+          <p>Select an assessment request to review its details.</p>
+        </div>
+      } @else if (selected(); as r) {
+        <div>
+          <div class="flex items-start justify-between gap-4 border-b border-line pb-4">
+            <div>
+              <div class="font-display text-2xl font-bold text-navy">{{ r.municipality }}</div>
+              <div class="text-sm text-muted">{{ r.province }}</div>
+            </div>
+            <span [class]="'rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + TONE[statusTone(r.status)]">
+              {{ statusLabel(r.status) }}
+            </span>
+          </div>
+
+          <div class="mt-5 text-[11px] font-bold uppercase tracking-[0.1em] text-muted">Submitted assessment</div>
+          <dl class="mt-3 grid gap-x-6 sm:grid-cols-2">
+            @for (f of fields(); track f[0]) {
+              <div class="flex flex-col border-b border-line py-2">
+                <dt class="text-[11px] uppercase tracking-wide text-muted">{{ f[0] }}</dt>
+                <dd [class]="'mt-0.5 break-words text-sm ' + (f[1] ? 'text-navy' : 'text-muted/70')">{{ f[1] || '—' }}</dd>
+              </div>
+            }
+          </dl>
+
+          <!-- PENDING → approve/decline -->
+          @if (r.status === STATUS.PENDING) {
+            @if (compose().mode) {
+              <div class="mt-5 overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
+                <div class="flex items-center gap-3 bg-navy px-5 py-3.5 text-white">
+                  <img src="/stalltrack-logo.png" alt="StallTrack" class="h-10 w-10 shrink-0 object-contain" />
+                  <div class="leading-tight">
+                    <div class="font-display text-base font-bold">StallTrack Platform</div>
+                    <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Official onboarding correspondence</div>
+                  </div>
+                  <span [class]="'ml-auto rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + (compose().mode === 'approve' ? 'bg-green-bg text-green' : 'bg-red-bg text-red')">
+                    {{ compose().mode === 'approve' ? 'Approval' : 'Decline' }}
+                  </span>
+                </div>
+                <div class="space-y-1 border-b border-line px-5 py-3 text-sm">
+                  <div class="flex gap-3"><span class="w-16 shrink-0 text-muted">To</span><span class="font-semibold text-navy">{{ r.officialEmail }}</span></div>
+                  <div class="flex gap-3"><span class="w-16 shrink-0 text-muted">Subject</span><span class="text-navy">StallTrack assessment — {{ r.municipality }}</span></div>
+                </div>
+                <div class="px-5 py-4">
+                  <div class="a-label mb-1.5">Message body</div>
+                  <textarea rows="7" [value]="compose().draft" (input)="setDraft($any($event.target).value)" class="a-input resize-y font-sans leading-relaxed"></textarea>
+                  @if (compose().mode === 'approve') {
+                    <div class="mt-3">
+                      <div class="a-label mb-1">Secure onboarding link (auto-generated)</div>
+                      <code class="flex items-center gap-2 break-all rounded-lg bg-navy px-3 py-2 text-xs text-gold-light">
+                        <app-icon name="link" className="h-3.5 w-3.5 shrink-0 text-gold" />
+                        {{ compose().link }}
+                      </code>
+                    </div>
+                  }
+                </div>
+                <div class="flex flex-wrap gap-2 border-t border-line bg-mist/50 px-5 py-3.5">
+                  @if (compose().mode === 'approve') {
+                    <button class="a-btn-navy" (click)="confirmApprove()" [disabled]="!compose().draft.trim()">
+                      <app-icon name="check" className="h-4 w-4" /> Send approval &amp; open onboarding room
+                    </button>
+                  } @else {
+                    <button class="a-btn-danger" (click)="confirmDecline()" [disabled]="!compose().draft.trim()">
+                      <app-icon name="x" className="h-4 w-4" /> Send decline
+                    </button>
+                  }
+                  <button class="a-btn-ghost" (click)="cancelCompose()">Cancel</button>
+                </div>
+              </div>
+            } @else {
+              <div class="mt-5 flex flex-wrap gap-2.5">
+                <button class="a-btn-navy" (click)="beginApprove()">
+                  <app-icon name="check" className="h-4 w-4" /> Approve &amp; issue onboarding link
+                </button>
+                <button class="a-btn-danger" (click)="beginDecline()">
+                  <app-icon name="x" className="h-4 w-4" /> Decline
+                </button>
+              </div>
+            }
+          }
+
+          <!-- DECLINED -->
+          @if (r.status === STATUS.DECLINED) {
+            <div class="mt-5 rounded-xl border border-[#e6c4c4] bg-red-bg p-4">
+              <div class="text-[11px] font-bold uppercase tracking-[0.1em] text-red/80">Decline notice sent</div>
+              <p class="mt-2 whitespace-pre-line text-sm text-navy">{{ r.decisionMessage }}</p>
+              <button class="a-btn-ghost mt-3" (click)="store.reopen(r.id)">Reopen for review</button>
+            </div>
+          }
+
+          <!-- APPROVED → onboarding room -->
+          @if (r.status === STATUS.APPROVED && r.stage === 'Onboarding') {
+            <div class="mt-6 border-t border-line pt-5">
+              <div class="text-[11px] font-bold uppercase tracking-[0.1em] text-muted">Private onboarding room — {{ r.municipality }}</div>
+
+              <ol class="mt-4 flex">
+                @for (s of STAGES; track s; let i = $index) {
+                  <li class="relative flex flex-1 flex-col items-center text-center">
+                    @if (i < STAGES.length - 1) {
+                      <span [class]="'absolute left-1/2 top-4 h-0.5 w-full ' + (i < stageIndex() ? 'bg-gold' : 'bg-line')"></span>
+                    }
+                    <span [class]="'relative z-10 grid h-8 w-8 place-items-center rounded-full border-2 text-xs font-bold ' + (i < stageIndex() ? 'border-gold bg-gold text-navy' : i === stageIndex() ? 'border-navy bg-navy text-gold ring-4 ring-navy/10' : 'border-line bg-mist text-muted')">
+                      @if (i < stageIndex()) {
+                        <app-icon name="check" className="h-4 w-4" />
+                      } @else {
+                        {{ i + 1 }}
+                      }
+                    </span>
+                    <span [class]="'mt-1.5 text-xs font-semibold ' + (i < stageIndex() || i === stageIndex() ? 'text-navy' : 'text-muted')">{{ s }}</span>
+                  </li>
+                }
+              </ol>
+
+              <div class="mt-6">
+                <div class="a-label">Onboarding link issued to {{ r.officialEmail }}</div>
+                <div class="mt-1.5 flex items-center gap-2">
+                  <code class="flex-1 break-all rounded-lg bg-navy px-3 py-2 text-xs text-gold-light">{{ r.onboardingLink }}</code>
+                  <button class="a-btn-ghost !px-3 !py-2" (click)="copyLink(r)">
+                    <app-icon name="copy" className="h-4 w-4" /> {{ copied() ? 'Copied' : 'Copy' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- LGU response -->
+              <div class="mt-5 overflow-hidden rounded-2xl border border-line">
+                <div class="flex items-center gap-2 border-b border-line bg-mist/60 px-4 py-2.5">
+                  <app-icon name="inbox" className="h-4 w-4 text-navy" />
+                  <span class="text-[11px] font-bold uppercase tracking-[0.1em] text-muted">LGU response</span>
+                  <span class="ml-auto text-[10px] text-muted/70">syncs via API</span>
+                </div>
+                <div class="space-y-3 p-4">
+                  <div class="flex items-start gap-2.5">
+                    <span [class]="'mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ' + (r.lguAcknowledgedAt ? 'bg-green-bg text-green' : 'bg-mist text-muted')">
+                      <app-icon [name]="r.lguAcknowledgedAt ? 'check' : 'clock'" className="h-3.5 w-3.5" />
+                    </span>
+                    <div class="text-sm">
+                      <div class="font-semibold text-navy">Onboarding link opened</div>
+                      <div class="text-muted">{{ r.lguAcknowledgedAt ? 'Acknowledged on ' + fmtLog(r.lguAcknowledgedAt) : 'Awaiting — updates when the LGU opens their link.' }}</div>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-2.5">
+                    <span [class]="'mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ' + (r.lguSubmittedForValidation ? 'bg-green-bg text-green' : 'bg-mist text-muted')">
+                      <app-icon [name]="r.lguSubmittedForValidation ? 'check' : 'clock'" className="h-3.5 w-3.5" />
+                    </span>
+                    <div class="text-sm">
+                      <div class="font-semibold text-navy">Onboarding submitted for validation</div>
+                      <div class="text-muted">{{ r.lguSubmittedForValidation ? 'Submitted on ' + fmtLog(r.lguSubmittedForValidation) + ' — checklist complete.' : 'Awaiting — the LGU completes their checklist and submits.' }}</div>
+                    </div>
+                  </div>
+                  @if (r.checklist) {
+                    <div class="border-t border-line pt-3">
+                      <div class="a-label mb-2">Onboarding checklist submitted by {{ r.municipality }}</div>
+                      <ul class="grid gap-1.5 sm:grid-cols-2">
+                        @for (c of r.checklist; track c.label) {
+                          <li class="flex items-center gap-2 text-sm">
+                            <span [class]="'grid h-4 w-4 shrink-0 place-items-center rounded-full ' + (c.done ? 'bg-green text-white' : 'border border-line bg-mist text-muted')">
+                              @if (c.done) {
+                                <app-icon name="check" className="h-2.5 w-2.5" />
+                              }
+                            </span>
+                            <span [class]="c.done ? 'text-navy' : 'text-muted'">{{ c.label }}</span>
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                </div>
+                @if (r.lguSubmittedForValidation) {
+                  <div class="flex items-center gap-2 border-t border-line bg-green-bg px-4 py-2.5 text-sm font-semibold text-green">
+                    <app-icon name="check" className="h-4 w-4" />
+                    {{ r.municipality }} is ready to advance to Validation.
+                  </div>
+                }
+              </div>
+
+              <!-- Advance -->
+              <div class="mt-4 flex flex-wrap gap-2.5">
+                <button class="a-btn-navy" (click)="store.sendToValidation(r.id)" [disabled]="!r.lguSubmittedForValidation">
+                  Advance to Validation stage <app-icon name="chevronRight" className="h-4 w-4" />
+                </button>
+              </div>
+
+              <!-- Messages -->
+              <div class="mt-6">
+                <div class="a-label">Messages to LGU</div>
+                <div class="a-scroll mt-2 max-h-56 space-y-2 overflow-y-auto pr-1">
+                  @if (r.log.length === 0) {
+                    <div class="rounded-lg bg-mist px-3 py-2 text-xs text-muted">No messages yet.</div>
+                  } @else {
+                    @for (e of r.log; track $index) {
+                      <div class="rounded-lg bg-mist px-3 py-2">
+                        <div class="text-[10px] text-muted">{{ fmtLog(e.at) }}</div>
+                        <div class="whitespace-pre-line text-sm text-navy">{{ e.text }}</div>
+                      </div>
+                    }
+                  }
+                </div>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  @for (t of CHAT_TEMPLATES; track t.label) {
+                    <button (click)="setChatFromTemplate(t.text(r.municipality))" class="rounded-full border border-line bg-white px-3 py-1 text-xs text-muted transition hover:border-gold/60 hover:text-navy">
+                      {{ t.label }}
+                    </button>
+                  }
+                </div>
+                <div class="mt-2 flex items-end gap-2">
+                  <textarea rows="3" [value]="chatDraft()" (input)="chatDraft.set($any($event.target).value)" placeholder="Write a message to the LGU…" class="a-input flex-1 resize-y"></textarea>
+                  <button class="a-btn-navy" (click)="sendChat(r)" [disabled]="!chatDraft().trim()">
+                    <app-icon name="send" className="h-4 w-4" /> Send
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  </div>
+</div>

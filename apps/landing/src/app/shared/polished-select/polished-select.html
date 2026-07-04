@@ -1,0 +1,38 @@
+<div [class]="className()">
+  <button
+    #trigger
+    type="button"
+    aria-haspopup="listbox"
+    [attr.aria-expanded]="open()"
+    (click)="toggle()"
+    class="flex w-full items-center justify-between gap-2 rounded-xl border bg-white px-3.5 py-2.5 text-left text-sm outline-none transition"
+    [class]="open() ? 'border-gold ring-2 ring-gold/20' : 'border-line hover:border-gold/60'"
+  >
+    <span [class]="selectedLabel() ? 'truncate text-navy' : 'truncate text-muted'">{{ selectedLabel() || placeholder() }}</span>
+    <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 text-muted transition" [class]="open() ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  </button>
+
+  @if (open() && pos()) {
+    <div role="listbox" [style]="pos()" class="facility-picker-menu fixed z-[80] overflow-y-auto rounded-xl border border-line bg-white py-1.5 shadow-card">
+      @for (option of opts(); track option.value) {
+        <button
+          type="button"
+          role="option"
+          [attr.aria-selected]="option.value === value()"
+          (click)="select(option.value)"
+          class="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left text-sm transition hover:bg-mist"
+          [class]="option.value === value() ? 'bg-gold/10 font-semibold text-navy' : 'font-normal text-navy/80'"
+        >
+          <span>{{ option.label }}</span>
+          @if (option.value === value()) {
+            <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 text-gold" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m20 6-11 11-5-5" />
+            </svg>
+          }
+        </button>
+      }
+    </div>
+  }
+</div>

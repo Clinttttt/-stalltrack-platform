@@ -1,0 +1,181 @@
+<div class="flex h-full flex-col">
+  <div class="mb-4 grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-4">
+    @for (s of stats(); track s.label) {
+      <div class="a-card px-4 py-3.5">
+        <div class="font-display text-2xl font-bold text-navy">{{ s.value }}</div>
+        <div class="text-[11px] font-semibold uppercase tracking-wide text-muted">{{ s.label }}</div>
+      </div>
+    }
+  </div>
+
+  <div class="flex flex-col gap-5 lg:min-h-0 lg:flex-1 lg:flex-row">
+    <!-- List -->
+    <aside class="a-card flex flex-col overflow-hidden lg:min-h-0 lg:w-[20rem] lg:shrink-0 xl:w-[22rem]">
+      <div class="border-b border-line bg-mist/60 px-4 py-3">
+        <div class="text-[11px] font-bold uppercase tracking-[0.1em] text-muted">Awaiting validation</div>
+      </div>
+      <div class="a-scroll max-h-[22rem] overflow-y-auto lg:max-h-none lg:flex-1">
+        @if (scoped().length === 0) {
+          <div class="px-4 py-10 text-center text-sm text-muted">No municipalities are awaiting validation.</div>
+        } @else {
+          @for (r of scoped(); track r.id) {
+            <button
+              (click)="select(r.id)"
+              [class]="'block w-full border-b border-line px-4 py-3.5 text-left transition ' + (selected()?.id === r.id ? 'bg-green-bg shadow-[inset_3px_0_0_#c8a84b]' : 'hover:bg-mist')"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-display text-base font-bold text-navy">{{ r.municipality }}</span>
+                <span class="rounded-full bg-amber-bg px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber">Validation</span>
+              </div>
+              <div class="mt-0.5 text-xs text-muted">{{ r.requestingOffice }}</div>
+              @if (r.lguSubmittedForValidation) {
+                <div class="mt-1 text-[11px] text-muted/80">Submitted {{ fmtLog(r.lguSubmittedForValidation) }}</div>
+              }
+            </button>
+          }
+        }
+      </div>
+    </aside>
+
+    <!-- Detail — dry run -->
+    <section class="a-card a-scroll p-6 sm:p-7 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+      @if (!selected()) {
+        <div class="flex min-h-[18rem] flex-col items-center justify-center gap-3 text-center text-muted">
+          <app-icon name="activity" className="h-10 w-10 opacity-40" />
+          <p>No municipality is awaiting validation. Advance one from the Onboarding page.</p>
+        </div>
+      } @else if (selected(); as r) {
+        <div>
+          <div class="flex items-start justify-between gap-4 border-b border-line pb-4">
+            <div>
+              <div class="font-display text-2xl font-bold text-navy">{{ r.municipality }}</div>
+              <div class="text-sm text-muted">{{ r.province }} · Validation dry-run</div>
+            </div>
+            <span class="rounded-full bg-amber-bg px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber">Validation</span>
+          </div>
+
+          @if (!r.config) {
+            <div class="mt-6 rounded-xl border border-line bg-mist px-4 py-8 text-center text-sm text-muted">
+              No configuration was captured during onboarding for this municipality.
+            </div>
+          } @else {
+            <!-- KPIs -->
+            <div class="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              @for (k of kpis(); track k.label) {
+                <div class="rounded-xl border border-line bg-mist/50 px-4 py-3">
+                  <div class="font-display text-xl font-bold text-navy">{{ k.value }}</div>
+                  <div class="text-[11px] font-semibold uppercase tracking-wide text-muted">{{ k.label }}</div>
+                </div>
+              }
+            </div>
+
+            <!-- Facilities detail -->
+            <div class="mt-6">
+              <div class="a-label mb-2">Configured facilities</div>
+              <div class="space-y-3">
+                @for (f of facilities(); track f.name) {
+                  <div class="overflow-hidden rounded-xl border border-line">
+                    <div class="flex items-center justify-between gap-2 border-b border-line bg-mist/50 px-4 py-2.5">
+                      <span class="font-display text-base font-bold text-navy">{{ f.name }}</span>
+                      <span class="rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-muted">{{ f.type }}</span>
+                    </div>
+                    <div class="space-y-3 p-4 text-sm">
+                      @if (f.type === 'Per head') {
+                        <div>
+                          <div class="a-label mb-1.5">Per-head rates</div>
+                          <div class="grid gap-2 sm:grid-cols-2">
+                            @for (ri of f.rateItems || []; track ri.label) {
+                              <div class="flex items-center justify-between gap-2 rounded-lg border border-line bg-white px-3 py-2">
+                                <div class="min-w-0">
+                                  <div class="truncate text-sm font-semibold text-navy">{{ ri.label }}</div>
+                                  <div class="text-[11px] text-muted">Per head</div>
+                                </div>
+                                <span class="shrink-0 rounded-full bg-green-bg px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-green">₱{{ ri.amount }}/head</span>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      } @else {
+                        <div class="flex items-center justify-between gap-3">
+                          <span class="text-muted">Base rate</span>
+                          <span class="font-semibold text-navy">₱{{ f.rateAmount }} {{ f.rateUnit }}{{ spaceBased(f) && facUnits(f) > 0 ? ' · ' + facUnits(f) + ' ' + f.unitLabel : '' }}</span>
+                        </div>
+                      }
+
+                      @if (f.sections.length > 0) {
+                        <div>
+                          <div class="a-label mb-1.5">Sections</div>
+                          <div class="overflow-hidden rounded-lg border border-line">
+                            @for (s of f.sections; track s.name) {
+                              <div class="flex items-center justify-between gap-3 border-t border-line px-3 py-2 first:border-t-0">
+                                <span class="text-navy">{{ s.name }} <span class="text-muted">· {{ s.units }} {{ f.unitLabel }}</span></span>
+                                @if (s.fees.length > 0) {
+                                  <span class="text-right text-xs text-muted">{{ feesText(s.fees) }}</span>
+                                }
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      }
+
+                      @if (f.addOns.length > 0) {
+                        <div>
+                          <div class="a-label mb-1.5">Additional fees</div>
+                          <div class="grid gap-2 sm:grid-cols-2">
+                            @for (a of f.addOns; track a.label) {
+                              <div class="flex items-center justify-between gap-2 rounded-lg border border-line bg-white px-3 py-2">
+                                <div class="min-w-0">
+                                  <div class="truncate text-sm font-semibold text-navy">{{ a.label }}</div>
+                                  <div class="text-[11px] text-muted">{{ a.mode }}</div>
+                                </div>
+                                <span [class]="'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + (a.basis === 'Per consumption' ? 'bg-amber-bg text-amber' : 'bg-green-bg text-green')">
+                                  {{ a.basis === 'Per consumption' ? 'Metered' : '₱' + a.amount + ' ' + a.unit }}
+                                </span>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Branding + users -->
+            <div class="mt-6 grid gap-5 sm:grid-cols-2">
+              <div class="rounded-xl border border-line p-4">
+                <div class="a-label mb-2">Branding &amp; receipts</div>
+                <div class="space-y-1.5 text-sm">
+                  <div class="flex justify-between gap-3"><span class="text-muted">Office</span><span class="text-right font-medium text-navy">{{ r.requestingOffice }}</span></div>
+                  <div class="flex justify-between gap-3"><span class="text-muted">OR series</span><span class="font-medium text-navy">{{ r.config.orSeries }}</span></div>
+                </div>
+              </div>
+              <div class="rounded-xl border border-line p-4">
+                <div class="a-label mb-2">Users to provision</div>
+                <ul class="space-y-1.5 text-sm">
+                  @for (u of r.config.users; track u.email) {
+                    <li class="flex items-center justify-between gap-3">
+                      <span class="font-medium text-navy">{{ u.name }}</span>
+                      <span class="text-xs text-muted">{{ u.role }}</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-6 flex flex-wrap gap-2.5 border-t border-line pt-5">
+              <button class="a-btn-gold" (click)="store.approveValidation(r.id)">
+                <app-icon name="check" className="h-4 w-4" /> Approve validation &amp; send to Activation
+              </button>
+              <button class="a-btn-ghost" (click)="store.returnToOnboarding(r.id, 'validation feedback')">
+                Return to Onboarding
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  </div>
+</div>

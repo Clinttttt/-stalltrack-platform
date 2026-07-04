@@ -1,1 +1,76 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply font-sans text-ink bg-white antialiased;
+}
+
+@keyframes sidebarOverlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sidebarPanelIn {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.facility-picker-menu {
+  scrollbar-width: thin;
+  scrollbar-color: #9aabb9 transparent;
+}
+
+.facility-picker-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.facility-picker-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.facility-picker-menu::-webkit-scrollbar-thumb {
+  background: #9aabb9;
+  border-radius: 999px;
+}
+
+.facility-picker-menu::-webkit-scrollbar-thumb:hover {
+  background: #6a8aa0;
+}
+
+@layer components {
+  .container-px {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+  .eyebrow {
+    @apply inline-block text-[11px] font-bold uppercase leading-none tracking-[0.18em] text-gold;
+  }
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-bold text-navy transition hover:bg-gold-light;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10;
+  }
+  .btn-navy {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-5 py-3 text-sm font-bold text-white transition hover:bg-navy-600;
+  }
+  .section-title {
+    @apply font-display text-3xl font-bold text-navy sm:text-4xl;
+  }
+}

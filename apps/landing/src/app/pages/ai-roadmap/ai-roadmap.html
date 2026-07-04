@@ -1,0 +1,192 @@
+<div class="flex min-h-screen flex-col">
+  <app-navbar (requestDemo)="openDemo()" />
+
+  <main class="flex-1">
+    <!-- ───────────────────────── Hero ───────────────────────── -->
+    <section class="relative overflow-hidden bg-navy text-white">
+      <div
+        class="pointer-events-none absolute inset-0 opacity-[0.06]"
+        style="background-image: radial-gradient(circle at 1px 1px, #fff 1px, transparent 0); background-size: 24px 24px;"
+      ></div>
+      <div class="container-px relative grid items-center gap-10 py-16 sm:py-20 lg:grid-cols-[1.05fr,0.95fr] lg:py-24">
+        <div reveal>
+          <span class="eyebrow">Planned AI Roadmap</span>
+          <h1 class="mt-4 font-display text-[2.5rem] font-bold leading-[1.06] sm:text-5xl lg:text-[3.25rem]">
+            Agentic AI for public revenue operations.
+          </h1>
+          <p class="mt-6 max-w-xl text-base leading-relaxed text-white/65 sm:text-lg">
+            StallTrack's planned intelligence layer will help LGU teams detect collection risks, prepare
+            reports, guide collectors, and review audit signals while keeping staff in control of every
+            financial action.
+          </p>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <a href="#agents" class="btn-gold">Explore AI Agents</a>
+            <a href="/#contact" class="btn-ghost">Discuss Pilot</a>
+          </div>
+        </div>
+
+        <div reveal [delay]="120">
+          <div class="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-2xl backdrop-blur sm:p-7">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xs font-semibold uppercase tracking-wider text-white/45">AI Operations Brief</div>
+                <div class="mt-1 font-display text-3xl font-bold text-white">Next best actions</div>
+              </div>
+              <span class="rounded-full bg-gold/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-gold-light">Roadmap</span>
+            </div>
+            <div class="mt-6 space-y-3">
+              @for (item of heroBrief; track item[0]) {
+                <div class="rounded-2xl border border-white/10 bg-navy/35 p-4">
+                  <div class="font-semibold text-gold-light">{{ item[0] }}</div>
+                  <div class="mt-1 text-sm leading-relaxed text-white/55">{{ item[1] }}</div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Principles ───────────────────────── -->
+    <section class="border-b border-line bg-white py-8 sm:py-10">
+      <div class="container-px grid gap-5 lg:grid-cols-3">
+        @for (it of principles; track it.t; let i = $index) {
+          <div reveal [delay]="i * 80">
+            <div class="h-full rounded-2xl border border-line bg-mist p-6">
+              <h2 class="font-display text-xl font-bold text-navy">{{ it.t }}</h2>
+              <p class="mt-2 text-sm leading-relaxed text-muted">{{ it.d }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Agents ───────────────────────── -->
+    <section id="agents" class="scroll-mt-20 bg-mist py-8 sm:py-10">
+      <div class="container-px">
+        <div reveal class="max-w-2xl">
+          <span class="eyebrow text-green">Agentic AI concepts</span>
+          <h2 class="mt-2.5 font-display text-3xl font-bold leading-[1.1] sm:text-4xl text-navy">Purpose-built agents for EEMO workflows.</h2>
+          <p class="mt-4 text-lg text-muted">These are planned AI capabilities, designed around the same operational scope as StallTrack: collections, contracts, reports, delinquency monitoring, and audit trails.</p>
+        </div>
+        <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          @for (agent of agents; track agent.t; let i = $index) {
+            <div reveal [delay]="(i % 3) * 90">
+              <div class="h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    @switch (agent.icon) {
+                      @case ('chart') {
+                        <path d="M3 3v18h18" /><path d="M7 15l4-4 3 3 5-7" />
+                      }
+                      @case ('file') {
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M8 13h8M8 17h6" />
+                      }
+                      @case ('route') {
+                        <path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z" /><path d="M9 3v15M15 6v15" />
+                      }
+                      @case ('shield') {
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M12 8v5" /><path d="M12 17h.01" />
+                      }
+                      @case ('contract') {
+                        <path d="M8 2h8l4 4v16H4V2h4z" /><path d="M16 2v4h4" /><path d="M8 12h8M8 16h5" />
+                      }
+                      @case ('question') {
+                        <circle cx="12" cy="12" r="10" /><path d="M9.1 9a3 3 0 1 1 4.9 2.3c-.9.5-1.5 1.2-1.5 2.2" /><path d="M12 17h.01" />
+                      }
+                    }
+                  </svg>
+                </span>
+                <h3 class="mt-4 font-display text-lg font-bold text-navy">{{ agent.t }}</h3>
+                <p class="mt-2 text-sm leading-relaxed text-muted">{{ agent.d }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Workflow ───────────────────────── -->
+    <section class="py-8 sm:py-10">
+      <div class="container-px">
+        <div reveal class="max-w-2xl mx-auto text-center">
+          <span class="eyebrow text-green">AI workflow</span>
+          <h2 class="mt-2.5 font-display text-3xl font-bold leading-[1.1] sm:text-4xl text-navy">Assistive, not autonomous finance.</h2>
+          <p class="mt-4 text-lg text-muted">StallTrack's AI direction focuses on reducing administrative load while preserving accountability for government revenue work.</p>
+        </div>
+        <div class="mt-12 grid gap-5 md:grid-cols-4">
+          @for (step of workflow; track step[1]; let i = $index) {
+            <div reveal [delay]="i * 80">
+              <div class="h-full rounded-2xl border border-line bg-white p-6 shadow-soft">
+                <div class="grid h-10 w-10 place-items-center rounded-full bg-green-bg font-bold text-green">{{ step[0] }}</div>
+                <h3 class="mt-4 font-display text-lg font-bold text-navy">{{ step[1] }}</h3>
+                <p class="mt-2 text-sm leading-relaxed text-muted">{{ step[2] }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Roadmap ───────────────────────── -->
+    <section class="bg-navy py-8 text-white sm:py-10">
+      <div class="container-px">
+        <div reveal class="max-w-2xl">
+          <span class="eyebrow">Implementation path</span>
+          <h2 class="mt-2.5 font-display text-3xl font-bold leading-[1.1] sm:text-4xl text-white">A practical roadmap for AI adoption.</h2>
+          <p class="mt-4 text-lg text-white/65">The roadmap starts with low-risk administrative assistance, then expands toward agentic coordination as the data foundation matures.</p>
+        </div>
+        <div class="mt-12 grid gap-5 lg:grid-cols-3">
+          @for (phase of phases; track phase[0]; let i = $index) {
+            <div reveal [delay]="i * 90">
+              <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6">
+                <div class="text-xs font-bold uppercase tracking-wider text-gold-light">{{ phase[0] }}</div>
+                <h3 class="mt-3 font-display text-xl font-bold">{{ phase[1] }}</h3>
+                <p class="mt-2 text-sm leading-relaxed text-white/58">{{ phase[2] }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── CTA ───────────────────────── -->
+    <section class="py-10 sm:py-14">
+      <div class="container-px">
+        <div reveal>
+          <div class="rounded-3xl border border-line bg-mist p-8 text-center sm:p-12">
+            <span class="eyebrow text-green">Pilot-ready direction</span>
+            <h2 class="mx-auto mt-3 max-w-2xl font-display text-3xl font-bold leading-tight text-navy sm:text-4xl">
+              Built for real LGU constraints, not generic AI demos.
+            </h2>
+            <p class="mx-auto mt-4 max-w-2xl text-muted">
+              StallTrack's AI roadmap is anchored in revenue collection, public-market operations,
+              official receipt workflows, contract monitoring, and auditable government reporting.
+            </p>
+            <div class="mt-7 flex flex-wrap justify-center gap-3">
+              <a href="/#preview" class="btn-navy">View Product</a>
+              <a href="/#contact" class="inline-flex items-center justify-center rounded-xl border border-line bg-white px-5 py-3 text-sm font-bold text-navy transition hover:border-gold/50">Contact Founder</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <app-footer />
+
+  <button
+    (click)="scrollToTop()"
+    aria-label="Back to top"
+    class="fixed bottom-6 right-6 z-50 grid h-11 w-11 place-items-center rounded-full bg-navy text-white shadow-card transition-all duration-300 hover:bg-navy-600"
+    [class]="showBackToTop() ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'"
+  >
+    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m18 15-6-6-6 6" />
+    </svg>
+  </button>
+
+  @if (demoModalOpen()) {
+    <app-demo-request-modal (close)="closeDemo()" />
+  }
+</div>

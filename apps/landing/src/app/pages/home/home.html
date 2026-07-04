@@ -1,0 +1,698 @@
+<div class="flex min-h-screen flex-col">
+  <app-navbar (requestDemo)="openDemo()" />
+
+  <main class="flex-1">
+    <!-- ───────────────────────── Hero ───────────────────────── -->
+    <section class="relative overflow-hidden bg-navy text-white">
+      <div
+        class="pointer-events-none absolute inset-0 opacity-[0.06]"
+        style="background-image: radial-gradient(circle at 1px 1px, #fff 1px, transparent 0); background-size: 24px 24px;"
+      ></div>
+      <div class="pointer-events-none absolute -right-32 -top-24 h-96 w-96 rounded-full bg-gold/10 blur-3xl"></div>
+      <div class="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-gold/5 blur-3xl"></div>
+
+      <div class="container-px relative grid items-center gap-y-12 gap-x-10 py-16 sm:py-20 lg:grid-cols-2 lg:gap-x-14 lg:py-24">
+        <div reveal>
+          <span class="eyebrow">GovTech · LGU Economic Enterprise Operations</span>
+          <h1 class="mt-4 font-display text-[2.6rem] font-bold leading-[1.06] sm:text-5xl lg:text-[3.4rem]">
+            Run public market &amp; facility collections on one clean platform.
+          </h1>
+          <p class="mt-6 max-w-xl text-base leading-relaxed text-white/65 sm:text-lg">
+            StallTrack is a GovTech SaaS platform for Economic Enterprise Management Offices and
+            LGU-managed facilities — digitizing stall records, rental collections, payment tracking,
+            audit logs, operational reports, and planned AI-assisted workflows.
+          </p>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <a href="#features" class="btn-gold">View Features</a>
+            <a href="/ai-roadmap" class="btn-ghost">AI Roadmap</a>
+            <a href="#contact" class="btn-ghost">Contact Founder</a>
+          </div>
+          <div class="mt-9 flex flex-wrap items-center gap-x-7 gap-y-3 text-sm text-white/55">
+            <span class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-gold"></span> Public markets</span>
+            <span class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-gold"></span> LGU-managed facilities</span>
+            <span class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-gold"></span> Rental &amp; fee collections</span>
+          </div>
+        </div>
+
+        <div reveal [delay]="120" class="lg:pl-4">
+          <div class="rounded-2xl border border-white/10 bg-white/[0.06] p-5 shadow-2xl backdrop-blur sm:p-6">
+            <div class="flex items-center justify-between">
+              <div class="text-xs font-semibold uppercase tracking-wider text-white/45">Collections · This Month</div>
+              <span class="rounded-full bg-gold/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-gold-light">Sample</span>
+            </div>
+            <div class="mt-3 font-display text-4xl font-bold text-white">₱248,650.00</div>
+            <div class="mt-1 text-sm text-white/50">Across 6 managed facilities</div>
+
+            <div class="mt-6 flex items-end gap-2" aria-hidden="true">
+              <div class="flex-1 rounded-t bg-gradient-to-t from-gold/40 to-gold" style="height: 40px;"></div>
+              <div class="flex-1 rounded-t bg-gradient-to-t from-gold/40 to-gold" style="height: 62px;"></div>
+              <div class="flex-1 rounded-t bg-gradient-to-t from-gold/40 to-gold" style="height: 51px;"></div>
+              <div class="flex-1 rounded-t bg-gradient-to-t from-gold/40 to-gold" style="height: 78px;"></div>
+              <div class="flex-1 rounded-t bg-gradient-to-t from-gold/40 to-gold" style="height: 66px;"></div>
+              <div class="flex-1 rounded-t bg-gradient-to-t from-gold/40 to-gold" style="height: 90px;"></div>
+              <div class="flex-1 rounded-t bg-gradient-to-t from-gold/40 to-gold" style="height: 72px;"></div>
+            </div>
+            <div class="mt-2 flex justify-between text-[10px] text-white/35">
+              <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span>
+            </div>
+
+            <div class="mt-6 grid grid-cols-3 gap-3 border-t border-white/10 pt-5">
+              <div>
+                <div class="font-display text-xl font-bold text-gold-light">312</div>
+                <div class="text-[11px] text-white/45">Active stalls</div>
+              </div>
+              <div>
+                <div class="font-display text-xl font-bold text-gold-light">92%</div>
+                <div class="text-[11px] text-white/45">Collection rate</div>
+              </div>
+              <div>
+                <div class="font-display text-xl font-bold text-gold-light">14</div>
+                <div class="text-[11px] text-white/45">Delinquent</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Trust strip ───────────────────────── -->
+    <section class="border-y border-line bg-white">
+      <div class="container-px grid grid-cols-2 gap-y-8 py-10 lg:grid-cols-4">
+        <div class="text-center">
+          <div class="font-display text-2xl font-bold text-navy sm:text-3xl">8</div>
+          <div class="mt-1 text-xs text-muted sm:text-sm">Configurable facility types</div>
+        </div>
+        <div class="text-center">
+          <div class="font-display text-2xl font-bold text-navy sm:text-3xl">3</div>
+          <div class="mt-1 text-xs text-muted sm:text-sm">Role-based access levels</div>
+        </div>
+        <div class="text-center">
+          <div class="font-display text-2xl font-bold text-navy sm:text-3xl">100%</div>
+          <div class="mt-1 text-xs text-muted sm:text-sm">Audited financial actions</div>
+        </div>
+        <div class="text-center">
+          <div class="font-display text-2xl font-bold text-navy sm:text-3xl">Web + Mobile</div>
+          <div class="mt-1 text-xs text-muted sm:text-sm">Admin & field collection</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Problem ───────────────────────── -->
+    <section class="bg-mist py-8 sm:py-10">
+      <div class="container-px">
+        <div reveal class="max-w-2xl">
+          <span class="eyebrow text-green">The problem</span>
+          <h2 class="mt-2.5 font-display text-3xl font-bold leading-[1.1] sm:text-4xl text-navy">Manual operations slow down revenue collection.</h2>
+          <p class="mt-4 text-lg text-muted">Many Economic Enterprise Management Offices and public market / facility operations still depend on manual records, paper-based collections, scattered reports, and difficult audit trails.</p>
+        </div>
+        <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div reveal [delay]="0">
+            <div class="h-full rounded-2xl border border-line bg-white p-6 shadow-soft">
+              <h3 class="font-display text-lg font-bold text-navy">Paper-based collections</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Daily and monthly fees logged on paper are slow to total and easy to misplace.</p>
+            </div>
+          </div>
+          <div reveal [delay]="80">
+            <div class="h-full rounded-2xl border border-line bg-white p-6 shadow-soft">
+              <h3 class="font-display text-lg font-bold text-navy">Scattered records</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Stall, tenant, and contract details live across notebooks, spreadsheets, and folders.</p>
+            </div>
+          </div>
+          <div reveal [delay]="160">
+            <div class="h-full rounded-2xl border border-line bg-white p-6 shadow-soft">
+              <h3 class="font-display text-lg font-bold text-navy">Hard audit trails</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Tracing who collected what, when, and under which OR number is tedious and error-prone.</p>
+            </div>
+          </div>
+          <div reveal [delay]="240">
+            <div class="h-full rounded-2xl border border-line bg-white p-6 shadow-soft">
+              <h3 class="font-display text-lg font-bold text-navy">Manual reporting</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Monthly and yearly reports are re-compiled by hand, delaying decisions and reconciliation.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Solution ───────────────────────── -->
+    <section class="py-8 sm:py-10">
+      <div class="container-px grid items-center gap-12 lg:grid-cols-2">
+        <div>
+          <div reveal class="max-w-2xl">
+            <span class="eyebrow text-green">The solution</span>
+            <h2 class="mt-2.5 font-display text-3xl font-bold leading-[1.1] sm:text-4xl text-navy">Everything in one digital platform.</h2>
+            <p class="mt-4 text-lg text-muted">StallTrack centralizes stall records, rental collections, payment tracking, reports, audit logs, and dashboards — so offices spend less time on paperwork and more on service.</p>
+          </div>
+          <div reveal [delay]="80">
+            <ul class="mt-7 space-y-3.5">
+              <li class="flex items-start gap-3">
+                <span class="mt-0.5 grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-green-bg text-green">
+                  <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                </span>
+                <span class="text-navy/80">One source of truth for stalls, tenants, and contracts</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="mt-0.5 grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-green-bg text-green">
+                  <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                </span>
+                <span class="text-navy/80">Faster, traceable rental and fee collections</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="mt-0.5 grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-green-bg text-green">
+                  <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                </span>
+                <span class="text-navy/80">Reports and dashboards generated automatically</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="mt-0.5 grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-green-bg text-green">
+                  <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                </span>
+                <span class="text-navy/80">A complete audit trail on every transaction</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div reveal [delay]="120">
+          <div class="rounded-3xl border border-line bg-gradient-to-br from-mist to-white p-6 shadow-card sm:p-8">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="rounded-2xl border border-line bg-white p-5">
+                <div class="font-display text-lg font-bold text-navy">Records</div>
+                <div class="mt-1 text-xs text-muted">Stalls · tenants · contracts</div>
+              </div>
+              <div class="rounded-2xl border border-line bg-white p-5">
+                <div class="font-display text-lg font-bold text-navy">Collections</div>
+                <div class="mt-1 text-xs text-muted">Daily · monthly · per-head</div>
+              </div>
+              <div class="rounded-2xl border border-line bg-white p-5">
+                <div class="font-display text-lg font-bold text-navy">Reports</div>
+                <div class="mt-1 text-xs text-muted">Monthly · yearly · exportable</div>
+              </div>
+              <div class="rounded-2xl border border-line bg-white p-5">
+                <div class="font-display text-lg font-bold text-navy">Audit</div>
+                <div class="mt-1 text-xs text-muted">Actor · timestamp · before/after</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── AI Roadmap Teaser ───────────────────────── -->
+    <section id="ai" class="scroll-mt-20 bg-navy py-8 text-white sm:py-10">
+      <div class="container-px grid items-center gap-10 lg:grid-cols-[0.92fr,1.08fr]">
+        <div>
+          <div reveal class="max-w-2xl">
+            <span class="eyebrow">Future AI capability</span>
+            <h2 class="mt-2.5 font-display text-3xl font-bold leading-[1.1] sm:text-4xl text-white">An agentic AI roadmap for revenue offices.</h2>
+            <p class="mt-4 text-lg text-white/65">StallTrack is being designed with a practical AI layer that can assist staff with risk detection, report preparation, audit review, and collector task planning.</p>
+          </div>
+          <div reveal [delay]="80">
+            <div class="mt-7 flex flex-wrap gap-3">
+              <a href="/ai-roadmap" class="btn-gold">View AI Roadmap</a>
+              <a href="#contact" class="btn-ghost">Discuss Pilot</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid gap-4">
+          <div reveal [delay]="0">
+            <div class="rounded-2xl border border-white/10 bg-white/[0.05] p-5 transition hover:bg-white/[0.075]">
+              <div class="flex items-start gap-4">
+                <span class="mt-0.5 grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-gold/15 text-gold">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4" /><path d="M12 18v4" /><path d="m4.93 4.93 2.83 2.83" /><path d="m16.24 16.24 2.83 2.83" /><path d="M2 12h4" /><path d="M18 12h4" /><path d="m4.93 19.07 2.83-2.83" /><path d="m16.24 7.76 2.83-2.83" /><circle cx="12" cy="12" r="3" /></svg>
+                </span>
+                <div>
+                  <h3 class="font-display text-lg font-bold">Collection Risk Agent</h3>
+                  <p class="mt-1 text-sm leading-relaxed text-white/58">Prioritizes vendors, stalls, and facilities that may need follow-up before arrears grow.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div reveal [delay]="90">
+            <div class="rounded-2xl border border-white/10 bg-white/[0.05] p-5 transition hover:bg-white/[0.075]">
+              <div class="flex items-start gap-4">
+                <span class="mt-0.5 grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-gold/15 text-gold">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4" /><path d="M12 18v4" /><path d="m4.93 4.93 2.83 2.83" /><path d="m16.24 16.24 2.83 2.83" /><path d="M2 12h4" /><path d="M18 12h4" /><path d="m4.93 19.07 2.83-2.83" /><path d="m16.24 7.76 2.83-2.83" /><circle cx="12" cy="12" r="3" /></svg>
+                </span>
+                <div>
+                  <h3 class="font-display text-lg font-bold">Report Drafting Agent</h3>
+                  <p class="mt-1 text-sm leading-relaxed text-white/58">Prepares collection summaries, delinquency narratives, and variance notes for staff review.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div reveal [delay]="180">
+            <div class="rounded-2xl border border-white/10 bg-white/[0.05] p-5 transition hover:bg-white/[0.075]">
+              <div class="flex items-start gap-4">
+                <span class="mt-0.5 grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-gold/15 text-gold">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4" /><path d="M12 18v4" /><path d="m4.93 4.93 2.83 2.83" /><path d="m16.24 16.24 2.83 2.83" /><path d="M2 12h4" /><path d="M18 12h4" /><path d="m4.93 19.07 2.83-2.83" /><path d="m16.24 7.76 2.83-2.83" /><circle cx="12" cy="12" r="3" /></svg>
+                </span>
+                <div>
+                  <h3 class="font-display text-lg font-bold">Audit Review Agent</h3>
+                  <p class="mt-1 text-sm leading-relaxed text-white/58">Flags unusual edits, OR sequence gaps, and transaction patterns that may need supervisor attention.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Features ───────────────────────── -->
+    <section id="features" class="scroll-mt-20 bg-mist py-8 sm:py-10">
+      <div class="container-px">
+        <div reveal class="max-w-2xl">
+          <span class="eyebrow text-green">Features</span>
+          <h2 class="mt-2.5 font-display text-3xl font-bold leading-[1.1] sm:text-4xl text-navy">Built around real office workflows.</h2>
+          <p class="mt-4 text-lg text-muted">Designed around the day-to-day work of economic enterprise and public market offices.</p>
+        </div>
+        <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div reveal [delay]="0">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Stall & tenant records</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Maintain stalls, occupants, contracts, and terms with expiry tracking.</p>
+            </div>
+          </div>
+          <div reveal [delay]="90">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Rental & collection tracking</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Record daily, monthly, and per-head fees with clear paid / partial / unpaid status.</p>
+            </div>
+          </div>
+          <div reveal [delay]="180">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Payment history</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">A rolling per-stall ledger with OR numbers and collector attribution.</p>
+            </div>
+          </div>
+          <div reveal [delay]="0">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M8 13v4M12 9v8M16 6v11" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Monthly & yearly reports</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Collection totals, outstanding balances, and collection-rate reporting per facility.</p>
+            </div>
+          </div>
+          <div reveal [delay]="90">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Audit logs</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Every financial transaction logged with actor, timestamp, and before/after values.</p>
+            </div>
+          </div>
+          <div reveal [delay]="180">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Role-based admin access</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Separate Head, Admin, and Collector roles with facility-scoped permissions.</p>
+            </div>
+          </div>
+          <div reveal [delay]="0">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Facility dashboards</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">At-a-glance KPIs and trends for each managed facility.</p>
+            </div>
+          </div>
+          <div reveal [delay]="90">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Exportable reports</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Generate printable, shareable reports for review and reconciliation.</p>
+            </div>
+          </div>
+          <div reveal [delay]="180">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" /><line x1="12" y1="18" x2="12" y2="18" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Mobile collector support</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Optional field collection for collectors — record on-site and sync.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Facility Types ───────────────────────── -->
+    <section id="facilities" class="scroll-mt-20 py-8 sm:py-10">
+      <div class="container-px">
+        <div reveal class="max-w-2xl mx-auto text-center">
+          <span class="eyebrow text-green">Facility types</span>
+          <h2 class="mt-2.5 font-display text-3xl font-bold leading-[1.1] sm:text-4xl text-navy">One platform, many facility types.</h2>
+          <p class="mt-4 text-lg text-muted">StallTrack models facilities as configurable types — each with its own billing rhythm. Cantilan's EEMO, our first deployment, runs the eight below; the names, rates, and rules adapt to any LGU's enterprises.</p>
+        </div>
+
+        <div reveal>
+          <div class="mx-auto mt-8 flex max-w-3xl items-start gap-3 rounded-2xl border border-gold/30 bg-gold/[0.06] p-5">
+            <span class="mt-0.5 grid h-7 w-7 flex-shrink-0 place-items-center rounded-lg bg-gold/15 text-gold">
+              <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+            </span>
+            <p class="text-sm leading-relaxed text-navy/70">
+              <span class="font-semibold text-navy">Not locked to one LGU.</span> Facility names and fee
+              structures are configured per office — billing models (daily, monthly, per-head, per-trip,
+              per-vendor) are reused across markets, terminals, slaughterhouses, and more.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div reveal [delay]="0">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <div class="flex items-center justify-between">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+                </span>
+                <span class="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-navy/70">Daily</span>
+              </div>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Public Market</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Per-stall daily fees with optional utilities and per-kilo produce or fish charges.</p>
+              <div class="mt-4 border-t border-line pt-3 text-[11px] font-medium text-muted/80">e.g. New Public Market (NPM)</div>
+            </div>
+          </div>
+          <div reveal [delay]="80">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <div class="flex items-center justify-between">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" /></svg>
+                </span>
+                <span class="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-navy/70">Monthly</span>
+              </div>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Commercial Center</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Fixed monthly rent for commercial stalls and units, with contract terms and expiry.</p>
+              <div class="mt-4 border-t border-line pt-3 text-[11px] font-medium text-muted/80">e.g. Tampak / New Commercial Center</div>
+            </div>
+          </div>
+          <div reveal [delay]="160">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <div class="flex items-center justify-between">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></svg>
+                </span>
+                <span class="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-navy/70">Monthly</span>
+              </div>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Food & BBQ Stalls</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Monthly space rental for food courts and barbecue vendors.</p>
+              <div class="mt-4 border-t border-line pt-3 text-[11px] font-medium text-muted/80">e.g. Barbecue Stand (BBQ)</div>
+            </div>
+          </div>
+          <div reveal [delay]="240">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <div class="flex items-center justify-between">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+                </span>
+                <span class="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-navy/70">Monthly</span>
+              </div>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Iceplant</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Monthly space and utility rental for cold-storage or ice production.</p>
+              <div class="mt-4 border-t border-line pt-3 text-[11px] font-medium text-muted/80">e.g. Iceplant (ICE)</div>
+            </div>
+          </div>
+          <div reveal [delay]="0">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <div class="flex items-center justify-between">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 22l-9-9V2h11l7.59 9.41a2 2 0 0 1 0 2.82z" /><circle cx="6.5" cy="6.5" r="1.5" /></svg>
+                </span>
+                <span class="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-navy/70">Per head</span>
+              </div>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Slaughterhouse</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Per-animal fees by type (hog, cattle, carabao) with official-receipt entry.</p>
+              <div class="mt-4 border-t border-line pt-3 text-[11px] font-medium text-muted/80">e.g. Slaughterhouse (SLH)</div>
+            </div>
+          </div>
+          <div reveal [delay]="80">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <div class="flex items-center justify-between">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1" /><path d="M16 8h4l3 5v3h-7V8z" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>
+                </span>
+                <span class="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-navy/70">Per trip</span>
+              </div>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Transport Terminal</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Per-trip dispatch fees with queuing and departure-order tracking.</p>
+              <div class="mt-4 border-t border-line pt-3 text-[11px] font-medium text-muted/80">e.g. Transport Terminal (TRM)</div>
+            </div>
+          </div>
+          <div reveal [delay]="160">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <div class="flex items-center justify-between">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                </span>
+                <span class="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-navy/70">Per vendor</span>
+              </div>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Weekly / Tabo-an Market</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Per-vendor fees collected on scheduled market days (e.g. every Friday).</p>
+              <div class="mt-4 border-t border-line pt-3 text-[11px] font-medium text-muted/80">e.g. Tabo-an Public Market (TPM)</div>
+            </div>
+          </div>
+          <div reveal [delay]="240">
+            <div class="group h-full rounded-2xl border border-line bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-card">
+              <div class="flex items-center justify-between">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy text-gold transition group-hover:scale-105 group-hover:bg-navy-600">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" /><line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" /></svg>
+                </span>
+                <span class="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-navy/70">Configurable</span>
+              </div>
+              <h3 class="mt-4 font-display text-lg font-bold text-navy">Custom Monthly Facility</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted">Any other LGU enterprise on a monthly model — added on request as you onboard.</p>
+              <div class="mt-4 border-t border-line pt-3 text-[11px] font-medium text-muted/80">e.g. Configurable per LGU</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Use Cases ───────────────────────── -->
+    <section id="usecases" class="scroll-mt-20 bg-mist py-8 sm:py-10">
+      <div class="container-px">
+        <div reveal class="max-w-2xl">
+          <span class="eyebrow text-green">Use cases</span>
+          <h2 class="mt-2.5 font-display text-3xl font-bold leading-[1.1] sm:text-4xl text-navy">Who StallTrack helps.</h2>
+          <p class="mt-4 text-lg text-muted">Built for public market offices, LGU-managed facilities, and teams handling rental collections and operational reporting.</p>
+        </div>
+        <div reveal class="mt-10 flex flex-wrap gap-3">
+          <span class="rounded-full border border-line bg-white px-5 py-3 text-sm font-medium text-navy/80 shadow-soft transition hover:border-gold/50 hover:text-navy">Public market stall management</span>
+          <span class="rounded-full border border-line bg-white px-5 py-3 text-sm font-medium text-navy/80 shadow-soft transition hover:border-gold/50 hover:text-navy">LGU-managed facility operations</span>
+          <span class="rounded-full border border-line bg-white px-5 py-3 text-sm font-medium text-navy/80 shadow-soft transition hover:border-gold/50 hover:text-navy">Economic Enterprise Management Office workflows</span>
+          <span class="rounded-full border border-line bg-white px-5 py-3 text-sm font-medium text-navy/80 shadow-soft transition hover:border-gold/50 hover:text-navy">Rental collection monitoring</span>
+          <span class="rounded-full border border-line bg-white px-5 py-3 text-sm font-medium text-navy/80 shadow-soft transition hover:border-gold/50 hover:text-navy">Administrative reporting</span>
+          <span class="rounded-full border border-line bg-white px-5 py-3 text-sm font-medium text-navy/80 shadow-soft transition hover:border-gold/50 hover:text-navy">Internal audit and transparency</span>
+          <span class="rounded-full border border-line bg-white px-5 py-3 text-sm font-medium text-navy/80 shadow-soft transition hover:border-gold/50 hover:text-navy">Payment and delinquency tracking</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Product Showcase ───────────────────────── -->
+    <section id="preview" class="scroll-mt-20 py-8 sm:py-10">
+      <div class="container-px">
+        <div reveal class="max-w-2xl mx-auto text-center">
+          <span class="eyebrow text-green">Product showcase</span>
+          <h2 class="mt-2.5 font-display text-3xl font-bold leading-[1.1] sm:text-4xl text-navy">A closer look at StallTrack.</h2>
+          <p class="mt-4 text-lg text-muted">The web admin area, collector app, and payor portal — all using fictional sample data for illustration.</p>
+        </div>
+
+        <div class="mx-auto mt-12 max-w-5xl">
+          <figure reveal [delay]="0">
+            <div class="overflow-hidden rounded-3xl border border-line bg-white p-2.5 shadow-card transition duration-300 hover:shadow-xl sm:p-4">
+              <picture>
+                <source srcset="/showcase/admin.webp" type="image/webp" />
+                <img src="/showcase/admin.png" alt="StallTrack Web Admin Area — dashboard, facilities, reports" loading="lazy" width="1448" height="1086" class="block h-auto w-full rounded-2xl" />
+              </picture>
+            </div>
+            <figcaption class="mt-3 text-center text-sm font-semibold text-navy">
+              Web Admin Area <span class="font-normal text-muted">— facility oversight, monitoring, reporting & audit</span>
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="mx-auto mt-12 grid max-w-4xl gap-8 sm:grid-cols-2">
+          <figure reveal [delay]="80">
+            <div class="overflow-hidden rounded-3xl border border-line bg-white p-2.5 shadow-card transition duration-300 hover:shadow-xl sm:p-4">
+              <picture>
+                <source srcset="/showcase/collector.webp" type="image/webp" />
+                <img src="/showcase/collector.png" alt="StallTrack Collector Area — mobile field collection screens" loading="lazy" width="1122" height="1402" class="block h-auto w-full rounded-2xl" />
+              </picture>
+            </div>
+            <figcaption class="mt-3 text-center text-sm font-semibold text-navy">
+              Collector App <span class="font-normal text-muted">— field collection & official receipts</span>
+            </figcaption>
+          </figure>
+          <figure reveal [delay]="160">
+            <div class="overflow-hidden rounded-3xl border border-line bg-white p-2.5 shadow-card transition duration-300 hover:shadow-xl sm:p-4">
+              <picture>
+                <source srcset="/showcase/payor.webp" type="image/webp" />
+                <img src="/showcase/payor.png" alt="StallTrack Payor Portal — balances, payments, receipts" loading="lazy" width="1122" height="1402" class="block h-auto w-full rounded-2xl" />
+              </picture>
+            </div>
+            <figcaption class="mt-3 text-center text-sm font-semibold text-navy">
+              Payor Portal <span class="font-normal text-muted">— balances, GCash payments & receipts</span>
+            </figcaption>
+          </figure>
+        </div>
+
+        <p class="mt-8 text-center text-xs text-muted/80">Sample interface · no real, private, or government data is shown.</p>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Security ───────────────────────── -->
+    <section id="security" class="scroll-mt-20 bg-navy py-8 text-white sm:py-10">
+      <div class="container-px">
+        <div reveal class="max-w-2xl">
+          <span class="eyebrow">Security & privacy</span>
+          <h2 class="mt-2.5 font-display text-3xl font-bold leading-[1.1] sm:text-4xl text-white">Private by design.</h2>
+          <p class="mt-4 text-lg text-white/65">StallTrack treats operational data as private. This website is a public company page — the admin system itself is access-controlled and does not need to be public.</p>
+        </div>
+        <div class="mt-12 grid gap-5 sm:grid-cols-2">
+          <div reveal [delay]="0">
+            <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:bg-white/[0.07]">
+              <span class="grid h-10 w-10 place-items-center rounded-lg bg-gold/15 text-gold">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold">Role-based access</h3>
+              <p class="mt-2 text-sm leading-relaxed text-white/55">Head, Admin, and Collector roles with least-privilege, facility-scoped permissions.</p>
+            </div>
+          </div>
+          <div reveal [delay]="80">
+            <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:bg-white/[0.07]">
+              <span class="grid h-10 w-10 place-items-center rounded-lg bg-gold/15 text-gold">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold">Admin-only dashboard</h3>
+              <p class="mt-2 text-sm leading-relaxed text-white/55">The operational system stays private behind authentication — not publicly exposed.</p>
+            </div>
+          </div>
+          <div reveal [delay]="160">
+            <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:bg-white/[0.07]">
+              <span class="grid h-10 w-10 place-items-center rounded-lg bg-gold/15 text-gold">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold">Audit trail support</h3>
+              <p class="mt-2 text-sm leading-relaxed text-white/55">Financial transactions are recorded with actor, timestamp, and before/after values.</p>
+            </div>
+          </div>
+          <div reveal [delay]="240">
+            <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:bg-white/[0.07]">
+              <span class="grid h-10 w-10 place-items-center rounded-lg bg-gold/15 text-gold">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold">Secure records management</h3>
+              <p class="mt-2 text-sm leading-relaxed text-white/55">Operational data is handled privately and never surfaced on this public site.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Founder ───────────────────────── -->
+    <section id="founder" class="scroll-mt-20 py-8 sm:py-10">
+      <div class="container-px">
+        <div reveal>
+          <div class="rounded-3xl border border-line bg-mist p-8 sm:p-12">
+            <div class="flex flex-col items-center gap-8 text-center sm:flex-row sm:items-start sm:text-left lg:gap-10">
+              <div class="h-28 w-28 flex-shrink-0 overflow-hidden rounded-2xl">
+                <img src="/founder.png" alt="Clint Villanueva" class="h-full w-full object-cover" />
+              </div>
+              <div>
+                <span class="eyebrow text-green">Founder</span>
+                <h2 class="mt-2 font-display text-3xl font-bold text-navy">Clint Villanueva</h2>
+                <p class="mt-1 text-sm font-semibold text-muted">.NET Software Developer</p>
+                <p class="mt-4 max-w-2xl leading-relaxed text-navy/75">
+                  Clint Villanueva is a software developer building StallTrack to help modernize LGU
+                  economic enterprise, public market, and facility operations through clean, practical,
+                  and secure digital tools.
+                </p>
+                <div class="mt-5 flex flex-wrap justify-center gap-2 text-xs sm:justify-start">
+                  <span class="rounded-full border border-line bg-white px-3 py-1.5 font-medium text-navy/70">Early-stage / MVP</span>
+                  <span class="rounded-full border border-line bg-white px-3 py-1.5 font-medium text-navy/70">Bootstrapped</span>
+                  <span class="rounded-full border border-line bg-white px-3 py-1.5 font-medium text-navy/70">Solo founder</span>
+                  <span class="rounded-full border border-line bg-white px-3 py-1.5 font-medium text-navy/70">GovTech · SaaS</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Contact / CTA ───────────────────────── -->
+    <section id="contact" class="scroll-mt-20 pb-10 sm:pb-14">
+      <div class="container-px">
+        <div reveal>
+          <div class="overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-600 p-10 text-white sm:p-14">
+            <div class="grid items-center gap-8 lg:grid-cols-[1.4fr,1fr]">
+              <div>
+                <h2 class="font-display text-3xl font-bold sm:text-4xl">Let's talk about your operations.</h2>
+                <p class="mt-4 max-w-xl text-lg text-white/70">
+                  Interested in StallTrack for your office or facility? Tell us about your operations and see how we can support your team.
+                </p>
+                <div class="mt-7 flex flex-wrap gap-3">
+                  <button type="button" (click)="openFounder()" class="btn-gold">Email the Founder</button>
+                  <button type="button" (click)="openDemo()" class="btn-ghost">Explore StallTrack</button>
+                </div>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-white/[0.05] p-6">
+                <div class="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 border-b border-white/10">
+                  <span class="text-xs text-white/45 sm:text-sm">Business email</span>
+                  <span class="break-all text-sm font-semibold text-white sm:break-normal sm:text-right">founder&#64;stalltrack.site</span>
+                </div>
+                <div class="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 border-b border-white/10">
+                  <span class="text-xs text-white/45 sm:text-sm">Website</span>
+                  <span class="break-all text-sm font-semibold text-white sm:break-normal sm:text-right">stalltrack.site</span>
+                </div>
+                <div class="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 border-b border-white/10">
+                  <span class="text-xs text-white/45 sm:text-sm">Product</span>
+                  <span class="break-all text-sm font-semibold text-white sm:break-normal sm:text-right">StallTrack (GovTech SaaS)</span>
+                </div>
+                <div class="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                  <span class="text-xs text-white/45 sm:text-sm">Stage</span>
+                  <span class="break-all text-sm font-semibold text-white sm:break-normal sm:text-right">Early-stage / MVP</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <app-footer />
+
+  <button
+    (click)="scrollToTop()"
+    aria-label="Back to top"
+    class="fixed bottom-6 right-6 z-50 grid h-11 w-11 place-items-center rounded-full bg-navy text-white shadow-card transition-all duration-300 hover:bg-navy-600"
+    [class]="showBackToTop() ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'"
+  >
+    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m18 15-6-6-6 6" />
+    </svg>
+  </button>
+
+  @if (demoModalOpen()) {
+    <app-demo-request-modal (close)="closeDemo()" />
+  }
+  @if (founderModalOpen()) {
+    <app-founder-contact-modal (close)="closeFounder()" />
+  }
+</div>

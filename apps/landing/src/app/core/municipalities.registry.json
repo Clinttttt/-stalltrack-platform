@@ -1,0 +1,27 @@
+{
+  "cantilan": {
+    "name": "Cantilan",
+    "status": "Active",
+    "isActive": true
+  },
+  "carmen": {
+    "name": "Carmen",
+    "status": "Upcoming",
+    "isActive": false
+  },
+  "carrascal": {
+    "name": "Carrascal",
+    "status": "Upcoming",
+    "isActive": false
+  },
+  "lanuza": {
+    "name": "Lanuza",
+    "status": "Upcoming",
+    "isActive": false
+  },
+  "madrid": {
+    "name": "Madrid",
+    "status": "Upcoming",
+    "isActive": false
+  }
+}

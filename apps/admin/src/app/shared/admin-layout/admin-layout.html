@@ -1,0 +1,67 @@
+<div class="flex h-[100dvh] overflow-hidden bg-mist text-ink">
+  <!-- Sidebar -->
+  <aside class="hidden w-64 shrink-0 flex-col bg-navy text-white lg:flex">
+    <div class="flex items-center gap-3 border-b border-white/10 px-6 py-5">
+      <span class="grid h-9 w-9 place-items-center rounded-lg bg-gold font-display text-lg font-bold text-navy">S</span>
+      <div class="leading-tight">
+        <div class="font-display text-lg font-bold tracking-wide">StallTrack</div>
+        <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Platform Admin</div>
+      </div>
+    </div>
+
+    <nav class="flex-1 px-3 py-5">
+      <div class="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">Console</div>
+      @for (item of nav; track item.to) {
+        <a
+          [routerLink]="item.to"
+          routerLinkActive
+          #rla="routerLinkActive"
+          [routerLinkActiveOptions]="{ exact: true }"
+          [class]="'mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ' + (rla.isActive ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white')"
+        >
+          <app-icon [name]="item.icon" className="h-5 w-5 text-gold" />
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+
+    <div class="border-t border-white/10 p-3">
+      <button
+        (click)="signOut()"
+        class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/5 hover:text-white"
+      >
+        <app-icon name="logout" className="h-5 w-5 text-gold" />
+        Sign out
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="flex min-w-0 flex-1 flex-col">
+    <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-line bg-white/95 px-5 backdrop-blur sm:px-8">
+      <div class="flex items-center gap-3">
+        <span class="grid h-8 w-8 place-items-center rounded-lg bg-navy font-display text-base font-bold text-gold lg:hidden">S</span>
+        <div>
+          <div class="text-sm font-bold text-navy">LGU Assessment &amp; Onboarding</div>
+          <div class="text-[11px] text-muted">StallTrack Platform · CARCANMADCARLAN</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="hidden text-right sm:block">
+          <div class="text-sm font-semibold text-navy">{{ user?.displayName || 'Platform Operator' }}</div>
+          <div class="text-[11px] text-muted">Signed in</div>
+        </div>
+        <span class="grid h-9 w-9 place-items-center rounded-full bg-navy text-gold">
+          <app-icon name="user" className="h-4 w-4" />
+        </span>
+        <button (click)="signOut()" class="a-btn-ghost !px-3 !py-2 lg:hidden" title="Sign out">
+          <app-icon name="logout" className="h-4 w-4" />
+        </button>
+      </div>
+    </header>
+
+    <main class="flex-1 min-h-0 overflow-y-auto px-5 py-6 sm:px-8 lg:overflow-hidden">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

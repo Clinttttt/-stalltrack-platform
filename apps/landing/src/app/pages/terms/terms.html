@@ -1,0 +1,126 @@
+<div class="flex min-h-screen flex-col">
+  <app-navbar (requestDemo)="openDemo()" />
+
+  <main class="flex-1">
+    <div class="bg-mist py-10 sm:py-12">
+      <div class="container-px max-w-3xl">
+        <span class="eyebrow text-green">Legal</span>
+        <h1 class="mt-2.5 font-display text-4xl font-bold leading-tight text-navy">Terms of Service</h1>
+        <p class="mt-2 text-sm text-muted">Last updated: June 2026</p>
+
+        <div class="mt-6 rounded-2xl border border-line bg-white p-8 shadow-soft">
+          <p class="leading-relaxed text-navy/75">
+            These Terms of Service govern your use of the StallTrack public website and product.
+            By accessing the website or using the product, you agree to these terms.
+          </p>
+
+          <div class="mt-8">
+            <h2 class="font-display text-xl font-bold text-navy">1. About StallTrack</h2>
+            <div class="mt-2 space-y-3 leading-relaxed text-navy/75">
+              <p>
+                StallTrack is an independent GovTech SaaS product designed for LGU economic enterprise
+                operations, public market operations, and facility management workflows. StallTrack is
+                a privately developed product and is not an official government system or
+                government-owned platform. Any reference to LGU or office workflows describes intended
+                use cases, not an official affiliation.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-8">
+            <h2 class="font-display text-xl font-bold text-navy">2. Use of the Website</h2>
+            <div class="mt-2 space-y-3 leading-relaxed text-navy/75">
+              <p>
+                The website is provided for informational purposes about the product. Content,
+                including any sample dashboards or figures, is fictional and provided "as is" without
+                warranties of any kind.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-8">
+            <h2 class="font-display text-xl font-bold text-navy">3. Product Access</h2>
+            <div class="mt-2 space-y-3 leading-relaxed text-navy/75">
+              <p>
+                The StallTrack administrative system is access-controlled and intended for authorized
+                users of an operating organization. Access is governed by separate arrangements with
+                that organization and by role-based permissions within the platform.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-8">
+            <h2 class="font-display text-xl font-bold text-navy">4. Acceptable Use</h2>
+            <div class="mt-2 space-y-3 leading-relaxed text-navy/75">
+              <p>
+                You agree not to misuse the website or product, including attempting unauthorized
+                access, disrupting the service, or using it for unlawful purposes.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-8">
+            <h2 class="font-display text-xl font-bold text-navy">5. Intellectual Property</h2>
+            <div class="mt-2 space-y-3 leading-relaxed text-navy/75">
+              <p>
+                The StallTrack name, branding, website, and software are the property of the founder.
+                Operational data entered into a deployment remains the property of the operating
+                organization.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-8">
+            <h2 class="font-display text-xl font-bold text-navy">6. Limitation of Liability</h2>
+            <div class="mt-2 space-y-3 leading-relaxed text-navy/75">
+              <p>
+                StallTrack is an early-stage product. To the maximum extent permitted by law, we are
+                not liable for indirect or consequential damages arising from use of the website or
+                product.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-8">
+            <h2 class="font-display text-xl font-bold text-navy">7. Changes</h2>
+            <div class="mt-2 space-y-3 leading-relaxed text-navy/75">
+              <p>
+                We may update these terms as the product evolves. Continued use after changes
+                constitutes acceptance of the updated terms.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-8">
+            <h2 class="font-display text-xl font-bold text-navy">8. Contact</h2>
+            <div class="mt-2 space-y-3 leading-relaxed text-navy/75">
+              <p>
+                Questions about these terms? Contact{{ ' ' }}
+                <a href="mailto:founder&#64;stalltrack.site" class="font-semibold text-green hover:underline">
+                  founder&#64;stalltrack.site
+                </a>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <app-footer />
+
+  <button
+    (click)="scrollToTop()"
+    aria-label="Back to top"
+    class="fixed bottom-6 right-6 z-50 grid h-11 w-11 place-items-center rounded-full bg-navy text-white shadow-card transition-all duration-300 hover:bg-navy-600"
+    [class]="showBackToTop() ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'"
+  >
+    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m18 15-6-6-6 6" />
+    </svg>
+  </button>
+
+  @if (demoModalOpen()) {
+    <app-demo-request-modal (close)="closeDemo()" />
+  }
+</div>
