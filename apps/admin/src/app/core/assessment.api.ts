@@ -39,6 +39,19 @@ export interface AssessmentRequestDto {
 export type ListResult = { ok: true; requests: RequestRecord[] } | { ok: false; error: string };
 export type MutateResult = { ok: true; request: RequestRecord } | { ok: false; error: string };
 
+export interface OnboardingDraftDto {
+  id: string;
+  assessmentRequestId: string;
+  municipality: string;
+  province: string;
+  configJson: string | null;
+  isSubmittedForValidation: boolean;
+  submittedAt: string | null;
+  expiresAt: string;
+  isExpired: boolean;
+}
+export type DraftResult = { ok: true; draft: OnboardingDraftDto } | { ok: false; error: string };
+
 /** Maps a backend assessment DTO to the console's RequestRecord shape (downstream fields default empty). */
 export function toRecord(d: AssessmentRequestDto): RequestRecord {
   return {
@@ -109,6 +122,29 @@ export class AssessmentApi {
 
   async decline(id: string, decisionMessage: string): Promise<MutateResult> {
     return this.mutate(`${API_BASE_URL}/api/assessment/requests/${id}/decline`, { decisionMessage });
+  }
+
+  /** Load a submitted onboarding draft (its config) for the validation dry-run. */
+  async getDraftByRequest(assessmentRequestId: string): Promise<DraftResult> {
+    if (!this.auth.token()) return { ok: false, error: 'Your session has expired — please sign in again.' };
+    try {
+      const draft = await firstValueFrom(
+        this.http.get<OnboardingDraftDto>(`${API_BASE_URL}/api/onboarding/by-request/${assessmentRequestId}`, { headers: this.headers() }),
+      );
+      return { ok: true, draft };
+    } catch (e: unknown) {
+      return { ok: false, error: describeError(e) };
+    }
+  }
+
+  /** Approve the validation dry-run — advances the request to Activation. */
+  async approveValidation(assessmentRequestId: string): Promise<MutateResult> {
+    return this.mutate(`${API_BASE_URL}/api/onboarding/by-request/${assessmentRequestId}/approve-validation`, {});
+  }
+
+  /** Return the config for corrections — reopens the draft (Onboarding). */
+  async returnToOnboarding(assessmentRequestId: string, note: string): Promise<MutateResult> {
+    return this.mutate(`${API_BASE_URL}/api/onboarding/by-request/${assessmentRequestId}/return`, { note });
   }
 
   private async mutate(url: string, body: unknown): Promise<MutateResult> {

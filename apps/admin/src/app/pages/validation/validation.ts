@@ -1,17 +1,36 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon/icon';
-import { DemoStore } from '../../core/demo-store.service';
+import { AssessmentApi } from '../../core/assessment.api';
 import { fmtLog } from '../../core/format';
-import { Facility, Fee, RequestRecord, STATUS } from '../../core/demo';
+import { Config, Facility, Fee, RequestRecord, STATUS } from '../../core/demo';
 
 const inScope = (r: RequestRecord): boolean =>
   r.status === STATUS.APPROVED && r.stage === 'Validation' && !r.activated;
 
+/** Parse the workspace's opaque config document into the console's Config shape. */
+function parseConfig(json: string | null): Config {
+  if (!json) return { facilities: [], orSeries: '', users: [] };
+  try {
+    const c = JSON.parse(json) as {
+      facilities?: Facility[];
+      administrator?: { name?: string; email?: string };
+      branding?: { orPrefix?: string };
+    };
+    return {
+      facilities: Array.isArray(c.facilities) ? c.facilities : [],
+      orSeries: c.branding?.orPrefix ?? '',
+      users: c.administrator
+        ? [{ name: c.administrator.name ?? '', role: 'Administrator (Super Admin)', email: c.administrator.email ?? '' }]
+        : [],
+    };
+  } catch {
+    return { facilities: [], orSeries: '', users: [] };
+  }
+}
+
 /**
- * Faithful Angular port of the React apps/admin/src/pages/Validation.jsx.
- * Lists municipalities awaiting validation and renders the configuration dry-run (KPIs,
- * per-facility rate/section/add-on breakdown, branding + users) with approve/return
- * actions. The React <DryRun> subcomponent is inlined into this component's template.
+ * Validation dry-run, backed by the live API. Lists requests in the Validation stage, loads each one's
+ * submitted onboarding draft config for review, and approves (→ Activation) or returns (→ Onboarding).
  */
 @Component({
   selector: 'app-validation',
@@ -20,19 +39,25 @@ const inScope = (r: RequestRecord): boolean =>
   templateUrl: './validation.html',
 })
 export class Validation {
-  readonly store = inject(DemoStore);
+  private readonly api = inject(AssessmentApi);
   readonly fmtLog = fmtLog;
+
+  readonly requests = signal<RequestRecord[]>([]);
+  readonly loading = signal(true);
+  readonly loadError = signal('');
+  readonly actionError = signal('');
+  readonly busy = signal(false);
 
   readonly selectedId = signal<string | null>(null);
 
-  readonly scoped = computed(() => this.store.requests().filter(inScope));
+  readonly scoped = computed(() => this.requests().filter(inScope));
   readonly selected = computed<RequestRecord | null>(() => {
     const s = this.scoped();
     return s.find((r) => r.id === this.selectedId()) || s[0] || null;
   });
 
   readonly stats = computed(() => {
-    const reqs = this.store.requests();
+    const reqs = this.requests();
     const onboarding = reqs.filter((r) => r.status === STATUS.APPROVED && r.stage === 'Onboarding' && !r.activated).length;
     const activation = reqs.filter((r) => r.status === STATUS.APPROVED && r.stage === 'Activation').length;
     return [
@@ -62,6 +87,35 @@ export class Validation {
     ];
   });
 
+  constructor() {
+    void this.refresh();
+  }
+
+  async refresh(): Promise<void> {
+    this.loading.set(true);
+    this.loadError.set('');
+    const res = await this.api.list();
+    this.loading.set(false);
+    if (res.ok) {
+      this.requests.set(res.requests);
+      const first = this.scoped()[0];
+      if (first) void this.loadConfig(first.id);
+    } else {
+      this.loadError.set(res.error);
+    }
+  }
+
+  private upsert(record: RequestRecord): void {
+    this.requests.update((rs) => rs.map((x) => (x.id === record.id ? record : x)));
+  }
+
+  private async loadConfig(id: string): Promise<void> {
+    const r = this.requests().find((x) => x.id === id);
+    if (!r || r.config) return;
+    const res = await this.api.getDraftByRequest(id);
+    if (res.ok) this.upsert({ ...r, config: parseConfig(res.draft.configJson) });
+  }
+
   facUnits(f: Facility): number {
     return f.sections?.length
       ? f.sections.reduce((s, x) => s + (parseInt(x.units, 10) || 0), 0)
@@ -76,5 +130,35 @@ export class Validation {
 
   select(id: string): void {
     this.selectedId.set(id);
+    this.actionError.set('');
+    void this.loadConfig(id);
+  }
+
+  async approveValidation(r: RequestRecord): Promise<void> {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.actionError.set('');
+    const res = await this.api.approveValidation(r.id);
+    this.busy.set(false);
+    if (res.ok) {
+      this.upsert(res.request); // now stage=Activation → leaves the validation queue
+      this.selectedId.set(null);
+    } else {
+      this.actionError.set(res.error);
+    }
+  }
+
+  async returnToOnboarding(r: RequestRecord): Promise<void> {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.actionError.set('');
+    const res = await this.api.returnToOnboarding(r.id, 'Please review the noted items and resubmit for validation.');
+    this.busy.set(false);
+    if (res.ok) {
+      this.upsert(res.request); // now stage=Onboarding → leaves the validation queue
+      this.selectedId.set(null);
+    } else {
+      this.actionError.set(res.error);
+    }
   }
 }

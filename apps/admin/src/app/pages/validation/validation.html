@@ -165,13 +165,18 @@
             </div>
 
             <!-- Actions -->
-            <div class="mt-6 flex flex-wrap gap-2.5 border-t border-line pt-5">
-              <button class="a-btn-gold" (click)="store.approveValidation(r.id)">
-                <app-icon name="check" className="h-4 w-4" /> Approve validation &amp; send to Activation
-              </button>
-              <button class="a-btn-ghost" (click)="store.returnToOnboarding(r.id, 'validation feedback')">
-                Return to Onboarding
-              </button>
+            <div class="mt-6 border-t border-line pt-5">
+              @if (actionError()) {
+                <div class="mb-3 rounded-lg border border-red/40 bg-red-bg px-3 py-2 text-xs font-medium text-red">{{ actionError() }}</div>
+              }
+              <div class="flex flex-wrap gap-2.5">
+                <button class="a-btn-gold" (click)="approveValidation(r)" [disabled]="busy()">
+                  <app-icon name="check" className="h-4 w-4" /> {{ busy() ? 'Working…' : 'Approve validation & send to Activation' }}
+                </button>
+                <button class="a-btn-ghost" (click)="returnToOnboarding(r)" [disabled]="busy()">
+                  Return to Onboarding
+                </button>
+              </div>
             </div>
           }
         </div>
