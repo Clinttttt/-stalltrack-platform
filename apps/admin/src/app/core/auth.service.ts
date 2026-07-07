@@ -72,7 +72,7 @@ export class AuthService {
       return { ok: true };
     } catch (e: unknown) {
       const status = (e as { status?: number })?.status;
-      if (status === 401) return { ok: false, error: 'Invalid administrator credentials.' };
+      if (status === 401 || status === 404) return { ok: false, error: 'Invalid administrator credentials.' };
       if (status === 429) return { ok: false, error: 'Too many attempts. Please wait a minute and try again.' };
       if (status === 0) return { ok: false, error: 'Cannot reach the server. Please check your connection.' };
       return { ok: false, error: 'Unable to sign in. Please try again.' };
