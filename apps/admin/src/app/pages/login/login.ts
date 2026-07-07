@@ -37,12 +37,16 @@ export class Login {
   submit(): void {
     this.error.set('');
     this.busy.set(true);
-    // Mock latency so the demo feels like a real sign-in.
-    setTimeout(() => {
-      const res = this.auth.login(this.username, this.password);
-      this.busy.set(false);
-      if (res.ok) this.router.navigateByUrl(this.from, { replaceUrl: true });
-      else this.error.set(res.error || 'Unable to sign in.');
-    }, 450);
+    this.auth
+      .login(this.username, this.password)
+      .then((res) => {
+        this.busy.set(false);
+        if (res.ok) this.router.navigateByUrl(this.from, { replaceUrl: true });
+        else this.error.set(res.error || 'Unable to sign in.');
+      })
+      .catch(() => {
+        this.busy.set(false);
+        this.error.set('Unable to sign in. Please try again.');
+      });
   }
 }

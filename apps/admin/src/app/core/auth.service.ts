@@ -1,28 +1,24 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { API_BASE_URL } from './api.config';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DEMO authentication for the StallTrack admin console.
+// Real platform-operator authentication for the StallTrack admin console.
 //
-// IMPORTANT: this is a client-side MOCK for the demo only. A public SPA cannot be a
-// real security boundary — the actual protection must be enforced by the StallTrack
-// API, which validates the platform-operator token on every request. When the API is
-// wired, replace login()/isAuthenticated() with a real token exchange + refresh flow.
-//
-// Faithful Angular port of the React apps/admin/src/lib/auth.js.
+// Sign-in exchanges credentials at POST /api/adminauth/login for a JWT access token,
+// stored client-side and sent as a Bearer on activation calls. The actual authorization
+// (platform operator = SuperAdmin of the default LGU) is ENFORCED SERVER-SIDE on every
+// activation request — the SPA is not a security boundary; storing the token only lets
+// the console call the API on the operator's behalf.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SESSION_KEY = 'st_admin_session';
 
-// Demo-only credentials. Do NOT ship real credentials in client code.
-const DEMO = {
-  username: 'admin',
-  password: 'stalltrack2026',
-  displayName: 'Platform Operator',
-};
-
 export interface AdminSession {
   username: string;
   displayName: string;
+  token: string;
   at: number;
 }
 
@@ -31,22 +27,56 @@ export interface LoginResult {
   error?: string;
 }
 
+interface TokenResponse {
+  accessToken?: string;
+  refreshToken?: string;
+}
+
+/** Best-effort read of a JWT claim (no verification — display only). */
+function jwtClaim(token: string, claim: string): string | undefined {
+  try {
+    const payload = token.split('.')[1];
+    const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    return json?.[claim];
+  } catch {
+    return undefined;
+  }
+}
+
+const NAME_CLAIM = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  login(username: string, password: string): LoginResult {
-    const u = (username || '').trim().toLowerCase();
-    if (u === DEMO.username && password === DEMO.password) {
+  private readonly http = inject(HttpClient);
+
+  async login(username: string, password: string): Promise<LoginResult> {
+    const u = (username || '').trim();
+    if (!u || !password) return { ok: false, error: 'Enter your username and password.' };
+    try {
+      const res = await firstValueFrom(
+        this.http.post<TokenResponse>(`${API_BASE_URL}/api/adminauth/login`, { username: u, password }),
+      );
+      const token = res?.accessToken;
+      if (!token) return { ok: false, error: 'Sign in failed. Please try again.' };
+      const session: AdminSession = {
+        username: u,
+        displayName: jwtClaim(token, NAME_CLAIM) || u,
+        token,
+        at: Date.now(),
+      };
       try {
-        localStorage.setItem(
-          SESSION_KEY,
-          JSON.stringify({ username: DEMO.username, displayName: DEMO.displayName, at: Date.now() }),
-        );
+        localStorage.setItem(SESSION_KEY, JSON.stringify(session));
       } catch {
         /* storage unavailable */
       }
       return { ok: true };
+    } catch (e: unknown) {
+      const status = (e as { status?: number })?.status;
+      if (status === 401) return { ok: false, error: 'Invalid administrator credentials.' };
+      if (status === 429) return { ok: false, error: 'Too many attempts. Please wait a minute and try again.' };
+      if (status === 0) return { ok: false, error: 'Cannot reach the server. Please check your connection.' };
+      return { ok: false, error: 'Unable to sign in. Please try again.' };
     }
-    return { ok: false, error: 'Invalid administrator credentials.' };
   }
 
   logout(): void {
@@ -65,7 +95,12 @@ export class AuthService {
     }
   }
 
+  /** The stored JWT access token, or null. */
+  token(): string | null {
+    return this.currentUser()?.token ?? null;
+  }
+
   isAuthenticated(): boolean {
-    return this.currentUser() !== null;
+    return !!this.currentUser()?.token;
   }
 }

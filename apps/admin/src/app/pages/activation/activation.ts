@@ -2,13 +2,10 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon/icon';
 import { DemoStore } from '../../core/demo-store.service';
 import { Facility, RequestRecord, STATUS } from '../../core/demo';
+import { ActivationApi } from '../../core/activation.api';
+import { mapRequestToCommand } from '../../core/activation.mapper';
 
 const inScope = (r: RequestRecord): boolean => r.status === STATUS.APPROVED && r.stage === 'Activation';
-
-function makeHeadLink(m: string): string {
-  const token = Math.random().toString(16).slice(2, 10);
-  return `https://${m.toLowerCase()}.stalltrack.site/activate/${token}`;
-}
 
 function activationTemplate(m: string): string {
   return (
@@ -33,6 +30,7 @@ function activationTemplate(m: string): string {
 })
 export class Activation {
   readonly store = inject(DemoStore);
+  private readonly activationApi = inject(ActivationApi);
 
   readonly selectedId = signal<string | null>(null);
 
@@ -41,6 +39,10 @@ export class Activation {
   readonly composing = signal(false);
   readonly draft = signal('');
   readonly link = signal('');
+  // Live-activation state.
+  readonly activating = signal(false);
+  readonly activateError = signal('');
+  readonly warnings = signal<string[]>([]);
 
   readonly scoped = computed(() => this.store.requests().filter(inScope));
   readonly selected = computed<RequestRecord | null>(() => {
@@ -95,18 +97,45 @@ export class Activation {
   beginActivate(): void {
     const r = this.selected();
     if (!r) return;
-    this.link.set(makeHeadLink(r.municipality));
+    this.activateError.set('');
+    // Compute the mapping now so the operator sees any warnings before committing.
+    // The real activation link only exists after the API returns its one-time token.
+    const { warnings } = mapRequestToCommand(r);
+    this.warnings.set(warnings);
+    this.link.set('');
     this.draft.set(activationTemplate(r.municipality));
     this.composing.set(true);
   }
-  confirmActivate(): void {
+
+  async confirmActivate(): Promise<void> {
     const r = this.selected();
-    if (!r || !this.draft().trim()) return;
-    this.store.activate(r.id, this.link(), this.draft());
-    this.composing.set(false);
+    if (!r || !this.draft().trim() || this.activating()) return;
+    if (!r.config?.facilities?.length) {
+      this.activateError.set('This municipality has no configured facilities to activate.');
+      return;
+    }
+    this.activating.set(true);
+    this.activateError.set('');
+    try {
+      const { command } = mapRequestToCommand(r);
+      const res = await this.activationApi.activate(command);
+      if (!res.ok) {
+        this.activateError.set(res.error);
+        return;
+      }
+      // Build the Head's set-password link from the one-time token returned by the API.
+      const headLink = `https://console.stalltrack.site/activate/${res.result.activationToken}`;
+      this.link.set(headLink);
+      this.store.activate(r.id, headLink, this.draft());
+      this.composing.set(false);
+    } finally {
+      this.activating.set(false);
+    }
   }
+
   cancelComposing(): void {
     this.composing.set(false);
+    this.activateError.set('');
   }
 
   async copyLink(): Promise<void> {
