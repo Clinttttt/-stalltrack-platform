@@ -13,7 +13,7 @@
     <!-- Header -->
     <div class="flex shrink-0 items-start justify-between gap-5 border-b border-line px-6 py-5 sm:px-8">
       <div>
-        <span class="eyebrow">LGU Assessment Request</span>
+        <span class="eyebrow">LGU Assessment Request</span>spaces
         <h2 id="assessment-title" class="mt-2 font-display text-2xl font-bold text-navy sm:text-3xl">
           {{ heading() }}
         </h2>
@@ -32,21 +32,9 @@
     </div>
 
     <form
-      action="https://formsubmit.co/founder@stalltrack.site"
-      method="POST"
       (submit)="handleSubmit($event)"
       class="min-h-0 overflow-y-auto px-6 pb-6 pt-5 sm:px-8 sm:pb-8 sm:pt-6"
     >
-      <!-- FormSubmit configuration -->
-      <input type="hidden" name="_subject" [value]="subject()" />
-      <input type="hidden" name="_template" value="table" />
-      <input type="hidden" name="_next" [value]="confirmationUrl()" />
-      <input type="text" name="_honey" class="hidden" tabindex="-1" autocomplete="off" />
-      <input type="hidden" name="Municipality" [value]="municipalityName()" />
-      <input type="hidden" name="Province" value="Surigao del Sur" />
-      <input type="hidden" name="Facilities managed" [value]="facilitiesManaged()" />
-      <input type="hidden" name="Requesting office" [value]="resolvedOffice()" />
-
       <!-- Requesting office & focal person -->
       <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-gold">Requesting office &amp; focal person</p>
       <div class="mt-3 grid gap-5 sm:grid-cols-2">
@@ -122,6 +110,9 @@
           </button>
         }
       </div>
+      @if (errors()['facilities']) {
+        <p class="mt-2 text-xs font-medium text-red-600">{{ errors()['facilities'] }}</p>
+      }
 
       <!-- Scale -->
       <p class="mt-7 text-[11px] font-bold uppercase tracking-[0.16em] text-gold">Approximate scale</p>
@@ -211,11 +202,14 @@
       </div>
 
       <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-        <button type="button" (click)="close.emit()" class="inline-flex items-center justify-center gap-2 rounded-xl border border-line px-5 py-3 text-sm font-semibold text-navy/80 transition hover:bg-mist">
+        @if (submitError()) {
+          <p class="text-sm font-medium text-red-600 sm:mr-auto">{{ submitError() }}</p>
+        }
+        <button type="button" (click)="close.emit()" [disabled]="submitting()" class="inline-flex items-center justify-center gap-2 rounded-xl border border-line px-5 py-3 text-sm font-semibold text-navy/80 transition hover:bg-mist disabled:opacity-60">
           Cancel
         </button>
-        <button type="submit" class="btn-navy">
-          Submit Assessment Request
+        <button type="submit" [disabled]="submitting()" class="btn-navy disabled:opacity-70">
+          {{ submitting() ? 'Submitting…' : 'Submit Assessment Request' }}
         </button>
       </div>
     </form>

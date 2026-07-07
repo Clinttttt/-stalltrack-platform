@@ -8,7 +8,9 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { Municipality } from '../../core/municipality.model';
+import { AssessmentService } from '../../core/assessment.service';
 import { AssessmentSelect } from './assessment-select';
 
 /**
@@ -30,6 +32,8 @@ import { AssessmentSelect } from './assessment-select';
 })
 export class RequestAssessmentModal {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly assessments = inject(AssessmentService);
+  private readonly router = inject(Router);
 
   readonly municipality = input<Municipality | null>(null);
   /** Mirrors the React `onClose` prop. */
@@ -74,6 +78,8 @@ export class RequestAssessmentModal {
   readonly authStatus = signal('');
   readonly selectedFacilities = signal<string[]>([]);
   readonly errors = signal<Record<string, string | undefined>>({});
+  readonly submitting = signal(false);
+  readonly submitError = signal('');
 
   readonly municipalityName = computed(() => this.municipality()?.name ?? '');
   readonly resolvedOffice = computed(() =>
@@ -127,17 +133,62 @@ export class RequestAssessmentModal {
   }
 
   // The polished selects aren't native inputs, so validate the required ones on submit.
-  // Native required inputs are validated by the browser before this runs.
-  handleSubmit(event: Event): void {
+  // Native required inputs (focal person, email, contact, consent checkboxes) are validated by the
+  // browser first, so when this handler runs those are already present/valid.
+  async handleSubmit(event: Event): Promise<void> {
+    event.preventDefault();
+
     const nextErrors: Record<string, string | undefined> = {};
     if (!this.office()) nextErrors['office'] = 'Please select the responsible office.';
     if (this.office() === 'Other' && !this.otherOffice().trim())
       nextErrors['otherOffice'] = 'Please specify the office name.';
     if (!this.authStatus()) nextErrors['authStatus'] = 'Please select the current authorization status.';
+    if (this.selectedFacilities().length === 0)
+      nextErrors['facilities'] = 'Please select at least one facility.';
 
     if (Object.keys(nextErrors).length > 0) {
-      event.preventDefault();
       this.errors.set(nextErrors);
+      return;
+    }
+
+    if (this.submitting()) return;
+    this.submitError.set('');
+    this.submitting.set(true);
+
+    const form = event.target as HTMLFormElement;
+    const fd = new FormData(form);
+    const value = (name: string) => ((fd.get(name) as string) ?? '').trim();
+
+    // Fold the extra scale inputs into notes so nothing is lost (backend has no dedicated columns).
+    const extras: string[] = [];
+    if (value('Facilities to onboard')) extras.push(`Facilities to onboard: ${value('Facilities to onboard')}`);
+    if (value('Collectors')) extras.push(`Field collectors: ${value('Collectors')}`);
+    const noteParts = [value('Notes'), ...extras].filter((s) => s.length > 0);
+
+    const result = await this.assessments.submit({
+      municipality: this.municipalityName().trim(),
+      province: 'Surigao del Sur',
+      requestingOffice: this.resolvedOffice(),
+      focalPerson: value('Focal person'),
+      position: value('Position'),
+      officialEmail: value('Official email'),
+      contactNumber: value('Contact number'),
+      facilitiesManaged: this.facilitiesManaged(),
+      approxVendors: this.vendorScaleValue() || null,
+      authorizationStatus: this.authStatus() || null,
+      acknowledged: fd.get('Authorization acknowledgement') === 'Confirmed',
+      notes: noteParts.length ? noteParts.join(' · ') : null,
+    });
+
+    this.submitting.set(false);
+
+    if (result.ok) {
+      this.close.emit();
+      this.router.navigateByUrl(
+        `/assessment-received?lgu=${encodeURIComponent(this.municipalityName())}`,
+      );
+    } else {
+      this.submitError.set(result.error);
     }
   }
 }
