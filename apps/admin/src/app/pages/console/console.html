@@ -27,7 +27,9 @@
 
       <div class="a-scroll max-h-[22rem] overflow-y-auto lg:max-h-none lg:flex-1">
         @if (filtered().length === 0) {
-          <div class="px-4 py-10 text-center text-sm text-muted">No requests in this view.</div>
+          <div class="px-4 py-10 text-center text-sm text-muted">
+            {{ loadError() || (loading() ? 'Loading requests…' : 'No requests in this view.') }}
+          </div>
         } @else {
           @for (r of filtered(); track r.id) {
             <button
@@ -109,16 +111,19 @@
                   }
                 </div>
                 <div class="flex flex-wrap gap-2 border-t border-line bg-mist/50 px-5 py-3.5">
+                  @if (actionError()) {
+                    <div class="w-full rounded-lg border border-red/40 bg-red-bg px-3 py-2 text-xs font-medium text-red">{{ actionError() }}</div>
+                  }
                   @if (compose().mode === 'approve') {
-                    <button class="a-btn-navy" (click)="confirmApprove()" [disabled]="!compose().draft.trim()">
-                      <app-icon name="check" className="h-4 w-4" /> Send approval &amp; open onboarding room
+                    <button class="a-btn-navy" (click)="confirmApprove()" [disabled]="!compose().draft.trim() || busy()">
+                      <app-icon name="check" className="h-4 w-4" /> {{ busy() ? 'Sending…' : 'Send approval & open onboarding room' }}
                     </button>
                   } @else {
-                    <button class="a-btn-danger" (click)="confirmDecline()" [disabled]="!compose().draft.trim()">
-                      <app-icon name="x" className="h-4 w-4" /> Send decline
+                    <button class="a-btn-danger" (click)="confirmDecline()" [disabled]="!compose().draft.trim() || busy()">
+                      <app-icon name="x" className="h-4 w-4" /> {{ busy() ? 'Sending…' : 'Send decline' }}
                     </button>
                   }
-                  <button class="a-btn-ghost" (click)="cancelCompose()">Cancel</button>
+                  <button class="a-btn-ghost" (click)="cancelCompose()" [disabled]="busy()">Cancel</button>
                 </div>
               </div>
             } @else {
@@ -138,7 +143,6 @@
             <div class="mt-5 rounded-xl border border-[#e6c4c4] bg-red-bg p-4">
               <div class="text-[11px] font-bold uppercase tracking-[0.1em] text-red/80">Decline notice sent</div>
               <p class="mt-2 whitespace-pre-line text-sm text-navy">{{ r.decisionMessage }}</p>
-              <button class="a-btn-ghost mt-3" (click)="store.reopen(r.id)">Reopen for review</button>
             </div>
           }
 
@@ -229,7 +233,7 @@
 
               <!-- Advance -->
               <div class="mt-4 flex flex-wrap gap-2.5">
-                <button class="a-btn-navy" (click)="store.sendToValidation(r.id)" [disabled]="!r.lguSubmittedForValidation">
+                <button class="a-btn-navy" (click)="sendToValidation(r)" [disabled]="!r.lguSubmittedForValidation">
                   Advance to Validation stage <app-icon name="chevronRight" className="h-4 w-4" />
                 </button>
               </div>

@@ -1,11 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon/icon';
-import { DemoStore } from '../../core/demo-store.service';
+import { AssessmentApi } from '../../core/assessment.api';
 import { fmtLog } from '../../core/format';
 import {
   CHAT_TEMPLATES,
   RequestRecord,
-  RequestStatus,
   STAGES,
   STATUS,
   approvalTemplate,
@@ -43,10 +42,11 @@ interface Compose {
 }
 
 /**
- * Faithful Angular port of the React apps/admin/src/pages/Console.jsx.
- * Handles the Assessment + Onboarding stages: request list (tabbed) + detail panel with
- * approve/decline correspondence composer and the private onboarding room. The React
- * <Detail> subcomponent is inlined into this component's template.
+ * Assessment + Onboarding review, backed by the live API (GET/approve/decline
+ * /api/assessment/requests). Downstream stages (validation/activation) and the rich
+ * onboarding config/chat are not backed yet, so a real approved request advances to the
+ * Onboarding stage but its config is entered later; the LGU-response timeline/messages
+ * render in their "awaiting" state until those staging endpoints land.
  */
 @Component({
   selector: 'app-console',
@@ -55,7 +55,7 @@ interface Compose {
   templateUrl: './console.html',
 })
 export class Console {
-  readonly store = inject(DemoStore);
+  private readonly api = inject(AssessmentApi);
 
   // Expose helpers/constants to the template.
   readonly TABS = TABS;
@@ -67,18 +67,24 @@ export class Console {
   readonly statusLabel = statusLabel;
   readonly fmtLog = fmtLog;
 
+  readonly requests = signal<RequestRecord[]>([]);
+  readonly loading = signal(true);
+  readonly loadError = signal('');
+  readonly actionError = signal('');
+
   readonly selectedId = signal<string | null>(null);
   readonly tab = signal<string>('Pending');
   readonly compose = signal<Compose>({ mode: null, draft: '', link: '' });
   readonly chatDraft = signal('');
   readonly copied = signal(false);
+  readonly busy = signal(false);
 
-  readonly scoped = computed(() => this.store.requests().filter(inScope));
+  readonly scoped = computed(() => this.requests().filter(inScope));
   readonly filtered = computed(() => this.scoped().filter(TAB_FILTER[this.tab()]));
   readonly selected = computed(() => this.scoped().find((r) => r.id === this.selectedId()) || null);
 
   readonly stats = computed(() => [
-    { label: 'Total requests', value: this.store.requests().length },
+    { label: 'Total requests', value: this.requests().length },
     { label: 'Pending review', value: this.count('Pending') },
     { label: 'Onboarding', value: this.count('Onboarding') },
     { label: 'Declined', value: this.count('Declined') },
@@ -108,6 +114,23 @@ export class Console {
     return r ? STAGES.indexOf(r.stage as (typeof STAGES)[number]) : -1;
   });
 
+  constructor() {
+    void this.refresh();
+  }
+
+  async refresh(): Promise<void> {
+    this.loading.set(true);
+    this.loadError.set('');
+    const result = await this.api.list();
+    this.loading.set(false);
+    if (result.ok) this.requests.set(result.requests);
+    else this.loadError.set(result.error);
+  }
+
+  private upsert(record: RequestRecord): void {
+    this.requests.update((rs) => rs.map((r) => (r.id === record.id ? record : r)));
+  }
+
   count(t: string): number {
     return this.scoped().filter(TAB_FILTER[t]).length;
   }
@@ -121,16 +144,19 @@ export class Console {
     this.compose.set({ mode: null, draft: '', link: '' });
     this.chatDraft.set('');
     this.copied.set(false);
+    this.actionError.set('');
   }
 
   beginApprove(): void {
     const s = this.selected();
     if (!s) return;
+    this.actionError.set('');
     this.compose.set({ mode: 'approve', draft: approvalTemplate(s.municipality), link: makeLink(s.municipality) });
   }
   beginDecline(): void {
     const s = this.selected();
     if (!s) return;
+    this.actionError.set('');
     this.compose.set({ mode: 'decline', draft: declineTemplate(s.municipality), link: '' });
   }
   cancelCompose(): void {
@@ -140,21 +166,44 @@ export class Console {
     this.compose.update((c) => ({ ...c, draft: value }));
   }
 
-  confirmApprove(): void {
+  async confirmApprove(): Promise<void> {
     const s = this.selected();
     const c = this.compose();
-    if (!s || !c.draft.trim()) return;
-    this.store.approve(s.id, c.draft, c.link, s.officialEmail);
+    if (!s || !c.draft.trim() || this.busy()) return;
+    this.busy.set(true);
+    this.actionError.set('');
+    const result = await this.api.approve(s.id, c.link, c.draft);
+    this.busy.set(false);
+    if (!result.ok) {
+      this.actionError.set(result.error);
+      return;
+    }
+    this.upsert(result.request);
     this.cancelCompose();
     this.setTab('Onboarding');
   }
-  confirmDecline(): void {
+
+  async confirmDecline(): Promise<void> {
     const s = this.selected();
     const c = this.compose();
-    if (!s || !c.draft.trim()) return;
-    this.store.decline(s.id, c.draft);
+    if (!s || !c.draft.trim() || this.busy()) return;
+    this.busy.set(true);
+    this.actionError.set('');
+    const result = await this.api.decline(s.id, c.draft);
+    this.busy.set(false);
+    if (!result.ok) {
+      this.actionError.set(result.error);
+      return;
+    }
+    this.upsert(result.request);
     this.cancelCompose();
     this.setTab('Declined');
+  }
+
+  // Onboarding → Validation requires the onboarding-staging backend (future stage). The button is
+  // disabled for backend-backed requests (no lguSubmittedForValidation), so this is a safe stub.
+  sendToValidation(_r: RequestRecord): void {
+    /* future stage */
   }
 
   async copyLink(r: RequestRecord): Promise<void> {
@@ -171,10 +220,12 @@ export class Console {
     this.chatDraft.set(text);
   }
 
+  // Messaging is not persisted yet (no backend) — kept as an in-session note on the local record.
   sendChat(r: RequestRecord): void {
     const draft = this.chatDraft();
     if (!draft.trim()) return;
-    this.store.addMessage(r.id, draft.trim());
+    const updated: RequestRecord = { ...r, log: [...r.log, { at: new Date().toISOString(), text: draft.trim() }] };
+    this.upsert(updated);
     this.chatDraft.set('');
   }
 }
