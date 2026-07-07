@@ -9,7 +9,6 @@ import {
   STATUS,
   approvalTemplate,
   declineTemplate,
-  makeLink,
   statusLabel,
   statusTone,
 } from '../../core/demo';
@@ -151,7 +150,7 @@ export class Console {
     const s = this.selected();
     if (!s) return;
     this.actionError.set('');
-    this.compose.set({ mode: 'approve', draft: approvalTemplate(s.municipality), link: makeLink(s.municipality) });
+    this.compose.set({ mode: 'approve', draft: approvalTemplate(s.municipality), link: '' });
   }
   beginDecline(): void {
     const s = this.selected();
@@ -172,7 +171,7 @@ export class Console {
     if (!s || !c.draft.trim() || this.busy()) return;
     this.busy.set(true);
     this.actionError.set('');
-    const result = await this.api.approve(s.id, c.link, c.draft);
+    const result = await this.api.approve(s.id, c.draft);
     this.busy.set(false);
     if (!result.ok) {
       this.actionError.set(result.error);

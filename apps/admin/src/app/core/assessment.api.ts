@@ -103,8 +103,8 @@ export class AssessmentApi {
     }
   }
 
-  async approve(id: string, onboardingLink: string, decisionMessage: string): Promise<MutateResult> {
-    return this.mutate(`${API_BASE_URL}/api/assessment/requests/${id}/approve`, { onboardingLink, decisionMessage });
+  async approve(id: string, decisionMessage: string): Promise<MutateResult> {
+    return this.mutate(`${API_BASE_URL}/api/assessment/requests/${id}/approve`, { decisionMessage });
   }
 
   async decline(id: string, decisionMessage: string): Promise<MutateResult> {
