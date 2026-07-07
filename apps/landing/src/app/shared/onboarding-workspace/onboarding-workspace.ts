@@ -1,4 +1,4 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { PolishedSelect } from '../polished-select/polished-select';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -121,6 +121,16 @@ function facilityFrom(c: CatalogItem): Facility {
 })
 export class OnboardingWorkspace {
   readonly municipalityName = input('');
+  /** Initial config document to hydrate the workspace (from the saved draft). */
+  readonly configJson = input<string | null>(null);
+  /** Disables actions while the parent is saving/submitting. */
+  readonly busy = input(false);
+  /** Whether the draft is already submitted for validation (shows the submitted view). */
+  readonly submitted = input(false);
+  readonly saveDraft = output<string>();
+  readonly submitDraft = output<string>();
+  readonly edit = output<void>();
+  private hydrated = false;
 
   // Design-system class strings (mirror the React module constants).
   readonly INPUT =
@@ -165,7 +175,17 @@ export class OnboardingWorkspace {
   readonly admin = signal({ name: '', position: '', email: '' });
   readonly branding = signal({ officeName: '', orPrefix: '', orStart: '', logoName: '' });
   readonly logoPreview = signal('');
-  readonly submitted = signal(false);
+
+  constructor() {
+    // Hydrate the editor from the saved draft config once it arrives from the parent.
+    effect(() => {
+      const json = this.configJson();
+      if (json && !this.hydrated) {
+        this.hydrate(json);
+        this.hydrated = true;
+      }
+    });
+  }
 
   // ── completion logic (mirrors React) ──────────────────────────────────────
   readonly doneFacilities = computed(() => this.facilities().filter((f) => this.isFacilityDone(f)).length);
@@ -304,10 +324,43 @@ export class OnboardingWorkspace {
   }
 
   submit(): void {
-    if (this.allDone()) this.submitted.set(true);
+    if (this.allDone()) this.submitDraft.emit(this.serialize());
   }
   editSubmission(): void {
-    this.submitted.set(false);
+    this.edit.emit();
+  }
+  saveProgress(): void {
+    this.saveDraft.emit(this.serialize());
+  }
+
+  private serialize(): string {
+    return JSON.stringify({ facilities: this.facilities(), administrator: this.admin(), branding: this.branding() });
+  }
+
+  private hydrate(json: string): void {
+    try {
+      const cfg = JSON.parse(json) as {
+        facilities?: Facility[];
+        administrator?: { name?: string; position?: string; email?: string };
+        branding?: { officeName?: string; orPrefix?: string; orStart?: string; logoName?: string };
+      };
+      if (Array.isArray(cfg.facilities)) this.facilities.set(cfg.facilities);
+      if (cfg.administrator)
+        this.admin.set({
+          name: cfg.administrator.name ?? '',
+          position: cfg.administrator.position ?? '',
+          email: cfg.administrator.email ?? '',
+        });
+      if (cfg.branding)
+        this.branding.set({
+          officeName: cfg.branding.officeName ?? '',
+          orPrefix: cfg.branding.orPrefix ?? '',
+          orStart: cfg.branding.orStart ?? '',
+          logoName: cfg.branding.logoName ?? '',
+        });
+    } catch {
+      /* keep defaults on malformed config */
+    }
   }
 
   catalogIcon(type: string): 'coins' | 'grid' | 'building' {

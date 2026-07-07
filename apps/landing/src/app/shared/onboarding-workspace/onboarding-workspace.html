@@ -467,8 +467,11 @@
             {{ allDone() ? 'All sections are ready. Submitting sends your configuration to the coordinator for the validation dry-run.' : 'Complete all ' + sectionFlags().length + ' sections to submit (' + doneCount() + '/' + sectionFlags().length + ' ready).' }}
           </p>
         </div>
-        <div class="lg:justify-self-end">
-          <button type="button" (click)="submit()" [disabled]="!allDone()" class="btn-gold w-full" [class.cursor-not-allowed]="!allDone()" [class.opacity-50]="!allDone()">
+        <div class="lg:justify-self-end space-y-2">
+          <button type="button" (click)="saveProgress()" [disabled]="busy()" class="btn-ghost w-full disabled:opacity-50">
+            {{ busy() ? 'Saving…' : 'Save progress' }}
+          </button>
+          <button type="button" (click)="submit()" [disabled]="!allDone() || busy()" class="btn-gold w-full" [class.cursor-not-allowed]="!allDone() || busy()" [class.opacity-50]="!allDone() || busy()">
             <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> Submit for validation
           </button>
         </div>

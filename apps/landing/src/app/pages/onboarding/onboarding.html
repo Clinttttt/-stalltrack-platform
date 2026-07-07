@@ -1,4 +1,9 @@
-@if (municipality(); as m) {
+@if (loading()) {
+  <div class="flex min-h-[100dvh] flex-col items-center justify-center bg-[#eef3f8] px-5 text-center text-navy">
+    <img src="/carcanmadcarlan/logo/stalltrack-logo-lockup-transparent.png" alt="StallTrack" class="h-11 w-auto max-w-[18rem] object-contain" />
+    <p class="mt-6 text-muted">Loading your onboarding workspace…</p>
+  </div>
+} @else if (presentation(); as m) {
   <div class="flex min-h-[100dvh] flex-col bg-[#eef3f8] text-navy">
     <!-- Header -->
     <header class="sticky top-0 z-40 h-[4.25rem] border-b border-gold/60 bg-white/95 backdrop-blur">
@@ -54,7 +59,9 @@
     <section class="border-b border-line bg-white py-10">
       <div class="mx-auto w-full max-w-6xl px-5 sm:px-8">
         <span class="eyebrow">Rollout progress</span>
-        <h2 class="mt-2 font-display text-2xl font-bold text-navy sm:text-3xl">You are now in the Onboarding stage.</h2>
+        <h2 class="mt-2 font-display text-2xl font-bold text-navy sm:text-3xl">
+          {{ submitted() ? 'Submitted — awaiting validation.' : 'You are now in the Onboarding stage.' }}
+        </h2>
         <ol class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           @for (s of stages; track s; let i = $index) {
             <li [class]="'relative rounded-2xl border p-5 ' + (stageCurrent(i) ? 'border-gold bg-white shadow-card ring-1 ring-gold/60' : stageDone(i) ? 'border-gold/40 bg-white shadow-soft' : 'border-line bg-mist shadow-soft')">
@@ -90,11 +97,27 @@
           <span class="eyebrow">Onboarding workspace</span>
           <h2 class="mt-2 font-display text-2xl font-bold text-navy sm:text-3xl">Configure {{ m.name }}.</h2>
           <p class="mt-2 max-w-2xl text-muted">
-            Enter your facilities, rates, users, and branding. Your coordinator reviews everything in the validation dry-run
-            before activation.
+            Enter your facilities, rates, users, and branding. Save your progress any time — your coordinator reviews everything
+            in the validation dry-run before activation.
           </p>
         </div>
-        <app-onboarding-workspace [municipalityName]="m.name" />
+
+        @if (actionError()) {
+          <div class="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{{ actionError() }}</div>
+        }
+        @if (saveNote()) {
+          <div class="mb-4 rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-sm font-medium text-green-700">{{ saveNote() }}</div>
+        }
+
+        <app-onboarding-workspace
+          [municipalityName]="m.name"
+          [configJson]="draft()?.configJson ?? null"
+          [busy]="busy()"
+          [submitted]="submitted()"
+          (saveDraft)="onSaveDraft($event)"
+          (submitDraft)="onSubmitDraft($event)"
+          (edit)="onEdit()"
+        />
       </div>
     </section>
 
@@ -118,7 +141,7 @@
       <span class="eyebrow">Onboarding</span>
       <h1 class="mt-3 font-display text-4xl font-bold sm:text-5xl">This onboarding link is invalid or has expired.</h1>
       <p class="mt-4 max-w-md text-muted">
-        Please use the most recent secure link sent to your official email, or contact your onboarding coordinator for a new one.
+        {{ loadError() || 'Please use the most recent secure link sent to your official email, or contact your onboarding coordinator for a new one.' }}
       </p>
       <a routerLink="/select-municipality" class="btn-navy mt-8">
         <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
