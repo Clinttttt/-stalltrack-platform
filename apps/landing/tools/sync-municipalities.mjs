@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 const API_URL =
   process.env.REGISTRY_API_URL ||
-  'https://stalltrack-api-clint-2026-g9awcrbed5fdakh8.southeastasia-01.azurewebsites.net/api/municipalities';
+  'https://api.stalltrack.site/api/municipalities';
 
 const OUT_PATH = join(
   dirname(fileURLToPath(import.meta.url)),
