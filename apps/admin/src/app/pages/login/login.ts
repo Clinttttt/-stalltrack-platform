@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { Icon } from '../../shared/icon/icon';
 import { AuthService } from '../../core/auth.service';
+import { PlatformSetupService } from '../../core/platform-setup.service';
 
 /**
  * Faithful Angular port of the React apps/admin/src/pages/Login.jsx.
@@ -21,6 +22,7 @@ export class Login {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly title = inject(Title);
+  private readonly setup = inject(PlatformSetupService);
 
   private readonly from = this.route.snapshot.queryParamMap.get('from') || '/';
 
@@ -31,7 +33,14 @@ export class Login {
 
   constructor() {
     this.title.setTitle('Sign in — StallTrack Admin');
-    if (this.auth.isAuthenticated()) this.router.navigate(['/'], { replaceUrl: true });
+    if (this.auth.isAuthenticated()) {
+      this.router.navigate(['/'], { replaceUrl: true });
+      return;
+    }
+    // First-run: if no platform operator exists yet, route to the setup screen.
+    void this.setup.isSetupRequired().then((required) => {
+      if (required) this.router.navigate(['/setup'], { replaceUrl: true });
+    });
   }
 
   submit(): void {

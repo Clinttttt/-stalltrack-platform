@@ -20,6 +20,10 @@ export const appRoutes: Route[] = [
     loadComponent: () => import('./pages/login/login').then((m) => m.Login),
   },
   {
+    path: 'setup',
+    loadComponent: () => import('./pages/setup/setup').then((m) => m.ConsoleSetup),
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./shared/admin-layout/admin-layout').then((m) => m.AdminLayout),

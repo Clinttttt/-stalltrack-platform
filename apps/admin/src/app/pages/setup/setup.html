@@ -1,0 +1,114 @@
+<div class="grid min-h-[100dvh] bg-mist lg:grid-cols-[1.05fr,0.95fr]">
+  <!-- Brand panel -->
+  <div class="relative hidden overflow-hidden bg-navy text-white lg:flex lg:flex-col lg:justify-between lg:p-12">
+    <div
+      class="pointer-events-none absolute inset-0 opacity-[0.07]"
+      style="background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.35) 1px, transparent 0); background-size: 22px 22px;"
+    ></div>
+    <div class="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-gold/10 blur-3xl"></div>
+
+    <div class="relative flex items-center gap-3">
+      <span class="grid h-10 w-10 place-items-center rounded-xl bg-gold font-display text-xl font-bold text-navy">S</span>
+      <div class="leading-tight">
+        <div class="font-display text-xl font-bold tracking-wide">StallTrack</div>
+        <div class="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">Platform Admin</div>
+      </div>
+    </div>
+
+    <div class="relative max-w-md">
+      <span class="eyebrow">First-run setup</span>
+      <h1 class="mt-4 font-display text-4xl font-bold leading-tight">Create the platform operator.</h1>
+      <p class="mt-4 text-base leading-relaxed text-white/70">
+        This one-time step creates the dedicated console operator who manages assessment, onboarding,
+        validation, and activation across the CARCANMADCARLAN cluster — separate from each municipality's Head.
+      </p>
+    </div>
+
+    <div class="relative flex items-center gap-3 text-sm text-white/60">
+      <app-icon name="shield" className="h-5 w-5 text-gold" />
+      <span>Available only until the first operator exists. Activity is recorded for audit.</span>
+    </div>
+  </div>
+
+  <!-- Form panel -->
+  <div class="flex items-center justify-center px-5 py-12 sm:px-10">
+    <div class="w-full max-w-sm">
+      <div class="mb-8 flex items-center gap-3 lg:hidden">
+        <span class="grid h-10 w-10 place-items-center rounded-xl bg-navy font-display text-xl font-bold text-gold">S</span>
+        <div class="leading-tight">
+          <div class="font-display text-lg font-bold text-navy">StallTrack</div>
+          <div class="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">Platform Admin</div>
+        </div>
+      </div>
+
+      @if (checking()) {
+        <p class="text-sm text-muted">Checking setup status…</p>
+      } @else if (done()) {
+        <span class="eyebrow">Setup complete</span>
+        <h2 class="mt-2 font-display text-3xl font-bold text-navy">Operator created.</h2>
+        <p class="mt-2 text-sm text-muted">Your platform-operator account is ready. You can now sign in to the console.</p>
+        <button type="button" (click)="goToLogin()" class="a-btn-navy mt-6 w-full !py-3">Continue to sign in</button>
+      } @else {
+        <span class="eyebrow">First-run setup</span>
+        <h2 class="mt-2 font-display text-3xl font-bold text-navy">Create console operator.</h2>
+        <p class="mt-2 text-sm text-muted">Set up the first platform-operator account for this console.</p>
+
+        <form (ngSubmit)="submit()" class="mt-8 space-y-4">
+          <div>
+            <label class="a-label" for="fullName">Full name</label>
+            <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
+              <app-icon name="user" className="h-4 w-4 text-muted" />
+              <input id="fullName" type="text" name="fullName" autocomplete="name" [(ngModel)]="fullName" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="e.g. Juan D. Dela Cruz" required />
+            </div>
+          </div>
+
+          <div>
+            <label class="a-label" for="username">Username</label>
+            <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
+              <app-icon name="user" className="h-4 w-4 text-muted" />
+              <input id="username" type="text" name="username" autocomplete="username" [(ngModel)]="username" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="e.g. console.admin" required />
+            </div>
+          </div>
+
+          <div>
+            <label class="a-label" for="email">Email</label>
+            <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
+              <app-icon name="inbox" className="h-4 w-4 text-muted" />
+              <input id="email" type="email" name="email" autocomplete="email" [(ngModel)]="email" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="name@stalltrack.site" required />
+            </div>
+          </div>
+
+          <div>
+            <label class="a-label" for="password">Password</label>
+            <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
+              <app-icon name="lock" className="h-4 w-4 text-muted" />
+              <input id="password" type="password" name="password" autocomplete="new-password" [(ngModel)]="password" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="Min. 8 chars, a letter and a number" required />
+            </div>
+          </div>
+
+          <div>
+            <label class="a-label" for="confirm">Confirm password</label>
+            <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
+              <app-icon name="lock" className="h-4 w-4 text-muted" />
+              <input id="confirm" type="password" name="confirm" autocomplete="new-password" [(ngModel)]="confirm" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="Re-enter password" required />
+            </div>
+          </div>
+
+          @if (error()) {
+            <div class="flex items-start gap-2 rounded-xl border border-[#e6c4c4] bg-red-bg px-3 py-2.5 text-sm text-red">
+              <app-icon name="x" className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{{ error() }}</span>
+            </div>
+          }
+
+          <button type="submit" [disabled]="busy()" class="a-btn-navy w-full !py-3">
+            {{ busy() ? 'Creating…' : 'Create operator' }}
+            @if (!busy()) {
+              <app-icon name="arrowRight" className="h-4 w-4" />
+            }
+          </button>
+        </form>
+      }
+    </div>
+  </div>
+</div>
