@@ -82,6 +82,7 @@ export interface ActivateMunicipalityCommand {
   rates: ActivationRate[];
   customAnimals?: ActivationCustomAnimal[];
   orSeries?: ActivationOrSeries;
+  tpmMarketDay?: string | null;
 }
 
 export interface ActivationResultDto {

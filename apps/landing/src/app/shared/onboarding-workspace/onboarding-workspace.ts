@@ -46,6 +46,7 @@ interface Facility {
   units: string;
   ordinance: string;
   notes: string;
+  marketDay: string;
   sections: FacilitySection[];
   addOns: AddOn[];
   rateItems: RateItem[];
@@ -64,6 +65,7 @@ const shortName = (label: string): string => label.split(' — ')[0].split(' / '
 const FEE_UNITS = ['per month', 'per day', 'per kilo', 'per use', 'one-time'];
 const FEE_MODES = ['Applies to all', 'Optional (per stall)'];
 const FEE_BASIS = ['Per consumption', 'Fixed amount'];
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const CATALOG: CatalogItem[] = [
   { key: 'public_market', label: 'Public Market — daily stalls', type: 'Daily stall', unitLabel: 'stalls', archetype: 'DailyStall' },
@@ -124,6 +126,7 @@ function facilityFrom(c: CatalogItem): Facility {
     units: '',
     ordinance: '',
     notes: '',
+    marketDay: c.type === 'Weekly market' ? 'Friday' : '',
     sections: [],
     addOns: [],
     rateItems: [],
@@ -158,6 +161,7 @@ export class OnboardingWorkspace {
   readonly feeUnits = FEE_UNITS;
   readonly feeModes = FEE_MODES;
   readonly feeBasis = FEE_BASIS;
+  readonly days = DAYS;
   readonly catalog = CATALOG;
   readonly ratePlaceholder = RATE_PLACEHOLDER;
 

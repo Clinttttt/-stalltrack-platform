@@ -58,6 +58,7 @@ export interface Facility {
   rateUnit: string;
   unitLabel: string;
   units: string;
+  marketDay?: string;
   sections: Section[];
   addOns: AddOn[];
   rateItems: RateItem[];

@@ -25,6 +25,8 @@ export interface MappedActivation {
 
 const ALL_CODES: FacilityCodeStr[] = ['NPM', 'TCC', 'NCC', 'BBQ', 'ICE', 'SLH', 'TRM', 'TPM'];
 
+const VALID_MARKET_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 function num(s: string | undefined | null): number | undefined {
   if (s == null) return undefined;
   const n = parseFloat(String(s).replace(/[^0-9.\-]/g, ''));
@@ -175,6 +177,13 @@ export function mapRequestToCommand(
     warnings.push('No office acronym found in the office name — the portal will fall back to a default.');
   }
 
+  // Tabo-an (Weekly market) market day — sent as a DayOfWeek string name (backend
+  // defaults to Friday when omitted). Only send one of the 7 valid names; anything
+  // else (blank/invalid) is dropped so the backend default applies.
+  const weeklyMarket = demoFacilities.find((f) => f.type === 'Weekly market');
+  const rawMarketDay = (weeklyMarket?.marketDay || '').trim();
+  const tpmMarketDay = VALID_MARKET_DAYS.includes(rawMarketDay) ? rawMarketDay : undefined;
+
   const command: ActivateMunicipalityCommand = {
     municipalityCode: r.municipality.trim(),
     branding: {
@@ -192,6 +201,7 @@ export function mapRequestToCommand(
     rates,
     customAnimals: customAnimals.length ? customAnimals : undefined,
     orSeries: parseOrSeries(r.config?.orSeries),
+    tpmMarketDay,
   };
 
   return { command, warnings };

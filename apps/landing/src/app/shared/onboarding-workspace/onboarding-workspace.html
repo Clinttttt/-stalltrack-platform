@@ -95,6 +95,14 @@
                         </div>
                       }
 
+                      @if (f.type === 'Weekly market') {
+                        <div>
+                          <label [class]="LABEL">Market day</label>
+                          <app-polished-select [options]="days" [value]="f.marketDay" (valueChange)="setFacility(f.id, 'marketDay', $event)" />
+                          <p class="mt-1 text-[11px] leading-snug text-muted/80">The weekday this market runs (e.g. Cantilan runs Fridays).</p>
+                        </div>
+                      }
+
                       <div>
                         <label [class]="LABEL">Ordinance reference <span class="font-normal normal-case text-muted/70">(optional)</span></label>
                         <input [class]="INPUT" [value]="f.ordinance" (input)="setFacility(f.id, 'ordinance', $any($event.target).value)" placeholder="e.g. Municipal Ordinance No. 2019-05" />
