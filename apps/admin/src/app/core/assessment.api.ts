@@ -52,6 +52,13 @@ export interface OnboardingDraftDto {
 }
 export type DraftResult = { ok: true; draft: OnboardingDraftDto } | { ok: false; error: string };
 
+export interface MunicipalityStatusDto {
+  code: string;
+  name: string;
+  isActive: boolean;
+}
+export type MunicipalitiesResult = { ok: true; municipalities: MunicipalityStatusDto[] } | { ok: false; error: string };
+
 /** Maps a backend assessment DTO to the console's RequestRecord shape (downstream fields default empty). */
 export function toRecord(d: AssessmentRequestDto): RequestRecord {
   return {
@@ -145,6 +152,18 @@ export class AssessmentApi {
   /** Return the config for corrections — reopens the draft (Onboarding). */
   async returnToOnboarding(assessmentRequestId: string, note: string): Promise<MutateResult> {
     return this.mutate(`${API_BASE_URL}/api/onboarding/by-request/${assessmentRequestId}/return`, { note });
+  }
+
+  /** Public registry (anonymous) — used to tell which LGUs are already live. */
+  async listMunicipalities(): Promise<MunicipalitiesResult> {
+    try {
+      const list = await firstValueFrom(
+        this.http.get<Array<{ code: string; name: string; isActive: boolean }>>(`${API_BASE_URL}/api/municipalities`),
+      );
+      return { ok: true, municipalities: (list ?? []).map((m) => ({ code: m.code, name: m.name, isActive: m.isActive })) };
+    } catch (e: unknown) {
+      return { ok: false, error: describeError(e) };
+    }
   }
 
   private async mutate(url: string, body: unknown): Promise<MutateResult> {

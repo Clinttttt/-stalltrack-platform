@@ -111,7 +111,10 @@ function parseOffice(requestingOffice: string): { name: string; acronym: string 
   return { name: name || office, acronym };
 }
 
-export function mapRequestToCommand(r: RequestRecord): MappedActivation {
+export function mapRequestToCommand(
+  r: RequestRecord,
+  overrides?: { officeName?: string | null },
+): MappedActivation {
   const warnings: string[] = [];
   const facilities: ActivationFacility[] = [];
   const rates: ActivationRate[] = [];
@@ -207,7 +210,7 @@ export function mapRequestToCommand(r: RequestRecord): MappedActivation {
   const command: ActivateMunicipalityCommand = {
     municipalityCode: r.municipality.trim(),
     branding: {
-      officeName: office.name,
+      officeName: overrides?.officeName?.trim() || office.name,
       address: null,
       sealPath: null,
       officeAcronym: office.acronym,
