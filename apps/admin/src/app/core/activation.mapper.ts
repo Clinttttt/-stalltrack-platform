@@ -91,7 +91,7 @@ function parseOffice(requestingOffice: string): { name: string; acronym: string 
 
 export function mapRequestToCommand(
   r: RequestRecord,
-  overrides?: { officeName?: string | null },
+  overrides?: { officeName?: string | null; sealPath?: string | null },
 ): MappedActivation {
   const warnings: string[] = [];
   const facilities: ActivationFacility[] = [];
@@ -174,7 +174,7 @@ export function mapRequestToCommand(
     branding: {
       officeName: overrides?.officeName?.trim() || office.name,
       address: null,
-      sealPath: null,
+      sealPath: overrides?.sealPath?.trim() || null,
       officeAcronym: office.acronym,
     },
     administrator: {

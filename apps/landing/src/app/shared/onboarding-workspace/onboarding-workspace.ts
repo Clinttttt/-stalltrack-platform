@@ -153,8 +153,9 @@ export class OnboardingWorkspace {
   readonly expandedId = signal<string | null>(null);
   readonly picking = signal(false);
   readonly admin = signal({ name: '', position: '', email: '' });
-  readonly branding = signal({ officeName: '', orPrefix: '', orStart: '', logoName: '' });
+  readonly branding = signal({ officeName: '', orPrefix: '', orStart: '', logoName: '', logoDataUri: '' });
   readonly logoPreview = signal('');
+  readonly logoError = signal('');
 
   constructor() {
     // Hydrate the editor from the saved draft config once it arrives from the parent.
@@ -293,14 +294,26 @@ export class OnboardingWorkspace {
   setAdmin(key: 'name' | 'position' | 'email', val: string): void {
     this.admin.update((h) => ({ ...h, [key]: val }));
   }
-  setBranding(key: 'officeName' | 'orPrefix' | 'orStart' | 'logoName', val: string): void {
+  setBranding(key: 'officeName' | 'orPrefix' | 'orStart' | 'logoName' | 'logoDataUri', val: string): void {
     this.branding.update((b) => ({ ...b, [key]: val }));
   }
   onLogo(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
+    // The seal is stored inline (base64 data URI) and returned with the LGU's branding, so keep it small.
+    if (file.size > 200 * 1024) {
+      this.logoError.set('Logo is too large — please use an image under 200 KB.');
+      return;
+    }
+    this.logoError.set('');
     this.setBranding('logoName', file.name);
-    this.logoPreview.set(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUri = typeof reader.result === 'string' ? reader.result : '';
+      this.setBranding('logoDataUri', dataUri);
+      this.logoPreview.set(dataUri);
+    };
+    reader.readAsDataURL(file);
   }
 
   submit(): void {
@@ -322,7 +335,7 @@ export class OnboardingWorkspace {
       const cfg = JSON.parse(json) as {
         facilities?: Facility[];
         administrator?: { name?: string; position?: string; email?: string };
-        branding?: { officeName?: string; orPrefix?: string; orStart?: string; logoName?: string };
+        branding?: { officeName?: string; orPrefix?: string; orStart?: string; logoName?: string; logoDataUri?: string };
       };
       if (Array.isArray(cfg.facilities)) this.facilities.set(cfg.facilities);
       if (cfg.administrator)
@@ -331,13 +344,16 @@ export class OnboardingWorkspace {
           position: cfg.administrator.position ?? '',
           email: cfg.administrator.email ?? '',
         });
-      if (cfg.branding)
+      if (cfg.branding) {
         this.branding.set({
           officeName: cfg.branding.officeName ?? '',
           orPrefix: cfg.branding.orPrefix ?? '',
           orStart: cfg.branding.orStart ?? '',
           logoName: cfg.branding.logoName ?? '',
+          logoDataUri: cfg.branding.logoDataUri ?? '',
         });
+        if (cfg.branding.logoDataUri) this.logoPreview.set(cfg.branding.logoDataUri);
+      }
     } catch {
       /* keep defaults on malformed config */
     }

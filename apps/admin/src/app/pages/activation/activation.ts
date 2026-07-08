@@ -10,7 +10,7 @@ const inScope = (r: RequestRecord): boolean => r.status === STATUS.APPROVED && r
 interface WorkspaceConfig {
   facilities?: Facility[];
   administrator?: { name?: string; position?: string; email?: string };
-  branding?: { officeName?: string; orPrefix?: string; orStart?: string; logoName?: string };
+  branding?: { officeName?: string; orPrefix?: string; orStart?: string; logoName?: string; logoDataUri?: string };
 }
 
 function parseWorkspaceConfig(json: string | null): WorkspaceConfig | null {
@@ -187,7 +187,7 @@ export class Activation {
     this.activateError.set('');
     try {
       const wc = this.configById()[r.id];
-      const { command } = mapRequestToCommand(r, { officeName: wc?.branding?.officeName });
+      const { command } = mapRequestToCommand(r, { officeName: wc?.branding?.officeName, sealPath: wc?.branding?.logoDataUri });
       const res = await this.activationApi.activate(command);
       if (!res.ok) {
         this.activateError.set(res.error);
