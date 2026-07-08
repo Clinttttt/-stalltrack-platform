@@ -1,14 +1,12 @@
-import { Facility as DemoFacility, RequestRecord, Section } from './demo';
+import { Facility as DemoFacility, RequestRecord } from './demo';
 import {
   ActivateMunicipalityCommand,
   ActivationCustomAnimal,
   ActivationFacility,
   ActivationOrSeries,
   ActivationRate,
-  ActivationStallGroup,
   BillingArchetypeStr,
   FacilityCodeStr,
-  MarketSectionStr,
 } from './activation.api';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -31,11 +29,6 @@ function num(s: string | undefined | null): number | undefined {
   if (s == null) return undefined;
   const n = parseFloat(String(s).replace(/[^0-9.\-]/g, ''));
   return Number.isFinite(n) ? n : undefined;
-}
-
-function intOf(s: string | undefined | null): number {
-  const n = parseInt(String(s ?? '').replace(/[^0-9\-]/g, ''), 10);
-  return Number.isFinite(n) ? n : 0;
 }
 
 function usernameSlug(municipality: string): string {
@@ -72,21 +65,6 @@ function candidateCode(f: DemoFacility): FacilityCodeStr {
   if (t === 'Daily stall' || /public market/.test(n)) return 'NPM';
   if (/commercial|tampak|\btcc\b|mall|center|centre/.test(n)) return 'TCC';
   return 'TCC';
-}
-
-function sectionOf(name: string): MarketSectionStr | null {
-  const n = name.toLowerCase();
-  if (/fish|seafood/.test(n)) return 'FishSection';
-  if (/meat|pork|poultry/.test(n)) return 'MeatSection';
-  if (/veget|vegie|fruit|dry|grocery/.test(n)) return 'VegetableArea';
-  return null;
-}
-
-function sectionFees(s: Section): string {
-  const flags = ['DailyRental'];
-  const hasFish = /fish|kilo/.test(s.name.toLowerCase()) || (s.fees || []).some((fee) => /fish|kilo/.test(fee.label.toLowerCase()));
-  if (hasFish) flags.push('FishFee');
-  return flags.join(', ');
 }
 
 function parseOrSeries(raw: string | undefined): ActivationOrSeries | undefined {
@@ -140,32 +118,16 @@ export function mapRequestToCommand(
     }
     used.add(code);
 
-    // Stall groups (spaces). Transaction-only facilities (SLH/TRM/TPM) get none.
-    const stallGroups: ActivationStallGroup[] = [];
-    if (archetype === 'DailyStall') {
-      const daily = num(f.rateAmount) ?? 0;
-      if (f.sections?.length) {
-        for (const s of f.sections) {
-          const count = intOf(s.units);
-          if (count < 1) continue;
-          stallGroups.push({ count, monthlyRate: 0, dailyRate: daily, fees: sectionFees(s), section: sectionOf(s.name) });
-        }
-      } else {
-        const count = intOf(f.units);
-        if (count >= 1) stallGroups.push({ count, monthlyRate: 0, dailyRate: daily, fees: 'DailyRental', section: null });
-      }
-    } else if (archetype === 'MonthlyRental') {
-      const count = intOf(f.units);
-      const monthly = num(f.rateAmount) ?? 0;
-      if (count >= 1) stallGroups.push({ count, monthlyRate: monthly, dailyRate: null, fees: 'BaseRental', section: null });
-    }
+    // NOTE: activation provisions only the LGU identity, facilities, fixed rates, and the Head account.
+    // Stalls/units (and their occupants/payors), collectors, and additional admins are created later in
+    // the live portal — NOT at onboarding — so we never auto-provision stall groups here.
 
     facilities.push({
       code,
       name: f.name.trim(),
       shortName: code,
       archetype,
-      stallGroups: stallGroups.length ? stallGroups : undefined,
+      stallGroups: undefined,
     });
 
     // Fixed ordinance rates.
