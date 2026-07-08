@@ -84,11 +84,24 @@ function parseOrSeries(raw: string | undefined): ActivationOrSeries | undefined 
   };
 }
 
+function deriveAcronym(name: string): string | null {
+  // Skip connector words so "Madrid Economic Enterprise Office" → "MEEO".
+  const stop = new Set(['of', 'the', 'and', 'for', 'a', 'an', 'de', 'del', 'y']);
+  const words = name
+    .split(/\s+/)
+    .map((w) => w.replace(/[^a-zA-Z]/g, ''))
+    .filter((w) => w.length > 0 && !stop.has(w.toLowerCase()));
+  if (words.length < 2) return null;
+  return words.map((w) => w[0].toUpperCase()).join('');
+}
+
 function parseOffice(requestingOffice: string): { name: string; acronym: string | null } {
   const office = (requestingOffice || '').trim();
-  const acronym = office.match(/\(([^)]+)\)/)?.[1]?.trim() || null;
-  const name = office.replace(/\s*\([^)]*\)\s*/g, ' ').trim();
-  return { name: name || office, acronym };
+  // Prefer an explicit parenthetical acronym, e.g. "… Office (MEEO)"; otherwise derive it from the initials.
+  const explicit = office.match(/\(([^)]+)\)/)?.[1]?.trim() || null;
+  const name = office.replace(/\s*\([^)]*\)\s*/g, ' ').trim() || office;
+  const acronym = explicit || deriveAcronym(name);
+  return { name, acronym };
 }
 
 export function mapRequestToCommand(

@@ -65,6 +65,9 @@ const shortName = (label: string): string => label.split(' — ')[0].split(' / '
 const FEE_UNITS = ['per month', 'per day', 'per kilo', 'per use', 'one-time'];
 const FEE_MODES = ['Applies to all', 'Optional (per stall)'];
 const FEE_BASIS = ['Per consumption', 'Fixed amount'];
+// Utility add-ons are capped at these two presets (chosen from a fixed dropdown, not free text).
+const FEE_NAMES = ['Electricity', 'Water'];
+const MAX_ADDONS = FEE_NAMES.length;
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const CATALOG: CatalogItem[] = [
@@ -161,6 +164,8 @@ export class OnboardingWorkspace {
   readonly feeUnits = FEE_UNITS;
   readonly feeModes = FEE_MODES;
   readonly feeBasis = FEE_BASIS;
+  readonly feeNames = FEE_NAMES;
+  readonly maxAddOns = MAX_ADDONS;
   readonly days = DAYS;
   readonly catalog = CATALOG;
   readonly ratePlaceholder = RATE_PLACEHOLDER;
@@ -202,6 +207,13 @@ export class OnboardingWorkspace {
   readonly pct = computed(() => Math.round((this.doneCount() / this.sectionFlags().length) * 100));
 
   isPerHead = (f: Facility): boolean => f.type === 'Per head';
+  /** A market section is a "fish" section when its name mentions fish — those carry the per-kilo weighing fee. */
+  isFishSection = (s: FacilitySection): boolean => /fish/i.test(s.name || '');
+  /** Varied example placeholder per section row (Fish, Vegetables, Meat…) instead of always "Fish". */
+  sectionNamePlaceholder(i: number): string {
+    const examples = ['e.g. Fish', 'e.g. Vegetables', 'e.g. Meat', 'e.g. Dry goods', 'e.g. Rice'];
+    return examples[i] ?? 'e.g. Section name';
+  }
   /** Whether this facility keeps a single facility-level base rate (all types except Daily stall / Per head). */
   showBaseRate = (f: Facility): boolean => f.type !== 'Daily stall' && f.type !== 'Per head';
   isFacilityDone = (f: Facility): boolean => {
@@ -272,7 +284,22 @@ export class OnboardingWorkspace {
   setSection(fid: string, sid: string, key: keyof FacilitySection, val: string): void {
     this.mapFacility(fid, (x) => ({
       ...x,
-      sections: x.sections.map((s) => (s.id === sid ? { ...s, [key]: val } : s)),
+      sections: x.sections.map((s) => {
+        if (s.id !== sid) return s;
+        const next: FacilitySection = { ...s, [key]: val };
+        // The per-kilo weighing fee is shown only on Fish sections and is managed automatically:
+        // naming a section "Fish" auto-adds the fee row; renaming away from fish removes it.
+        if (key === 'name') {
+          if (/fish/i.test(val)) {
+            if (next.fees.length === 0) {
+              next.fees = [{ id: uid(), label: 'Fish (per kilo)', amount: '', unit: 'per kilo' }];
+            }
+          } else {
+            next.fees = [];
+          }
+        }
+        return next;
+      }),
     }));
   }
   addSecFee(fid: string, sid: string): void {
@@ -314,10 +341,16 @@ export class OnboardingWorkspace {
 
   // facility-level fees
   addFee(fid: string): void {
-    this.mapFacility(fid, (x) => ({
-      ...x,
-      addOns: [...x.addOns, { id: uid(), label: '', basis: 'Per consumption', amount: '', unit: 'per month', mode: 'Optional (per stall)' }],
-    }));
+    this.mapFacility(fid, (x) => {
+      // Utilities are capped at the fixed presets (Electricity / Water) and picked from a dropdown.
+      if (x.addOns.length >= MAX_ADDONS) return x;
+      const used = new Set(x.addOns.map((a) => a.label));
+      const label = FEE_NAMES.find((n) => !used.has(n)) ?? FEE_NAMES[0];
+      return {
+        ...x,
+        addOns: [...x.addOns, { id: uid(), label, basis: 'Per consumption', amount: '', unit: 'per month', mode: 'Optional (per stall)' }],
+      };
+    });
   }
   removeFee(fid: string, feeId: string): void {
     this.mapFacility(fid, (x) => ({ ...x, addOns: x.addOns.filter((a) => a.id !== feeId) }));

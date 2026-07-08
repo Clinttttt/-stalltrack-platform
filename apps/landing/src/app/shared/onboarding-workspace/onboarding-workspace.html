@@ -74,7 +74,7 @@
                 @if (expandedId() === f.id) {
                   <div class="border-t border-line bg-mist/30 p-4">
                     <div class="grid gap-4 sm:grid-cols-2">
-                      <div class="sm:col-span-2">
+                      <div>
                         <label [class]="LABEL">Facility name</label>
                         <input [class]="INPUT" [value]="f.name" (input)="setFacility(f.id, 'name', $any($event.target).value)" placeholder="e.g. New Public Market" />
                         <div class="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-navy/5 px-2.5 py-1 text-[11px] font-semibold text-navy/70">
@@ -154,15 +154,15 @@
                           <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Market areas / sections</span>
                         </div>
                         <p class="mt-1 text-xs text-muted">
-                          Add each area of your market (e.g. Fish, Meat, Vegetables) and its daily base rate. Add any section fee (like fish ₱/kg) as needed. Stalls and vendors are added later in your live portal.
+                          Define each area of your public market and its daily stall rate. The Fish section automatically includes a per-kilo weighing fee. Stalls and vendors are added later in your live portal.
                         </p>
                         <div class="mt-3 space-y-2">
-                          @for (s of f.sections; track s.id) {
+                          @for (s of f.sections; track s.id; let i = $index) {
                             <div class="rounded-lg border border-line bg-white p-3">
                               <div class="grid gap-3 sm:grid-cols-[1fr,0.7fr,auto] sm:items-end">
                                 <div>
                                   <label [class]="LABEL">Section name</label>
-                                  <input [class]="INPUT" [value]="s.name" (input)="setSection(f.id, s.id, 'name', $any($event.target).value)" placeholder="e.g. Fish" />
+                                  <input [class]="INPUT" [value]="s.name" (input)="setSection(f.id, s.id, 'name', $any($event.target).value)" [placeholder]="sectionNamePlaceholder(i)" />
                                 </div>
                                 <div>
                                   <label [class]="LABEL">Base rate</label>
@@ -170,41 +170,26 @@
                                     <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
                                     <input type="number" min="0" [value]="s.rate" (input)="setSection(f.id, s.id, 'rate', $any($event.target).value)" placeholder="30" [class]="MONEY_INPUT" />
                                   </div>
-                                  <p class="mt-1 text-[11px] leading-snug text-muted/80">per day</p>
                                 </div>
                                 <button type="button" (click)="removeSection(f.id, s.id)" class="mb-0.5 inline-flex items-center justify-center rounded-lg border border-line px-2.5 py-2.5 text-muted transition hover:border-red/40 hover:text-red">
                                   <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
                                 </button>
                               </div>
-                              @if (s.fees.length > 0) {
-                                <div class="mt-3 space-y-2 border-t border-line pt-3">
-                                  @for (z of s.fees; track z.id) {
-                                    <div class="grid gap-3 sm:grid-cols-[1.6fr,0.9fr,1fr,auto] sm:items-end">
-                                      <div>
-                                        <label [class]="LABEL">Section fee name</label>
-                                        <input [class]="INPUT" [value]="z.label" (input)="setSecFee(f.id, s.id, z.id, 'label', $any($event.target).value)" placeholder="e.g. Fish per kilo" />
+                              @if (isFishSection(s) && s.fees.length > 0) {
+                                <div class="mt-3 border-t border-line pt-3">
+                                  <div class="grid gap-3 sm:grid-cols-[0.7fr,auto] sm:items-end">
+                                    <div>
+                                      <label [class]="LABEL">Fish weighing fee</label>
+                                      <div class="relative">
+                                        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
+                                        <input type="number" min="0" [value]="s.fees[0].amount" (input)="setSecFee(f.id, s.id, s.fees[0].id, 'amount', $any($event.target).value)" placeholder="1" [class]="MONEY_INPUT" />
                                       </div>
-                                      <div>
-                                        <label [class]="LABEL">Amount</label>
-                                        <div class="relative">
-                                          <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
-                                          <input type="number" min="0" [value]="z.amount" (input)="setSecFee(f.id, s.id, z.id, 'amount', $any($event.target).value)" placeholder="1" [class]="MONEY_INPUT" />
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <label [class]="LABEL">Unit</label>
-                                        <app-polished-select [options]="feeUnits" [value]="z.unit" (valueChange)="setSecFee(f.id, s.id, z.id, 'unit', $event)" />
-                                      </div>
-                                      <button type="button" (click)="removeSecFee(f.id, s.id, z.id)" class="mb-0.5 inline-flex items-center justify-center rounded-lg border border-line px-2.5 py-2.5 text-muted transition hover:border-red/40 hover:text-red">
-                                        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
-                                      </button>
                                     </div>
-                                  }
+                                    <div class="pb-2.5 text-sm font-medium text-muted">per kilo</div>
+                                  </div>
+                                  <p class="mt-1 text-[11px] leading-snug text-muted/80">Charged per kilogram weighed at the fish section (e.g. ₱1/kg).</p>
                                 </div>
                               }
-                              <button type="button" (click)="addSecFee(f.id, s.id)" class="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-navy/70 transition hover:text-navy">
-                                <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add section fee
-                              </button>
                             </div>
                           }
                         </div>
@@ -229,7 +214,7 @@
                               <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                                 <div>
                                   <label [class]="LABEL">Fee name</label>
-                                  <input [class]="INPUT" [value]="a.label" (input)="setFee(f.id, a.id, 'label', $any($event.target).value)" placeholder="e.g. Electricity, Water" />
+                                  <app-polished-select [options]="feeNames" [value]="a.label" (valueChange)="setFee(f.id, a.id, 'label', $event)" />
                                 </div>
                                 <div>
                                   <label [class]="LABEL">Charge basis</label>
@@ -269,9 +254,11 @@
                           }
                         </div>
                       }
-                      <button type="button" (click)="addFee(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
-                        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add fee
-                      </button>
+                      @if (f.addOns.length < maxAddOns) {
+                        <button type="button" (click)="addFee(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
+                          <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add fee
+                        </button>
+                      }
                     </div>
                     }
 
@@ -401,13 +388,9 @@
               <input [class]="INPUT" [value]="branding().officeName" (input)="setBranding('officeName', $any($event.target).value)" placeholder="e.g. Local Economic Enterprise Office" />
               <p class="mt-1 text-[11px] leading-snug text-muted/80">Appears as the header on reports and receipts.</p>
             </div>
-            <div>
+            <div class="sm:col-span-2">
               <label [class]="LABEL">OR series prefix</label>
               <input [class]="INPUT" [value]="branding().orPrefix" (input)="setBranding('orPrefix', $any($event.target).value)" placeholder="e.g. CANTILAN-2026-" />
-            </div>
-            <div>
-              <label [class]="LABEL">OR starting number</label>
-              <input [class]="INPUT" type="number" min="1" [value]="branding().orStart" (input)="setBranding('orStart', $any($event.target).value)" placeholder="e.g. 000001" />
             </div>
             <div class="sm:col-span-2">
               <label [class]="LABEL">Logo / seal <span class="font-normal normal-case text-muted/70">(optional)</span></label>

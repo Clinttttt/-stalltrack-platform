@@ -95,7 +95,7 @@
                             }
                           </div>
                         </div>
-                      } @else {
+                      } @else if (f.type !== 'Daily stall') {
                         <div class="flex items-center justify-between gap-3">
                           <span class="text-muted">Base rate</span>
                           <span class="font-semibold text-navy">₱{{ f.rateAmount }} {{ f.rateUnit }}{{ spaceBased(f) && facUnits(f) > 0 ? ' · ' + facUnits(f) + ' ' + f.unitLabel : '' }}</span>
@@ -108,10 +108,11 @@
                           <div class="overflow-hidden rounded-lg border border-line">
                             @for (s of f.sections; track s.name) {
                               <div class="flex items-center justify-between gap-3 border-t border-line px-3 py-2 first:border-t-0">
-                                <span class="text-navy">{{ s.name }} <span class="text-muted">· {{ s.units }} {{ f.unitLabel }}</span></span>
-                                @if (s.fees.length > 0) {
-                                  <span class="text-right text-xs text-muted">{{ feesText(s.fees) }}</span>
-                                }
+                                <span class="text-navy">{{ s.name }}</span>
+                                <span class="text-right text-xs text-muted">
+                                  @if (s.rate) { <span class="font-semibold text-navy">₱{{ s.rate }}</span> / day }
+                                  @if (s.fees.length > 0) { <span class="ml-2">· {{ feesText(s.fees) }}</span> }
+                                </span>
                               </div>
                             }
                           </div>
