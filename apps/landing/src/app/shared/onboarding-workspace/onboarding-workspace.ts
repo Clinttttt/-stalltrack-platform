@@ -146,29 +146,9 @@ export class OnboardingWorkspace {
   readonly catalog = CATALOG;
   readonly ratePlaceholder = RATE_PLACEHOLDER;
 
-  readonly facilities = signal<Facility[]>([
-    {
-      ...facilityFrom(CATALOG[0]),
-      rateAmount: '30',
-      sections: [
-        { id: uid(), name: 'Fish', units: '40', fees: [{ id: uid(), label: 'Fish (per kilo)', amount: '1', unit: 'per kilo' }] },
-        { id: uid(), name: 'Meat', units: '30', fees: [] },
-        { id: uid(), name: 'Vegetables', units: '50', fees: [] },
-      ],
-      addOns: [
-        { id: uid(), label: 'Electricity', basis: 'Per consumption', amount: '', unit: 'per month', mode: 'Optional (per stall)' },
-        { id: uid(), label: 'Water', basis: 'Per consumption', amount: '', unit: 'per month', mode: 'Optional (per stall)' },
-      ],
-    },
-    {
-      ...facilityFrom(CATALOG[4]),
-      rateItems: [
-        { id: uid(), label: 'Hog', amount: '250' },
-        { id: uid(), label: 'Cattle / Carabao', amount: '365' },
-      ],
-    },
-    facilityFrom(CATALOG[6]),
-  ]);
+  // Start empty — the LGU adds each facility and sets its own rate. Nothing is pre-filled or auto-marked
+  // Done on first open. A saved draft (configJson) re-hydrates the LGU's own previously entered values.
+  readonly facilities = signal<Facility[]>([]);
 
   readonly expandedId = signal<string | null>(null);
   readonly picking = signal(false);
