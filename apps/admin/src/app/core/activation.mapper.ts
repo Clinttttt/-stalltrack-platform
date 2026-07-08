@@ -132,7 +132,10 @@ export function mapRequestToCommand(
 
     // Fixed ordinance rates.
     if (archetype === 'DailyStall') {
-      rates.push({ facilityCode: code, key: 'NpmDailyStall', amount: num(f.rateAmount) ?? 0 });
+      // The daily stall rate now lives on the market sections; use the first section
+      // with a base rate set, falling back to any legacy facility-level rateAmount.
+      const sectionRate = (f.sections || []).find((s) => (s.rate ?? '').trim())?.rate;
+      rates.push({ facilityCode: code, key: 'NpmDailyStall', amount: num(sectionRate) ?? num(f.rateAmount) ?? 0 });
       for (const s of f.sections || []) {
         for (const fee of s.fees || []) {
           if (/kilo|fish/.test(fee.label.toLowerCase())) {
@@ -164,15 +167,18 @@ export function mapRequestToCommand(
   const admin = users.find((u) => /admin|super/i.test(u.role)) ?? users[0];
   if (!admin) warnings.push('No administrator account was configured for this LGU.');
 
-  const office = parseOffice(r.requestingOffice);
+  // Both the office name label and the acronym derive from the same workspace
+  // "Office name (report header)" input (its parenthetical → acronym); fall back to
+  // the requesting office from the original request when the workspace value is absent.
+  const office = parseOffice(overrides?.officeName || r.requestingOffice);
   if (!office.acronym) {
-    warnings.push('No office acronym found in the requesting office — the portal will fall back to a default.');
+    warnings.push('No office acronym found in the office name — the portal will fall back to a default.');
   }
 
   const command: ActivateMunicipalityCommand = {
     municipalityCode: r.municipality.trim(),
     branding: {
-      officeName: overrides?.officeName?.trim() || office.name,
+      officeName: office.name,
       address: null,
       sealPath: overrides?.sealPath?.trim() || null,
       officeAcronym: office.acronym,

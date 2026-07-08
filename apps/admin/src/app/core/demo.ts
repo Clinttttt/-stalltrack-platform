@@ -34,6 +34,7 @@ export interface Fee {
 export interface Section {
   name: string;
   units: string;
+  rate?: string;
   fees: Fee[];
 }
 

@@ -18,6 +18,7 @@ interface FacilitySection {
   id: string;
   name: string;
   units: string;
+  rate: string;
   fees: SectionFee[];
 }
 interface AddOn {
@@ -60,8 +61,6 @@ interface CatalogItem {
 const uid = (): string => Math.random().toString(36).slice(2, 9);
 const shortName = (label: string): string => label.split(' — ')[0].split(' / ')[0].trim();
 
-const BILLING_TYPES = ['Daily stall', 'Monthly rental', 'Weekly market', 'Per trip', 'Per head', 'Custom'];
-const RATE_UNITS = ['per day', 'per month', 'per trip', 'per head', 'per vendor', 'per kilo'];
 const FEE_UNITS = ['per month', 'per day', 'per kilo', 'per use', 'one-time'];
 const FEE_MODES = ['Applies to all', 'Optional (per stall)'];
 const FEE_BASIS = ['Per consumption', 'Fixed amount'];
@@ -92,6 +91,24 @@ const RATE_PLACEHOLDER: Record<string, string> = {
   'Per trip': '30',
   'Per head': '',
   Custom: '100',
+};
+
+// Fixed billing model + unit per facility type — shown as a read-only context line
+// instead of asking operators to pick a billing type / unit label.
+const CONTEXT_LINE: Record<string, string> = {
+  'Daily stall': 'Daily stall · per stall',
+  'Monthly rental': 'Monthly rental · per space',
+  'Per head': 'Per head · per transaction',
+  'Per trip': 'Per trip',
+  'Weekly market': 'Weekly market · per vendor',
+  Custom: 'Custom facility',
+};
+// Base-rate help text per facility type (only for types that keep a facility-level rate).
+const RATE_HELP: Record<string, string> = {
+  'Monthly rental': 'per month',
+  'Per trip': 'per trip',
+  'Weekly market': 'per vendor, per market day',
+  Custom: 'per unit',
 };
 
 function facilityFrom(c: CatalogItem): Facility {
@@ -138,8 +155,6 @@ export class OnboardingWorkspace {
   readonly MONEY_INPUT = this.INPUT + ' pl-7';
   readonly LABEL = 'block text-[11px] font-bold uppercase tracking-[0.1em] text-muted mb-1.5';
 
-  readonly billingTypes = BILLING_TYPES;
-  readonly rateUnits = RATE_UNITS;
   readonly feeUnits = FEE_UNITS;
   readonly feeModes = FEE_MODES;
   readonly feeBasis = FEE_BASIS;
@@ -183,13 +198,33 @@ export class OnboardingWorkspace {
   readonly pct = computed(() => Math.round((this.doneCount() / this.sectionFlags().length) * 100));
 
   isPerHead = (f: Facility): boolean => f.type === 'Per head';
-  isFacilityDone = (f: Facility): boolean =>
-    Boolean(f.name.trim() && (this.isPerHead(f) ? f.rateItems.some((r) => r.amount) : f.rateAmount));
+  /** Whether this facility keeps a single facility-level base rate (all types except Daily stall / Per head). */
+  showBaseRate = (f: Facility): boolean => f.type !== 'Daily stall' && f.type !== 'Per head';
+  isFacilityDone = (f: Facility): boolean => {
+    if (!f.name.trim()) return false;
+    if (f.type === 'Per head') return f.rateItems.some((r) => r.amount);
+    if (f.type === 'Daily stall') return f.sections.some((s) => (s.rate || '').trim());
+    return Boolean(f.rateAmount);
+  };
+
+  /** Read-only "billing model · unit" line shown under the facility name. */
+  contextLine(f: Facility): string {
+    return CONTEXT_LINE[f.type] || f.type;
+  }
+  /** Help text for the facility-level base rate (Monthly rental / Per trip / Weekly market / Custom). */
+  rateHelpFor(type: string): string {
+    return RATE_HELP[type] || 'per unit';
+  }
 
   summaryFor(f: Facility): string {
     if (this.isPerHead(f)) {
       const n = f.rateItems.filter((r) => r.amount).length;
       return n ? `${n} animal type(s)` : '';
+    }
+    if (f.type === 'Daily stall') {
+      const priced = f.sections.filter((s) => (s.rate || '').trim());
+      if (!priced.length) return '';
+      return priced.length === 1 ? `₱${priced[0].rate} per day` : `${priced.length} priced areas`;
     }
     return f.rateAmount ? `₱${f.rateAmount} ${f.rateUnit}` : '';
   }
@@ -225,7 +260,7 @@ export class OnboardingWorkspace {
 
   // sections
   addSection(fid: string): void {
-    this.mapFacility(fid, (x) => ({ ...x, sections: [...x.sections, { id: uid(), name: '', units: '', fees: [] }] }));
+    this.mapFacility(fid, (x) => ({ ...x, sections: [...x.sections, { id: uid(), name: '', units: '', rate: '', fees: [] }] }));
   }
   removeSection(fid: string, sid: string): void {
     this.mapFacility(fid, (x) => ({ ...x, sections: x.sections.filter((s) => s.id !== sid) }));
