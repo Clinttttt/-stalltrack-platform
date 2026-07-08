@@ -91,7 +91,7 @@ function parseOffice(requestingOffice: string): { name: string; acronym: string 
 
 export function mapRequestToCommand(
   r: RequestRecord,
-  overrides?: { officeName?: string | null; sealPath?: string | null },
+  overrides?: { officeName?: string | null; sealPath?: string | null; username?: string | null },
 ): MappedActivation {
   const warnings: string[] = [];
   const facilities: ActivationFacility[] = [];
@@ -179,7 +179,7 @@ export function mapRequestToCommand(
     },
     administrator: {
       fullName: (admin?.name || '').trim(),
-      username: `${usernameSlug(r.municipality)}.head`,
+      username: overrides?.username?.trim() || `${usernameSlug(r.municipality)}.head`,
       email: (admin?.email || '').trim(),
     },
     facilities,

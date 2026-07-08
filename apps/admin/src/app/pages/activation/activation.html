@@ -113,6 +113,12 @@
                   <div class="flex gap-3"><span class="w-16 shrink-0 text-muted">Subject</span><span class="text-navy">{{ r.municipality }} — Your StallTrack portal is live</span></div>
                 </div>
                 <div class="px-5 py-4">
+                  <div class="a-label mb-1.5">Head username</div>
+                  <input type="text" [value]="headUsername()" (input)="headUsername.set($any($event.target).value)"
+                         class="a-input font-sans" placeholder="e.g. {{ r.municipality.toLowerCase() }}.head" autocomplete="off" spellcheck="false" />
+                  <p class="mb-4 mt-1 text-[11px] leading-snug text-muted">
+                    The Head signs in with this username. Tip: keep the <strong>municipality.head</strong> form (e.g. carrascal.head) so the login page themes itself to this LGU.
+                  </p>
                   <div class="a-label mb-1.5">Message body</div>
                   <textarea rows="7" [value]="draft()" (input)="draft.set($any($event.target).value)" class="a-input resize-y font-sans leading-relaxed"></textarea>
                   <div class="mt-3">
@@ -136,7 +142,7 @@
                   </div>
                 </div>
                 <div class="flex flex-wrap gap-2 border-t border-line bg-mist/50 px-5 py-3.5">
-                  <button class="a-btn-gold" (click)="confirmActivate()" [disabled]="!draft().trim() || activating()">
+                  <button class="a-btn-gold" (click)="confirmActivate()" [disabled]="!draft().trim() || !headUsername().trim() || activating()">
                     <app-icon name="power" className="h-4 w-4" /> {{ activating() ? 'Activating…' : 'Send & activate ' + r.municipality }}
                   </button>
                   <button class="a-btn-ghost" (click)="cancelComposing()" [disabled]="activating()">Cancel</button>

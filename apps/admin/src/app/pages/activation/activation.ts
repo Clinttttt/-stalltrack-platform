@@ -69,6 +69,7 @@ export class Activation {
   readonly copied = signal(false);
   readonly composing = signal(false);
   readonly draft = signal('');
+  readonly headUsername = signal('');
   readonly link = signal('');
   readonly activating = signal(false);
   readonly activateError = signal('');
@@ -173,7 +174,15 @@ export class Activation {
     this.warnings.set(warnings);
     this.link.set('');
     this.draft.set(activationTemplate(r.municipality));
+    // Pre-fill the Head's username as "{municipality}.head" (editable by the operator). Keeping the
+    // "{tenant}.head" shape lets the login page theme itself to the LGU from the typed username.
+    this.headUsername.set(this.defaultHeadUsername(r.municipality));
     this.composing.set(true);
+  }
+
+  private defaultHeadUsername(municipality: string): string {
+    const slug = (municipality || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '') || 'lgu';
+    return `${slug}.head`;
   }
 
   async confirmActivate(): Promise<void> {
@@ -183,11 +192,20 @@ export class Activation {
       this.activateError.set('This municipality has no configured facilities to activate.');
       return;
     }
+    const username = this.headUsername().trim();
+    if (!username) {
+      this.activateError.set("Please enter the Head's username for this LGU.");
+      return;
+    }
     this.activating.set(true);
     this.activateError.set('');
     try {
       const wc = this.configById()[r.id];
-      const { command } = mapRequestToCommand(r, { officeName: wc?.branding?.officeName, sealPath: wc?.branding?.logoDataUri });
+      const { command } = mapRequestToCommand(r, {
+        officeName: wc?.branding?.officeName,
+        sealPath: wc?.branding?.logoDataUri,
+        username,
+      });
       const res = await this.activationApi.activate(command);
       if (!res.ok) {
         this.activateError.set(res.error);
