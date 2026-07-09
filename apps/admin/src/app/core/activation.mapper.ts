@@ -104,6 +104,19 @@ function parseOffice(requestingOffice: string): { name: string; acronym: string 
   return { name, acronym };
 }
 
+/** Derives a facility's short acronym from its name (e.g. "Madrid Commercial Center" → MCC,
+ *  "Carmen Public Market" → CPM). Single-word names take their first 3 letters; empty falls back to code. */
+function facilityShortName(name: string, code: FacilityCodeStr): string {
+  const stop = new Set(['of', 'the', 'and', 'for', 'a', 'an', 'de', 'del', 'y']);
+  const words = (name || '')
+    .split(/\s+/)
+    .map((w) => w.replace(/[^a-zA-Z]/g, ''))
+    .filter((w) => w.length > 0 && !stop.has(w.toLowerCase()));
+  if (words.length >= 2) return words.map((w) => w[0].toUpperCase()).join('').slice(0, 4);
+  if (words.length === 1) return words[0].slice(0, 3).toUpperCase();
+  return code;
+}
+
 export function mapRequestToCommand(
   r: RequestRecord,
   overrides?: { officeName?: string | null; sealPath?: string | null; username?: string | null },
@@ -140,7 +153,7 @@ export function mapRequestToCommand(
     facilities.push({
       code,
       name: f.name.trim(),
-      shortName: code,
+      shortName: facilityShortName(f.name, code),
       archetype,
       stallGroups: undefined,
     });

@@ -159,12 +159,6 @@ export class RequestAssessmentModal {
     const fd = new FormData(form);
     const value = (name: string) => ((fd.get(name) as string) ?? '').trim();
 
-    // Fold the extra scale inputs into notes so nothing is lost (backend has no dedicated columns).
-    const extras: string[] = [];
-    if (value('Facilities to onboard')) extras.push(`Facilities to onboard: ${value('Facilities to onboard')}`);
-    if (value('Collectors')) extras.push(`Field collectors: ${value('Collectors')}`);
-    const noteParts = [value('Notes'), ...extras].filter((s) => s.length > 0);
-
     const result = await this.assessments.submit({
       municipality: this.municipalityName().trim(),
       province: 'Surigao del Sur',
@@ -177,7 +171,7 @@ export class RequestAssessmentModal {
       approxVendors: this.vendorScaleValue() || null,
       authorizationStatus: this.authStatus() || null,
       acknowledged: fd.get('Authorization acknowledgement') === 'Confirmed',
-      notes: noteParts.length ? noteParts.join(' · ') : null,
+      notes: value('Notes') || null,
     });
 
     this.submitting.set(false);
