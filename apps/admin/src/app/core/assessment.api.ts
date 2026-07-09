@@ -2,7 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api.config';
-import { AuthService } from './auth.service';
 import { RequestRecord, RequestStatus } from './demo';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -104,18 +103,13 @@ function describeError(e: unknown): string {
 @Injectable({ providedIn: 'root' })
 export class AssessmentApi {
   private readonly http = inject(HttpClient);
-  private readonly auth = inject(AuthService);
 
-  private headers(): Record<string, string> {
-    const token = this.auth.token();
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
+  // Auth travels as the HttpOnly cookie (attached by the auth interceptor, which also refreshes on 401).
 
   async list(): Promise<ListResult> {
-    if (!this.auth.token()) return { ok: false, error: 'Your session has expired — please sign in again.' };
     try {
       const dtos = await firstValueFrom(
-        this.http.get<AssessmentRequestDto[]>(`${API_BASE_URL}/api/assessment/requests`, { headers: this.headers() }),
+        this.http.get<AssessmentRequestDto[]>(`${API_BASE_URL}/api/assessment/requests`),
       );
       return { ok: true, requests: (dtos ?? []).map(toRecord) };
     } catch (e: unknown) {
@@ -133,10 +127,9 @@ export class AssessmentApi {
 
   /** Load a submitted onboarding draft (its config) for the validation dry-run. */
   async getDraftByRequest(assessmentRequestId: string): Promise<DraftResult> {
-    if (!this.auth.token()) return { ok: false, error: 'Your session has expired — please sign in again.' };
     try {
       const draft = await firstValueFrom(
-        this.http.get<OnboardingDraftDto>(`${API_BASE_URL}/api/onboarding/by-request/${assessmentRequestId}`, { headers: this.headers() }),
+        this.http.get<OnboardingDraftDto>(`${API_BASE_URL}/api/onboarding/by-request/${assessmentRequestId}`),
       );
       return { ok: true, draft };
     } catch (e: unknown) {
@@ -167,9 +160,8 @@ export class AssessmentApi {
   }
 
   private async mutate(url: string, body: unknown): Promise<MutateResult> {
-    if (!this.auth.token()) return { ok: false, error: 'Your session has expired — please sign in again.' };
     try {
-      const dto = await firstValueFrom(this.http.post<AssessmentRequestDto>(url, body, { headers: this.headers() }));
+      const dto = await firstValueFrom(this.http.post<AssessmentRequestDto>(url, body));
       return { ok: true, request: toRecord(dto) };
     } catch (e: unknown) {
       return { ok: false, error: describeError(e) };

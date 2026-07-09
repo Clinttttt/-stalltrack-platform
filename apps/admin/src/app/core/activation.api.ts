@@ -2,11 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api.config';
-import { AuthService } from './auth.service';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Activation API — commits a staged onboarding configuration to a live LGU via
-// POST /api/activation/municipality (platform-operator only, Bearer token).
+// POST /api/activation/municipality (platform-operator only; cookie-authenticated).
 //
 // The command mirrors the backend ActivateMunicipalityCommand 1:1. Enums are sent as
 // their string names (the API uses JsonStringEnumConverter); [Flags] ApplicableFees is
@@ -133,16 +132,12 @@ function describeError(e: unknown): string {
 @Injectable({ providedIn: 'root' })
 export class ActivationApi {
   private readonly http = inject(HttpClient);
-  private readonly auth = inject(AuthService);
 
   async activate(command: ActivateMunicipalityCommand): Promise<ActivateResult> {
-    const token = this.auth.token();
-    if (!token) return { ok: false, error: 'Your session has expired — please sign in again.' };
     try {
+      // Auth travels as the HttpOnly cookie (attached by the auth interceptor); a 401 is auto-refreshed.
       const result = await firstValueFrom(
-        this.http.post<ActivationResultDto>(`${API_BASE_URL}/api/activation/municipality`, command, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+        this.http.post<ActivationResultDto>(`${API_BASE_URL}/api/activation/municipality`, command),
       );
       return { ok: true, result };
     } catch (e: unknown) {

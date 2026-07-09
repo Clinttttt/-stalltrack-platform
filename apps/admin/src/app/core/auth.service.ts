@@ -4,22 +4,23 @@ import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api.config';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Real platform-operator authentication for the StallTrack admin console.
+// Platform-operator authentication for the StallTrack admin console.
 //
-// Sign-in exchanges credentials at POST /api/adminauth/login for a JWT access token,
-// stored client-side and sent as a Bearer on activation calls. The actual authorization
-// (platform operator = SuperAdmin of the default LGU) is ENFORCED SERVER-SIDE on every
-// activation request — the SPA is not a security boundary; storing the token only lets
-// the console call the API on the operator's behalf.
+// The JWT access + refresh tokens are NEVER exposed to JavaScript. POST /api/adminauth/login
+// sets them as HttpOnly, Secure, SameSite cookies on the api.stalltrack.site domain (same site as
+// admin.stalltrack.site), so the browser attaches them automatically on every credentialed API call
+// (see auth.interceptor.ts, which sets withCredentials) and an XSS payload cannot read them. The access
+// token is short-lived (15 min); when it expires the interceptor silently refreshes it via the refresh
+// cookie (POST /api/adminauth/refresh-token), so the operator stays signed in without re-entering
+// credentials. Only a NON-SENSITIVE display marker (name/username) is kept client-side; authorization
+// (platform operator = SuperAdmin of the default LGU) is enforced SERVER-SIDE on every request.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SESSION_KEY = 'st_admin_session';
+const DISPLAY_KEY = 'st_admin_operator';
 
 export interface AdminSession {
   username: string;
   displayName: string;
-  token: string;
-  at: number;
 }
 
 export interface LoginResult {
@@ -32,7 +33,7 @@ interface TokenResponse {
   refreshToken?: string;
 }
 
-/** Best-effort read of a JWT claim (no verification — display only). */
+/** Best-effort read of a JWT claim (no verification — display only; the token is never stored). */
 function jwtClaim(token: string, claim: string): string | undefined {
   try {
     const payload = token.split('.')[1];
@@ -48,27 +49,24 @@ const NAME_CLAIM = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private session: AdminSession | null = readMarker();
 
   async login(username: string, password: string): Promise<LoginResult> {
     const u = (username || '').trim();
     if (!u || !password) return { ok: false, error: 'Enter your username and password.' };
     try {
+      // withCredentials lets the API set the HttpOnly auth cookies on this response.
       const res = await firstValueFrom(
-        this.http.post<TokenResponse>(`${API_BASE_URL}/api/adminauth/login`, { username: u, password }),
+        this.http.post<TokenResponse>(
+          `${API_BASE_URL}/api/adminauth/login`,
+          { username: u, password },
+          { withCredentials: true },
+        ),
       );
-      const token = res?.accessToken;
-      if (!token) return { ok: false, error: 'Sign in failed. Please try again.' };
-      const session: AdminSession = {
-        username: u,
-        displayName: jwtClaim(token, NAME_CLAIM) || u,
-        token,
-        at: Date.now(),
-      };
-      try {
-        localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-      } catch {
-        /* storage unavailable */
-      }
+      // The token also comes back in the body; we read the display name from it in-memory (for the UI
+      // chrome) but never persist the token — the browser holds it as an HttpOnly cookie.
+      const displayName = res?.accessToken ? jwtClaim(res.accessToken, NAME_CLAIM) || u : u;
+      this.setSession({ username: u, displayName });
       return { ok: true };
     } catch (e: unknown) {
       const status = (e as { status?: number })?.status;
@@ -79,28 +77,48 @@ export class AuthService {
     }
   }
 
-  logout(): void {
+  /** Clears the session: revokes the refresh token + clears the auth cookies server-side, then the marker. */
+  async logout(): Promise<void> {
     try {
-      localStorage.removeItem(SESSION_KEY);
+      await firstValueFrom(this.http.post(`${API_BASE_URL}/api/adminauth/logout`, {}, { withCredentials: true }));
+    } catch {
+      /* best-effort — always clear the local marker below */
+    }
+    this.clearSession();
+  }
+
+  currentUser(): AdminSession | null {
+    return this.session;
+  }
+
+  isAuthenticated(): boolean {
+    return this.session !== null;
+  }
+
+  /** Forgets the local session marker (called by the interceptor when a refresh is rejected). */
+  clearSession(): void {
+    this.session = null;
+    try {
+      localStorage.removeItem(DISPLAY_KEY);
     } catch {
       /* ignore */
     }
   }
 
-  currentUser(): AdminSession | null {
+  private setSession(session: AdminSession): void {
+    this.session = session;
     try {
-      return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') as AdminSession | null;
+      localStorage.setItem(DISPLAY_KEY, JSON.stringify(session));
     } catch {
-      return null;
+      /* storage unavailable — session still lives in-memory for this tab */
     }
   }
+}
 
-  /** The stored JWT access token, or null. */
-  token(): string | null {
-    return this.currentUser()?.token ?? null;
-  }
-
-  isAuthenticated(): boolean {
-    return !!this.currentUser()?.token;
+function readMarker(): AdminSession | null {
+  try {
+    return JSON.parse(localStorage.getItem(DISPLAY_KEY) || 'null') as AdminSession | null;
+  } catch {
+    return null;
   }
 }

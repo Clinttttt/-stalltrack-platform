@@ -36,8 +36,8 @@ export class AdminLayout {
   readonly nav = NAV;
   readonly user = this.auth.currentUser();
 
-  signOut(): void {
-    this.auth.logout();
+  async signOut(): Promise<void> {
+    await this.auth.logout();
     this.router.navigate(['/login'], { replaceUrl: true });
   }
 }
