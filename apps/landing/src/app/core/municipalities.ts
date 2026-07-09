@@ -22,12 +22,14 @@ const presentation: Municipality[] = [
     status: 'Active',
     image: '/carcanmadcarlan/backgrounds/cantilan-reference.png',
     active: true,
-    href: 'https://console.stalltrack.site/login',
   },
   { code: 'madrid', name: 'Madrid', status: 'Upcoming', image: '/carcanmadcarlan/backgrounds/madrid-reference.png' },
-  { code: 'carmen', name: 'Carmen', status: 'Upcoming', image: '/carcanmadcarlan/backgrounds/carmen-reference.png', href: 'https://console.stalltrack.site/login' },
+  { code: 'carmen', name: 'Carmen', status: 'Upcoming', image: '/carcanmadcarlan/backgrounds/carmen-reference.png' },
   { code: 'lanuza', name: 'Lanuza', status: 'Upcoming', image: '/carcanmadcarlan/backgrounds/lanuza-reference.png' },
 ];
+
+// Where an active municipality's card sends the user — the portal login, scoped to that LGU via ?lgu=.
+const PORTAL_LOGIN_URL = 'https://console.stalltrack.site/login';
 
 function applyRegistry(entry: Municipality): Municipality {
   const reg = registry[entry.code];
@@ -38,8 +40,10 @@ function applyRegistry(entry: Municipality): Municipality {
     name: reg.name || entry.name,
     status: reg.status,
     active: isActive,
-    // Route to the portal only while Active; otherwise the card links to the rollout page.
-    href: isActive ? entry.href : undefined,
+    // Active LGUs go straight to their scoped portal login. The ?lgu={code} drives the login page's
+    // branding AND the API's per-municipality sign-in boundary (only that LGU's users can sign in there).
+    // Non-active cards fall through to the rollout page.
+    href: isActive ? `${PORTAL_LOGIN_URL}?lgu=${encodeURIComponent(entry.code)}` : undefined,
   };
 }
 
