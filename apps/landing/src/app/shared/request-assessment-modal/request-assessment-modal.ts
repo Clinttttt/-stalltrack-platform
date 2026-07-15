@@ -60,8 +60,6 @@ export class RequestAssessmentModal {
     'Other',
   ];
 
-  readonly vendorScale: ReadonlyArray<string> = ['Under 50', '50–150', '150–300', '300–600', 'Over 600'];
-
   readonly authStatusOptions: ReadonlyArray<string> = [
     'Endorsement / authorization already available',
     'In process',
@@ -74,7 +72,6 @@ export class RequestAssessmentModal {
   readonly confirmationUrl = signal('');
   readonly office = signal('');
   readonly otherOffice = signal('');
-  readonly vendorScaleValue = signal('');
   readonly authStatus = signal('');
   readonly selectedFacilities = signal<string[]>([]);
   readonly errors = signal<Record<string, string | undefined>>({});
@@ -168,7 +165,7 @@ export class RequestAssessmentModal {
       officialEmail: value('Official email'),
       contactNumber: value('Contact number'),
       facilitiesManaged: this.facilitiesManaged(),
-      approxVendors: this.vendorScaleValue() || null,
+      approxVendors: null,
       authorizationStatus: this.authStatus() || null,
       acknowledged: fd.get('Authorization acknowledgement') === 'Confirmed',
       notes: value('Notes') || null,

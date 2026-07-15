@@ -286,7 +286,10 @@
                 </div>
                 <div class="grid gap-2 sm:grid-cols-2">
                   @for (c of catalog; track c.key) {
-                    <button type="button" (click)="addFromCatalog(c)" class="group flex items-center gap-3 rounded-xl border border-line bg-white px-3.5 py-2.5 text-left transition hover:border-gold/60 hover:shadow-soft">
+                    <button type="button" (click)="addFromCatalog(c)" [disabled]="isCatalogUsed(c)"
+                      [class]="isCatalogUsed(c)
+                        ? 'group flex items-center gap-3 rounded-xl border border-line bg-mist px-3.5 py-2.5 text-left opacity-60 cursor-not-allowed'
+                        : 'group flex items-center gap-3 rounded-xl border border-line bg-white px-3.5 py-2.5 text-left transition hover:border-gold/60 hover:shadow-soft'">
                       <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-mist text-navy transition group-hover:bg-navy group-hover:text-gold">
                         @switch (catalogIcon(c.type)) {
                           @case ('coins') {
@@ -304,7 +307,14 @@
                         <div class="truncate text-sm font-semibold text-navy">{{ c.label.split(' — ')[0].split(' / ')[0].trim() }}</div>
                         <div class="text-xs text-muted">{{ c.type }}</div>
                       </div>
-                      <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 text-muted transition group-hover:text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                      @if (isCatalogUsed(c)) {
+                        <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700">
+                          <svg viewBox="0 0 24 24" class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5" /></svg>
+                          Added
+                        </span>
+                      } @else {
+                        <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 text-muted transition group-hover:text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                      }
                     </button>
                   }
                 </div>
@@ -387,10 +397,6 @@
               <label [class]="LABEL">Office name (report header)</label>
               <input [class]="INPUT" [value]="branding().officeName" (input)="setBranding('officeName', $any($event.target).value)" placeholder="e.g. Local Economic Enterprise Office" />
               <p class="mt-1 text-[11px] leading-snug text-muted/80">Appears as the header on reports and receipts.</p>
-            </div>
-            <div class="sm:col-span-2">
-              <label [class]="LABEL">OR series prefix</label>
-              <input [class]="INPUT" [value]="branding().orPrefix" (input)="setBranding('orPrefix', $any($event.target).value)" placeholder="e.g. CANTILAN-2026-" />
             </div>
             <div class="sm:col-span-2">
               <label [class]="LABEL">Logo / seal <span class="font-normal normal-case text-muted/70">(optional)</span></label>

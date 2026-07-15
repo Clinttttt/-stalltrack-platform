@@ -199,7 +199,7 @@ export class OnboardingWorkspace {
   );
   readonly adminDone = computed(() => Boolean(this.admin().name.trim() && this.admin().email.trim()));
   readonly brandingDone = computed(() =>
-    Boolean(this.branding().officeName.trim() && this.branding().orPrefix.trim()),
+    Boolean(this.branding().officeName.trim()),
   );
   readonly sectionFlags = computed(() => [this.facilitiesDone(), this.adminDone(), this.brandingDone()]);
   readonly doneCount = computed(() => this.sectionFlags().filter(Boolean).length);
@@ -265,10 +265,18 @@ export class OnboardingWorkspace {
     this.mapFacility(id, (x) => ({ ...x, [key]: val }));
   }
   addFromCatalog(c: CatalogItem): void {
+    // A non-custom facility type can be configured only once; block re-adding a type already present.
+    // 'other' (custom facility) may be added many times.
+    if (this.isCatalogUsed(c)) return;
     const nf = facilityFrom(c);
     this.facilities.update((f) => [...f, nf]);
     this.expandedId.set(nf.id);
     this.picking.set(false);
+  }
+
+  /** True when this catalog type is already configured (so it can't be added again). Custom is exempt. */
+  isCatalogUsed(c: CatalogItem): boolean {
+    return c.key !== 'other' && this.facilities().some((f) => f.catalogKey === c.key);
   }
   toggleExpanded(id: string): void {
     this.expandedId.update((cur) => (cur === id ? null : id));
