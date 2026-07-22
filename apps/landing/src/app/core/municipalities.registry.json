@@ -11,17 +11,17 @@
   },
   "carrascal": {
     "name": "Carrascal",
-    "status": "Upcoming",
-    "isActive": false
+    "status": "Active",
+    "isActive": true
   },
   "lanuza": {
     "name": "Lanuza",
-    "status": "Upcoming",
-    "isActive": false
+    "status": "Active",
+    "isActive": true
   },
   "madrid": {
     "name": "Madrid",
-    "status": "Upcoming",
-    "isActive": false
+    "status": "Active",
+    "isActive": true
   }
 }
