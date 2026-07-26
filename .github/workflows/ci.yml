@@ -1,7 +1,7 @@
 name: CI
 
 # Mirrors the EEMO repository's CI: every push and pull request to main must build cleanly before it can be
-# deployed. Kept deliberately simple — this repo has no test suite yet, so the production build IS the gate
+# deployed. Kept deliberately simple - this repo has no test suite yet, so the production build IS the gate
 # (Angular's strict template checking catches a surprising amount).
 
 on:
@@ -31,10 +31,9 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          # Node 24 / npm 11 - the toolchain that generated package-lock.json (lockfileVersion 3).
-          # Node 22 ships npm 10, which resolves nx's nested yaml dependency differently and makes
-          # 
-pm ci fail with a false 'Missing: yaml@2.9.0 from lock file'.
+          # Node 24 / npm 11 is the toolchain that generated package-lock.json (lockfileVersion 3).
+          # Node 22 ships npm 10, which resolves nx's nested yaml dependency differently and fails
+          # "npm ci" with a false "Missing: yaml@2.9.0 from lock file".
           node-version: 24
           cache: npm
 
@@ -44,7 +43,7 @@ pm ci fail with a false 'Missing: yaml@2.9.0 from lock file'.
       - name: Build admin console
         run: npx nx build admin
 
-      # The landing site pulls the municipality registry first (same script Vercel runs), so a broken
+      # The landing site pulls the municipality registry first (the same script Vercel runs), so a broken
       # sync script is caught here rather than at deploy time.
       - name: Build landing site
         run: npm run build:landing

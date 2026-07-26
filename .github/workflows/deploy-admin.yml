@@ -4,12 +4,12 @@ name: Deploy admin console
 # automatically on a push to main, or on demand via "Run workflow".
 #
 # Only paths that can affect the admin bundle trigger it, so a landing-only or docs-only change does not
-# redeploy the console. The landing site keeps its own Vercel Git deployment — this workflow does not touch it.
+# redeploy the console. The landing site keeps its own Vercel Git deployment - this workflow does not touch it.
 #
-# ── One-time setup (repository Settings → Secrets and variables → Actions) ──
-#   VERCEL_TOKEN       secret  — Vercel account token (Account Settings → Tokens)
-#   VERCEL_ORG_ID      secret  — from the admin project's Vercel settings, or `npx vercel link` (.vercel/project.json)
-#   VERCEL_PROJECT_ID  secret  — the ADMIN project's id (not the landing project's)
+# One-time setup (repository Settings -> Secrets and variables -> Actions):
+#   VERCEL_TOKEN       Vercel account token (Account Settings -> Tokens)
+#   VERCEL_ORG_ID      from the admin project's Vercel settings, or "npx vercel link" (.vercel/project.json)
+#   VERCEL_PROJECT_ID  the ADMIN project's id (not the landing project's)
 # Without these three the deploy job fails fast with a clear message rather than half-deploying.
 
 on:
@@ -57,17 +57,14 @@ jobs:
           [ -z "$VERCEL_PROJECT_ID" ] && missing="$missing VERCEL_PROJECT_ID"
           if [ -n "$missing" ]; then
             echo "Missing repository secrets:$missing"
-            echo "Add them under Settings → Secrets and variables → Actions, then re-run this workflow."
+            echo "Add them under Settings -> Secrets and variables -> Actions, then re-run this workflow."
             exit 1
           fi
 
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          # Node 24 / npm 11 - the toolchain that generated package-lock.json (lockfileVersion 3).
-          # Node 22 ships npm 10, which resolves nx's nested yaml dependency differently and makes
-          # 
-pm ci fail with a false 'Missing: yaml@2.9.0 from lock file'.
+          # Node 24 / npm 11 is the toolchain that generated package-lock.json (see ci.yml for the detail).
           node-version: 24
           cache: npm
 
@@ -79,7 +76,7 @@ pm ci fail with a false 'Missing: yaml@2.9.0 from lock file'.
 
       # Angular is a single-page app: every deep link (/validation, /activation) must be served index.html,
       # otherwise a refresh on those routes 404s. The repo-root vercel.json belongs to the LANDING project,
-      # so the rewrite is written into the artefact we upload here.
+      # so the rewrite is written into the artefact uploaded here.
       - name: Add SPA rewrite to the bundle
         run: |
           cat > dist/apps/admin/vercel.json <<'JSON'
@@ -94,10 +91,9 @@ pm ci fail with a false 'Missing: yaml@2.9.0 from lock file'.
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          url=$(npx --yes vercel@latest deploy dist/apps/admin \
-            --prod --yes --archive=tgz \
-            --token "${{ secrets.VERCEL_TOKEN }}")
+          url=$(npx --yes vercel@latest deploy dist/apps/admin --prod --yes --archive=tgz --token "$VERCEL_TOKEN")
           echo "Deployment URL: $url"
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
@@ -122,7 +118,7 @@ pm ci fail with a false 'Missing: yaml@2.9.0 from lock file'.
           {
             echo "### Admin console deployment"
             echo ""
-            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- Commit: ${GITHUB_SHA}"
             echo "- Deployment: ${{ steps.deploy.outputs.url }}"
             echo "- Live URL: https://admin.stalltrack.site"
           } >> "$GITHUB_STEP_SUMMARY"
