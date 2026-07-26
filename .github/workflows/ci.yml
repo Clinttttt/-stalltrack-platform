@@ -52,6 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: admin-dist
-          path: dist/apps/admin
+          # Angular's application builder emits the servable site under browser/.
+          path: dist/apps/admin/browser
           if-no-files-found: error
           retention-days: 7

@@ -76,14 +76,20 @@ jobs:
 
       # Package the bundle using Vercel's Build Output API so the deployment is PREBUILT. Without this,
       # Vercel runs the admin project's own dashboard build command ("nx build admin") inside the uploaded
-      # folder, where nx is not installed - it fails with "nx: command not found" (exit 127). The routes below
-      # serve real files first and fall back to index.html, which Angular's deep links (/activation,
-      # /validation) require so a refresh does not 404.
+      # folder, where nx is not installed - it fails with "nx: command not found" (exit 127).
+      #
+      # NOTE the "browser" subfolder: Angular's application builder emits dist/apps/admin/browser/index.html
+      # (alongside 3rdpartylicenses.txt and prerendered-routes.json one level up). Copying the parent instead
+      # deploys a tree with no index.html at its root, which serves 404 on every request.
+      #
+      # The routes serve real files first and fall back to index.html, which Angular deep links
+      # (/activation, /validation) require so a refresh does not 404.
       - name: Package bundle for a prebuilt deployment
         run: |
+          test -f dist/apps/admin/browser/index.html || { echo "index.html not found - check the Angular output path."; exit 1; }
           rm -rf .vercel/output
           mkdir -p .vercel/output/static
-          cp -R dist/apps/admin/. .vercel/output/static/
+          cp -R dist/apps/admin/browser/. .vercel/output/static/
           cat > .vercel/output/config.json <<'JSON'
           {
             "version": 3,
