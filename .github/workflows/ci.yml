@@ -31,7 +31,11 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Node 24 / npm 11 - the toolchain that generated package-lock.json (lockfileVersion 3).
+          # Node 22 ships npm 10, which resolves nx's nested yaml dependency differently and makes
+          # 
+pm ci fail with a false 'Missing: yaml@2.9.0 from lock file'.
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
