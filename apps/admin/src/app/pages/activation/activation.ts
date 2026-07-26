@@ -28,7 +28,9 @@ function toConfig(wc: WorkspaceConfig | null): Config {
     facilities: wc?.facilities ?? [],
     orSeries: `${wc?.branding?.orPrefix ?? ''}${wc?.branding?.orStart ?? ''}`,
     users: wc?.administrator
-      ? [{ name: wc.administrator.name ?? '', role: 'Administrator (Super Admin)', email: wc.administrator.email ?? '' }]
+      // "Head" is the term used throughout the platform and by the LGUs themselves; the internal
+      // SuperAdmin role name is an implementation detail that should not surface in the console.
+      ? [{ name: wc.administrator.name ?? '', role: 'Head', email: wc.administrator.email ?? '' }]
       : [],
   };
 }
@@ -96,30 +98,12 @@ export class Activation {
   readonly users = computed(() => this.selected()?.config?.users ?? []);
   readonly facilities = computed<Facility[]>(() => this.selected()?.config?.facilities ?? []);
 
-  readonly totalUnits = computed(() =>
-    this.facilities().reduce((s, f) => s + (this.spaceBased(f) ? this.facUnits(f) : 0), 0),
-  );
-  readonly rateFeeCount = computed(() =>
-    this.facilities().reduce((s, f) => {
-      const base = f.type !== 'Per head' && f.rateAmount ? 1 : 0;
-      const secFees = (f.sections || []).reduce((n, x) => n + (x.fees?.length || 0), 0);
-      return s + base + secFees + (f.addOns?.length || 0) + (f.rateItems?.length || 0);
-    }, 0),
-  );
-  readonly collectionModels = computed(() => new Set(this.facilities().map((f) => f.type)).size);
   readonly headEmail = computed(() => {
     const users = this.users();
-    return (users.find((u) => /admin/i.test(u.role)) || users[0])?.email || '';
+    // The role label is "Head"; the older "administrator" wording is still matched so a cached or
+    // previously-stored config keeps resolving to the right person.
+    return (users.find((u) => /head|admin/i.test(u.role)) || users[0])?.email || '';
   });
-
-  facUnits(f: Facility): number {
-    return f.sections?.length
-      ? f.sections.reduce((s, x) => s + (parseInt(x.units, 10) || 0), 0)
-      : parseInt(f.units, 10) || 0;
-  }
-  spaceBased(f: Facility): boolean {
-    return f.type === 'Daily stall' || f.type === 'Monthly rental' || (f.sections?.length ?? 0) > 0;
-  }
 
   constructor() {
     void this.refresh();
