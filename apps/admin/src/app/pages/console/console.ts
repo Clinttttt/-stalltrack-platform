@@ -14,9 +14,12 @@ import {
 } from '../../core/demo';
 
 const TABS = ['Pending', 'Onboarding', 'Declined', 'All'];
+// Status tones. Amber and red still carry meaning (needs attention / refused), but "green" is rendered as the
+// same navy-on-white pill the Activation page uses for Live: a government console should not celebrate a
+// normal state with colour, and gold remains the only accent.
 const TONE: Record<'amber' | 'green' | 'red', string> = {
   amber: 'bg-amber-bg text-amber',
-  green: 'bg-green-bg text-green',
+  green: 'border border-line bg-white text-navy',
   red: 'bg-red-bg text-red',
 };
 

@@ -1,11 +1,28 @@
 <div class="flex h-full flex-col">
-  <div class="mb-4 grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-4">
-    @for (s of stats(); track s.label) {
-      <div class="a-card px-4 py-3.5">
-        <div class="font-display text-2xl font-bold text-navy">{{ s.value }}</div>
-        <div class="text-[11px] font-semibold uppercase tracking-wide text-muted">{{ s.label }}</div>
+  <!-- Hero: same dark navy summary band as Activation, so the three operator pages read as one console. The
+       counts that used to sit in four separate white tiles now form one authoritative header row. -->
+  <div class="mb-4 shrink-0 overflow-hidden rounded-2xl bg-navy text-white shadow-soft">
+    <div class="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:gap-6">
+      <div class="flex items-center gap-3.5">
+        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/10 text-gold">
+          <app-icon name="layers" className="h-5 w-5" />
+        </span>
+        <div class="leading-tight">
+          <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">StallTrack Platform · CARCANMADCARLAN</div>
+          <div class="font-display text-xl font-bold">LGU Onboarding</div>
+          <div class="text-xs text-white/60">Assess municipal requests and guide approved LGUs through onboarding</div>
+        </div>
       </div>
-    }
+
+      <div class="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 lg:ml-auto lg:gap-x-8">
+        @for (s of stats(); track s.label) {
+          <div class="lg:border-l lg:border-white/10 lg:pl-6 lg:first:border-0 lg:first:pl-0">
+            <div class="font-display text-2xl font-bold leading-none">{{ s.value }}</div>
+            <div class="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/55">{{ s.label }}</div>
+          </div>
+        }
+      </div>
+    </div>
   </div>
 
   <div class="flex flex-col gap-5 lg:min-h-0 lg:flex-1 lg:flex-row">
@@ -34,7 +51,7 @@
           @for (r of filtered(); track r.id) {
             <button
               (click)="select(r)"
-              [class]="'block w-full border-b border-line px-4 py-3.5 text-left transition ' + (selectedId() === r.id ? 'bg-green-bg shadow-[inset_3px_0_0_#c8a84b]' : 'hover:bg-mist')"
+              [class]="'block w-full border-b border-line px-4 py-3.5 text-left transition ' + (selectedId() === r.id ? 'bg-white shadow-[inset_3px_0_0_#c8a84b]' : 'hover:bg-mist')"
             >
               <div class="flex items-center justify-between gap-2">
                 <span class="font-display text-base font-bold text-navy">{{ r.municipality }}</span>
@@ -89,7 +106,7 @@
                     <div class="font-display text-base font-bold">StallTrack Platform</div>
                     <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Official onboarding correspondence</div>
                   </div>
-                  <span [class]="'ml-auto rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + (compose().mode === 'approve' ? 'bg-green-bg text-green' : 'bg-red-bg text-red')">
+                  <span [class]="'ml-auto rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + (compose().mode === 'approve' ? 'border border-line bg-white text-navy' : 'bg-red-bg text-red')">
                     {{ compose().mode === 'approve' ? 'Approval' : 'Decline' }}
                   </span>
                 </div>
@@ -185,7 +202,7 @@
                 </div>
                 <div class="space-y-3 p-4">
                   <div class="flex items-start gap-2.5">
-                    <span [class]="'mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ' + (r.lguAcknowledgedAt ? 'bg-green-bg text-green' : 'bg-mist text-muted')">
+                    <span [class]="'mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ' + (r.lguAcknowledgedAt ? 'border border-navy/20 bg-white text-navy' : 'bg-mist text-muted')">
                       <app-icon [name]="r.lguAcknowledgedAt ? 'check' : 'clock'" className="h-3.5 w-3.5" />
                     </span>
                     <div class="text-sm">
@@ -194,7 +211,7 @@
                     </div>
                   </div>
                   <div class="flex items-start gap-2.5">
-                    <span [class]="'mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ' + (r.lguSubmittedForValidation ? 'bg-green-bg text-green' : 'bg-mist text-muted')">
+                    <span [class]="'mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ' + (r.lguSubmittedForValidation ? 'border border-navy/20 bg-white text-navy' : 'bg-mist text-muted')">
                       <app-icon [name]="r.lguSubmittedForValidation ? 'check' : 'clock'" className="h-3.5 w-3.5" />
                     </span>
                     <div class="text-sm">
@@ -208,7 +225,7 @@
                       <ul class="grid gap-1.5 sm:grid-cols-2">
                         @for (c of r.checklist; track c.label) {
                           <li class="flex items-center gap-2 text-sm">
-                            <span [class]="'grid h-4 w-4 shrink-0 place-items-center rounded-full ' + (c.done ? 'bg-green text-white' : 'border border-line bg-mist text-muted')">
+                            <span [class]="'grid h-4 w-4 shrink-0 place-items-center rounded-full ' + (c.done ? 'bg-navy text-white' : 'border border-line bg-mist text-muted')">
                               @if (c.done) {
                                 <app-icon name="check" className="h-2.5 w-2.5" />
                               }
@@ -221,7 +238,7 @@
                   }
                 </div>
                 @if (r.lguSubmittedForValidation) {
-                  <div class="flex items-center gap-2 border-t border-line bg-green-bg px-4 py-2.5 text-sm font-semibold text-green">
+                  <div class="flex items-center gap-2 border-t border-line bg-white px-4 py-2.5 text-sm font-semibold text-navy">
                     <app-icon name="check" className="h-4 w-4" />
                     {{ r.municipality }} is ready to advance to Validation.
                   </div>

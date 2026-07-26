@@ -1,11 +1,28 @@
 <div class="flex h-full flex-col">
-  <div class="mb-4 grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-4">
-    @for (s of stats(); track s.label) {
-      <div class="a-card px-4 py-3.5">
-        <div class="font-display text-2xl font-bold text-navy">{{ s.value }}</div>
-        <div class="text-[11px] font-semibold uppercase tracking-wide text-muted">{{ s.label }}</div>
+  <!-- Hero: same dark navy summary band as Activation, so the three operator pages read as one console. The
+       counts that used to sit in four separate white tiles now form one authoritative header row. -->
+  <div class="mb-4 shrink-0 overflow-hidden rounded-2xl bg-navy text-white shadow-soft">
+    <div class="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:gap-6">
+      <div class="flex items-center gap-3.5">
+        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/10 text-gold">
+          <app-icon name="activity" className="h-5 w-5" />
+        </span>
+        <div class="leading-tight">
+          <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">StallTrack Platform · CARCANMADCARLAN</div>
+          <div class="font-display text-xl font-bold">Validation</div>
+          <div class="text-xs text-white/60">Verify a submitted LGU configuration before it is activated</div>
+        </div>
       </div>
-    }
+
+      <div class="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 lg:ml-auto lg:gap-x-8">
+        @for (s of stats(); track s.label) {
+          <div class="lg:border-l lg:border-white/10 lg:pl-6 lg:first:border-0 lg:first:pl-0">
+            <div class="font-display text-2xl font-bold leading-none">{{ s.value }}</div>
+            <div class="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/55">{{ s.label }}</div>
+          </div>
+        }
+      </div>
+    </div>
   </div>
 
   <div class="flex flex-col gap-5 lg:min-h-0 lg:flex-1 lg:flex-row">
@@ -21,7 +38,7 @@
           @for (r of scoped(); track r.id) {
             <button
               (click)="select(r.id)"
-              [class]="'block w-full border-b border-line px-4 py-3.5 text-left transition ' + (selected()?.id === r.id ? 'bg-green-bg shadow-[inset_3px_0_0_#c8a84b]' : 'hover:bg-mist')"
+              [class]="'block w-full border-b border-line px-4 py-3.5 text-left transition ' + (selected()?.id === r.id ? 'bg-white shadow-[inset_3px_0_0_#c8a84b]' : 'hover:bg-mist')"
             >
               <div class="flex items-center justify-between gap-2">
                 <span class="font-display text-base font-bold text-navy">{{ r.municipality }}</span>
@@ -90,7 +107,7 @@
                                   <div class="truncate text-sm font-semibold text-navy">{{ ri.label }}</div>
                                   <div class="text-[11px] text-muted">Per head</div>
                                 </div>
-                                <span class="shrink-0 rounded-full bg-green-bg px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-green">₱{{ ri.amount }}/head</span>
+                                <span class="shrink-0 rounded-full border border-line bg-white px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-navy">₱{{ ri.amount }}/head</span>
                               </div>
                             }
                           </div>
@@ -129,7 +146,7 @@
                                   <div class="truncate text-sm font-semibold text-navy">{{ a.label }}</div>
                                   <div class="text-[11px] text-muted">{{ a.mode }}</div>
                                 </div>
-                                <span [class]="'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + (a.basis === 'Per consumption' ? 'bg-amber-bg text-amber' : 'bg-green-bg text-green')">
+                                <span [class]="'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + (a.basis === 'Per consumption' ? 'bg-amber-bg text-amber' : 'border border-line bg-white text-navy')">
                                   {{ a.basis === 'Per consumption' ? 'Metered' : '₱' + a.amount + ' ' + a.unit }}
                                 </span>
                               </div>
