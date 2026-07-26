@@ -74,15 +74,23 @@ jobs:
       - name: Build admin console
         run: npx nx build admin
 
-      # Angular is a single-page app: every deep link (/validation, /activation) must be served index.html,
-      # otherwise a refresh on those routes 404s. The repo-root vercel.json belongs to the LANDING project,
-      # so the rewrite is written into the artefact uploaded here.
-      - name: Add SPA rewrite to the bundle
+      # Package the bundle using Vercel's Build Output API so the deployment is PREBUILT. Without this,
+      # Vercel runs the admin project's own dashboard build command ("nx build admin") inside the uploaded
+      # folder, where nx is not installed - it fails with "nx: command not found" (exit 127). The routes below
+      # serve real files first and fall back to index.html, which Angular's deep links (/activation,
+      # /validation) require so a refresh does not 404.
+      - name: Package bundle for a prebuilt deployment
         run: |
-          cat > dist/apps/admin/vercel.json <<'JSON'
+          rm -rf .vercel/output
+          mkdir -p .vercel/output/static
+          cp -R dist/apps/admin/. .vercel/output/static/
+          cat > .vercel/output/config.json <<'JSON'
           {
-            "$schema": "https://openapi.vercel.sh/vercel.json",
-            "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+            "version": 3,
+            "routes": [
+              { "handle": "filesystem" },
+              { "src": "/.*", "dest": "/index.html" }
+            ]
           }
           JSON
 
@@ -93,7 +101,7 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          url=$(npx --yes vercel@latest deploy dist/apps/admin --prod --yes --archive=tgz --token "$VERCEL_TOKEN")
+          url=$(npx --yes vercel@latest deploy --prebuilt --prod --yes --archive=tgz --token "$VERCEL_TOKEN")
           echo "Deployment URL: $url"
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
