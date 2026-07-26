@@ -1,0 +1,124 @@
+name: Deploy admin console
+
+# Deploys apps/admin (admin.stalltrack.site, hosted on Vercel) the same way the EEMO repo deploys its portal:
+# automatically on a push to main, or on demand via "Run workflow".
+#
+# Only paths that can affect the admin bundle trigger it, so a landing-only or docs-only change does not
+# redeploy the console. The landing site keeps its own Vercel Git deployment — this workflow does not touch it.
+#
+# ── One-time setup (repository Settings → Secrets and variables → Actions) ──
+#   VERCEL_TOKEN       secret  — Vercel account token (Account Settings → Tokens)
+#   VERCEL_ORG_ID      secret  — from the admin project's Vercel settings, or `npx vercel link` (.vercel/project.json)
+#   VERCEL_PROJECT_ID  secret  — the ADMIN project's id (not the landing project's)
+# Without these three the deploy job fails fast with a clear message rather than half-deploying.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/admin/**'
+      - 'libs/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'nx.json'
+      - 'tsconfig*.json'
+      - '.github/workflows/deploy-admin.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Never let two console deployments race each other.
+  group: admin-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy admin console
+    runs-on: ubuntu-latest
+    environment:
+      name: admin-production
+      url: https://admin.stalltrack.site
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Verify deployment credentials are configured
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          missing=""
+          [ -z "$VERCEL_TOKEN" ] && missing="$missing VERCEL_TOKEN"
+          [ -z "$VERCEL_ORG_ID" ] && missing="$missing VERCEL_ORG_ID"
+          [ -z "$VERCEL_PROJECT_ID" ] && missing="$missing VERCEL_PROJECT_ID"
+          if [ -n "$missing" ]; then
+            echo "Missing repository secrets:$missing"
+            echo "Add them under Settings → Secrets and variables → Actions, then re-run this workflow."
+            exit 1
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build admin console
+        run: npx nx build admin
+
+      # Angular is a single-page app: every deep link (/validation, /activation) must be served index.html,
+      # otherwise a refresh on those routes 404s. The repo-root vercel.json belongs to the LANDING project,
+      # so the rewrite is written into the artefact we upload here.
+      - name: Add SPA rewrite to the bundle
+        run: |
+          cat > dist/apps/admin/vercel.json <<'JSON'
+          {
+            "$schema": "https://openapi.vercel.sh/vercel.json",
+            "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+          }
+          JSON
+
+      - name: Deploy to Vercel (production)
+        id: deploy
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          url=$(npx --yes vercel@latest deploy dist/apps/admin \
+            --prod --yes --archive=tgz \
+            --token "${{ secrets.VERCEL_TOKEN }}")
+          echo "Deployment URL: $url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # Proves the deployment actually serves the console, rather than trusting the upload step.
+      - name: Verify the console responds
+        shell: bash
+        run: |
+          for attempt in {1..20}; do
+            if curl --fail --silent --show-error --output /dev/null "https://admin.stalltrack.site/"; then
+              echo "admin.stalltrack.site is responding."
+              exit 0
+            fi
+            echo "Console not ready yet (attempt $attempt/20). Waiting 10 seconds..."
+            sleep 10
+          done
+          echo "admin.stalltrack.site did not respond after ~3 minutes. Check the Vercel deployment logs."
+          exit 1
+
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo "### Admin console deployment"
+            echo ""
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- Deployment: ${{ steps.deploy.outputs.url }}"
+            echo "- Live URL: https://admin.stalltrack.site"
+          } >> "$GITHUB_STEP_SUMMARY"
