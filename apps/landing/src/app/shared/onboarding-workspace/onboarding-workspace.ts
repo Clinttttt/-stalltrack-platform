@@ -41,6 +41,11 @@ interface Facility {
   name: string;
   type: string;
   rateAmount: string;
+  /**
+   * A daily-stall market only: the MONTHLY rent a space is let for, if your ordinance states one. The daily rate
+   * above is the installment it is collected in. Left empty, a month is taken as thirty daily rates.
+   */
+  monthlyRent: string;
   rateUnit: string;
   unitLabel: string;
   units: string;
@@ -124,6 +129,7 @@ function facilityFrom(c: CatalogItem): Facility {
     name: c.key === 'other' ? '' : shortName(c.label),
     type: c.type,
     rateAmount: '',
+    monthlyRent: '',
     rateUnit: RATE_UNIT_FOR[c.type] || 'per month',
     unitLabel: c.unitLabel,
     units: '',
@@ -251,6 +257,15 @@ export class OnboardingWorkspace {
 
   ratePlaceholderFor(type: string): string {
     return this.ratePlaceholder[type] || '0';
+  }
+
+  /**
+   * What thirty of the market's own daily rate comes to — shown as the placeholder so the office can see the figure
+   * that will be used if it states nothing, and correct it if its ordinance says otherwise.
+   */
+  monthlyRentPlaceholder(f: Facility): string {
+    const daily = f.sections.map((s) => parseFloat((s.rate || '').trim())).find((n) => !isNaN(n) && n > 0);
+    return daily ? String(daily * 30) : '900';
   }
 
   // ── facility mutators (mirror React) ───────────────────────────────────────

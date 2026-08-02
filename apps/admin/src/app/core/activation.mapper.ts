@@ -164,6 +164,15 @@ export function mapRequestToCommand(
       // with a base rate set, falling back to any legacy facility-level rateAmount.
       const sectionRate = (f.sections || []).find((s) => (s.rate ?? '').trim())?.rate;
       rates.push({ facilityCode: code, key: 'NpmDailyStall', amount: num(sectionRate) ?? num(f.rateAmount) ?? 0 });
+
+      // The MONTHLY rent a space is let for, when the LGU's ordinance states one. The daily rate above is the
+      // installment it is collected in; this is what a month owes. Omitted (or 0) leaves it unstated, and a month is
+      // then thirty daily rates — which is the reference municipality's own ordinance. Sending it silently dropped
+      // was how an LGU could be billed a month it never passed.
+      const monthlyRent = num(f.monthlyRent);
+      if (monthlyRent && monthlyRent > 0) {
+        rates.push({ facilityCode: code, key: 'NpmMonthlyStall', amount: monthlyRent });
+      }
       for (const s of f.sections || []) {
         for (const fee of s.fees || []) {
           if (/kilo|fish/.test(fee.label.toLowerCase())) {

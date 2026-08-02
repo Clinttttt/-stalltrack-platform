@@ -119,6 +119,18 @@
                         </div>
                       }
 
+                      <!-- The month a market space is let for, as the LGU stated it. Shown so the operator can see
+                           what will be seeded: unstated means thirty daily rates, which the office is asked to
+                           confirm in its own portal after activation. -->
+                      @if (f.type === 'Daily stall') {
+                        <div class="flex items-center justify-between gap-3">
+                          <span class="text-muted">Monthly rent per space</span>
+                          <span class="font-semibold text-navy">
+                            @if (f.monthlyRent) { ₱{{ f.monthlyRent }} } @else { <span class="font-normal text-muted">Not stated · 30 × daily</span> }
+                          </span>
+                        </div>
+                      }
+
                       @if (f.sections.length > 0) {
                         <div>
                           <div class="a-label mb-1.5">Sections</div>

@@ -55,6 +55,8 @@ export interface Facility {
   name: string;
   type: string;
   rateAmount: string;
+  /** A daily-stall market only: the monthly rent a space is let for, when the ordinance states one. */
+  monthlyRent?: string;
   rateUnit: string;
   unitLabel: string;
   units: string;
