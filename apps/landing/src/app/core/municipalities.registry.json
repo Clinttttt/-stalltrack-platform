@@ -6,22 +6,22 @@
   },
   "carmen": {
     "name": "Carmen",
-    "status": "Active",
-    "isActive": true
+    "status": "Upcoming",
+    "isActive": false
   },
   "carrascal": {
     "name": "Carrascal",
-    "status": "Active",
-    "isActive": true
+    "status": "Upcoming",
+    "isActive": false
   },
   "lanuza": {
     "name": "Lanuza",
-    "status": "Active",
-    "isActive": true
+    "status": "Upcoming",
+    "isActive": false
   },
   "madrid": {
     "name": "Madrid",
-    "status": "Active",
-    "isActive": true
+    "status": "Upcoming",
+    "isActive": false
   }
 }

@@ -13,7 +13,11 @@ const presentation: Municipality[] = [
     code: 'carrascal',
     name: 'Carrascal',
     status: 'Upcoming',
-    rolloutStage: 'onboarding',
+    // No rolloutStage. Carrascal has not started: verified against the database on 2026-08-16, where the
+    // AssessmentRequests and OnboardingDrafts tables are EMPTY and it owns no rows in any tenant table.
+    // Naming a stage made this page report it as part-way through onboarding - a claim about an LGU's
+    // dealings with the office that nothing supports. Without one, the page shows the pipeline with no step
+    // marked current, which is what "not started" actually looks like.
     image: '/carcanmadcarlan/backgrounds/carrascal-reference.png',
   },
   {
