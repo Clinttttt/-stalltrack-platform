@@ -1,0 +1,85 @@
+name: Registry drift
+
+# Does the committed municipality snapshot still match the live registry?
+#
+# The snapshot (apps/landing/src/app/core/municipalities.registry.json) is refreshed at build time by
+# tools/sync-municipalities.mjs, and that script deliberately EXITS 0 on any failure so a deploy is never
+# blocked by an unreachable API. The cost of that choice is silence: if the fetch fails, the committed
+# snapshot ships unnoticed.
+#
+# That is not hypothetical. On 2026-08-16 the snapshot claimed all five municipalities were Active, and the
+# public site told an office its municipality was "live on StallTrack" and offered it a portal login, for an
+# LGU that had never been onboarded. Nothing failed; the page was simply wrong.
+#
+# So the drift check lives HERE, on its own schedule, and never on the deploy path. A stale snapshot becomes a
+# failed check somebody can see, while a flaky API still cannot stop a release.
+
+on:
+  schedule:
+    # 21:00 UTC = 05:00 Philippine time, before the office starts.
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: registry-drift
+  cancel-in-progress: false
+
+jobs:
+  drift:
+    name: Snapshot matches the live registry
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # Matches CI: Node 24 / npm 11 is the toolchain that generated package-lock.json.
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Checked BEFORE the sync runs, and this step is the reason the job is trustworthy. The sync swallows a
+      # failed fetch, so without this the job would pass whenever the API was unreachable - reporting "no
+      # drift" when it had not managed to look. A check that cannot tell those apart is worse than none.
+      - name: Confirm the registry API answers
+        env:
+          REGISTRY_API_URL: ${{ vars.REGISTRY_API_URL || 'https://api.stalltrack.site/api/municipalities' }}
+        run: |
+          set -euo pipefail
+          echo "Asking $REGISTRY_API_URL"
+          status=$(curl -sS -o /tmp/registry.json -w '%{http_code}' --max-time 30 "$REGISTRY_API_URL")
+          if [ "$status" != "200" ]; then
+            echo "::error::The registry API answered HTTP $status, so drift could not be checked."
+            exit 1
+          fi
+          count=$(node -e 'const d=require("/tmp/registry.json");if(!Array.isArray(d))throw new Error("not an array");console.log(d.length)')
+          if [ "$count" -lt 1 ]; then
+            echo "::error::The registry API returned an empty list, so drift could not be checked."
+            exit 1
+          fi
+          echo "The registry answered with $count municipalities."
+
+      - name: Refresh the snapshot from the registry
+        env:
+          REGISTRY_API_URL: ${{ vars.REGISTRY_API_URL || 'https://api.stalltrack.site/api/municipalities' }}
+        run: npm run sync:municipalities
+
+      - name: Fail if the committed snapshot has drifted
+        run: |
+          set -euo pipefail
+          snapshot=apps/landing/src/app/core/municipalities.registry.json
+          if git diff --quiet -- "$snapshot"; then
+            echo "The committed snapshot matches the live registry."
+            exit 0
+          fi
+          echo "::error::The committed snapshot no longer matches the live registry. It is the fallback the site ships when a build cannot reach the API, so a stale one can present an unonboarded municipality as live. Run 'npm run sync:municipalities' and commit the result."
+          git --no-pager diff -- "$snapshot"
+          exit 1
