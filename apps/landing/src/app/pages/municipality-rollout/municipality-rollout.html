@@ -284,28 +284,12 @@
       </section>
     }
 
-    @if (isActive()) {
-      <section class="bg-white py-16">
-        <div class="container-px">
-          <div reveal class="flex flex-col items-start gap-4 rounded-3xl border border-line bg-mist p-8 shadow-soft sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 class="font-display text-2xl font-bold text-navy">{{ m.name }} is live on StallTrack.</h2>
-              <p class="mt-2 text-muted">Enter the official portal to manage collections, records, and reports.</p>
-            </div>
-            <a [href]="m.href" class="btn-navy shrink-0">
-              Enter Portal
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-            </a>
-          </div>
-        </div>
-      </section>
-    }
-
     @if (assessmentOpen()) {
       <app-request-assessment-modal [municipality]="m" (close)="closeAssessment()" />
     }
 
-    <app-footer />
+    <!-- Slim: this page belongs to the municipality, not to the product. -->
+    <app-footer [slim]="true" />
   </div>
 } @else {
   <!-- ── NotFound ─────────────────────────────────────────── -->

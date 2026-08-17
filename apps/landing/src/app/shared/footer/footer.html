@@ -1,42 +1,55 @@
 <footer class="border-t border-line bg-navy text-white">
-  <div class="container-px grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
-    <div class="lg:col-span-2">
-      <div class="flex items-center gap-2.5">
-        <img src="/carcanmadcarlan/logo/stalltrack-seal-logo.png" alt="StallTrack seal" class="h-10 w-10 rounded-full object-contain" />
-        <span class="font-display text-xl font-bold">Stall<span class="text-gold">Track</span></span>
+  <!-- The product's own marketing. Left out on a municipality's page, which belongs to the LGU rather than to
+       StallTrack: the vendor's emblem and a Features / Use Cases / Product Preview menu do not belong under a
+       heading that reads "Municipality of ...". The copyright bar below stays either way, and carries the legal
+       links, because those are notices a public page should always reach. -->
+  @if (!slim()) {
+    <div class="container-px grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="lg:col-span-2">
+        <div class="flex items-center gap-2.5">
+          <img src="/carcanmadcarlan/logo/stalltrack-seal-logo.png" alt="StallTrack seal" class="h-10 w-10 rounded-full object-contain" />
+          <span class="font-display text-xl font-bold">Stall<span class="text-gold">Track</span></span>
+        </div>
+        <p class="mt-4 max-w-sm text-sm leading-relaxed text-white/55">
+          A GovTech SaaS platform for LGU economic enterprise operations — helping public market
+          offices and LGU-managed facilities digitize records, collections, reporting, and audit trails.
+        </p>
       </div>
-      <p class="mt-4 max-w-sm text-sm leading-relaxed text-white/55">
-        A GovTech SaaS platform for LGU economic enterprise operations — helping public market
-        offices and LGU-managed facilities digitize records, collections, reporting, and audit trails.
-      </p>
-    </div>
 
-    <div>
-      <h4 class="text-xs font-bold uppercase tracking-wider text-white/40">Product</h4>
-      <ul class="mt-4 space-y-2.5 text-sm text-white/70">
-        <li><a href="/#features" class="hover:text-gold">Features</a></li>
-        <li><a routerLink="/ai-roadmap" class="hover:text-gold">AI Roadmap</a></li>
-        <li><a href="/#usecases" class="hover:text-gold">Use Cases</a></li>
-        <li><a href="/#preview" class="hover:text-gold">Product Preview</a></li>
-        <li><a href="/#security" class="hover:text-gold">Security</a></li>
-      </ul>
-    </div>
+      <div>
+        <h4 class="text-xs font-bold uppercase tracking-wider text-white/40">Product</h4>
+        <ul class="mt-4 space-y-2.5 text-sm text-white/70">
+          <li><a href="/#features" class="hover:text-gold">Features</a></li>
+          <li><a routerLink="/ai-roadmap" class="hover:text-gold">AI Roadmap</a></li>
+          <li><a href="/#usecases" class="hover:text-gold">Use Cases</a></li>
+          <li><a href="/#preview" class="hover:text-gold">Product Preview</a></li>
+          <li><a href="/#security" class="hover:text-gold">Security</a></li>
+        </ul>
+      </div>
 
-    <div>
-      <h4 class="text-xs font-bold uppercase tracking-wider text-white/40">Company</h4>
-      <ul class="mt-4 space-y-2.5 text-sm text-white/70">
-        <li><a href="/#founder" class="hover:text-gold">Founder</a></li>
-        <li><a href="/#contact" class="hover:text-gold">Contact</a></li>
-        <li><a routerLink="/privacy" class="hover:text-gold">Privacy Policy</a></li>
-        <li><a routerLink="/terms" class="hover:text-gold">Terms of Service</a></li>
-      </ul>
+      <div>
+        <h4 class="text-xs font-bold uppercase tracking-wider text-white/40">Company</h4>
+        <ul class="mt-4 space-y-2.5 text-sm text-white/70">
+          <li><a href="/#founder" class="hover:text-gold">Founder</a></li>
+          <li><a href="/#contact" class="hover:text-gold">Contact</a></li>
+          <li><a routerLink="/privacy" class="hover:text-gold">Privacy Policy</a></li>
+          <li><a routerLink="/terms" class="hover:text-gold">Terms of Service</a></li>
+        </ul>
+      </div>
     </div>
-  </div>
+  }
 
-  <div class="border-t border-white/10">
+  <div [class]="slim() ? '' : 'border-t border-white/10'">
     <div class="container-px flex flex-col items-center justify-between gap-2 py-5 text-xs text-white/45 sm:flex-row">
       <p>© {{ year }} StallTrack. All rights reserved.</p>
       <p class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+        @if (slim()) {
+          <!-- Carried here when the columns above are gone, so the legal notices are never unreachable. -->
+          <a routerLink="/privacy" class="hover:text-gold">Privacy Policy</a>
+          <span class="hidden text-white/20 sm:inline">·</span>
+          <a routerLink="/terms" class="hover:text-gold">Terms of Service</a>
+          <span class="hidden text-white/20 sm:inline">·</span>
+        }
         <a href="mailto:founder@stalltrack.site" class="hover:text-gold">founder&#64;stalltrack.site</a>
         <span class="hidden text-white/20 sm:inline">·</span>
         <span>stalltrack.site</span>
