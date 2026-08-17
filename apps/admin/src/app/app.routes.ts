@@ -11,8 +11,8 @@ import { authGuard } from './core/auth.guard';
  *     '/activation' -> Activation
  *   '*'             -> Navigate to '/' (React `<Navigate to="/" replace />`)
  *
- * The AdminLayout (which provides the shared DemoStore) wraps the three console pages
- * as child routes, mirroring the React <Route element={<AdminLayout />}> nesting.
+ * The AdminLayout wraps the three console pages as child routes, mirroring the React
+ * <Route element={<AdminLayout />}> nesting.
  */
 export const appRoutes: Route[] = [
   {

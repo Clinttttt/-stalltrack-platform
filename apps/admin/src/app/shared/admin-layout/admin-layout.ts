@@ -2,7 +2,6 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Icon } from '../icon/icon';
 import { AuthService } from '../../core/auth.service';
-import { DemoStore } from '../../core/demo-store.service';
 
 interface NavItem {
   to: string;
@@ -18,15 +17,17 @@ const NAV: NavItem[] = [
 
 /**
  * Faithful Angular port of the React apps/admin/src/components/AdminLayout.jsx.
- * Sidebar + top bar shell wrapping the routed console pages. Provides the DemoStore at
- * this level so the three pages share one working set (mirrors the React provider that
- * wrapped the routed <Outlet />).
+ * Sidebar + top bar shell wrapping the routed console pages.
+ *
+ * It used to provide a DemoStore here so the three pages could share one seeded working set, mirroring the React
+ * provider. That store held fabricated assessment requests for municipalities that never applied, and by the time
+ * every page had been wired to the live endpoints no page injected it any more - it was seeded on each render and
+ * read by nobody. Removed 2026-08-17 along with the seed data itself.
  */
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon],
-  providers: [DemoStore],
   templateUrl: './admin-layout.html',
 })
 export class AdminLayout {

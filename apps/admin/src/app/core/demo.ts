@@ -1,9 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// DEMO data for the admin console. Illustrative only — nothing here is persisted or
-// connected to the live system. When the API is wired, replace `seedRequests()` with
-// a fetch to the StallTrack platform endpoints (assessment requests + onboarding).
+// The admin console's shared shapes: the pipeline stages, the request record every page reads, the status
+// helpers, and the decision-message templates.
 //
-// Faithful Angular/TypeScript port of the React apps/admin/src/data/demo.js.
+// This file WAS demo data, and its header still said so long after that stopped being true. All three console
+// pages now read the live platform endpoints - Console and Validation through AssessmentApi, Activation through
+// ActivationApi as well - and only these types and constants remained in use.
+//
+// The seeded records went with the header (2026-08-17). They described assessment requests and onboarding links
+// for named municipalities, complete with plausible focal persons, e-mail addresses and dated log entries, for
+// LGUs that have never applied - AssessmentRequests is an empty table. Nothing rendered them: the DemoStore that
+// held them was still provided by the layout but injected by no page. They were dead weight that read as real,
+// which is worse than dead weight, and they invited exactly the wrong conclusion when this console was audited.
+//
+// So: no fabricated municipalities here. If sample data is ever wanted again, it belongs behind something that
+// says on screen that it is sample data.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const STAGES = ['Assessment', 'Onboarding', 'Validation', 'Activation'] as const;
@@ -130,189 +140,6 @@ export function statusTone(s: RequestStatus): 'amber' | 'green' | 'red' {
   return 'red';
 }
 
-let _id = 0;
-const nid = () => `req-${++_id}`;
-
-// Fresh copy each call so component state owns a mutable working set.
-export function seedRequests(): RequestRecord[] {
-  _id = 0;
-  return [
-    {
-      id: nid(),
-      municipality: 'Madrid',
-      province: 'Surigao del Sur',
-      facilitiesManaged: 'Barbecue / food stalls, Public Market — daily stalls',
-      requestingOffice: 'Local Economic Enterprise Office (LEEO)',
-      focalPerson: 'Clint Villanueva',
-      position: 'LEEO Officer',
-      officialEmail: 'clintvillanueva82@gmail.com',
-      contactNumber: '0912 345 6789',
-      approxVendors: '~180',
-      authorizationStatus: 'In process',
-      acknowledged: true,
-      notes: '',
-      submittedAt: '2026-07-02T13:31:00',
-      status: STATUS.PENDING,
-      stage: 'Assessment',
-      activated: false,
-      decisionMessage: '',
-      onboardingLink: '',
-      log: [],
-    },
-    {
-      id: nid(),
-      municipality: 'Carmen',
-      province: 'Surigao del Sur',
-      facilitiesManaged: 'Public Market, Commercial Center, Slaughterhouse, Transport Terminal, Weekly market',
-      requestingOffice: 'Office of the Municipal Treasurer',
-      focalPerson: 'Maria Santos',
-      position: 'Municipal Treasurer',
-      officialEmail: 'treasury.carmen@example.gov.ph',
-      contactNumber: '0917 222 3344',
-      approxVendors: '~95',
-      authorizationStatus: "Endorsed by Mayor's Office",
-      acknowledged: true,
-      notes: '',
-      submittedAt: '2026-07-01T09:10:00',
-      status: STATUS.APPROVED,
-      stage: 'Validation',
-      activated: false,
-      decisionMessage: '',
-      onboardingLink: 'https://stalltrack.site/onboarding/carmen-4b8e1a90',
-      lguAcknowledgedAt: '2026-07-02T08:40:00',
-      lguSubmittedForValidation: '2026-07-02T16:05:00',
-      checklist: ONBOARDING_CHECKLIST.map((label) => ({ label, done: true })),
-      config: {
-        facilities: [
-          {
-            name: 'Public Market', type: 'Daily stall', rateAmount: '25', rateUnit: 'per day', unitLabel: 'stalls', units: '',
-            sections: [
-              { name: 'Fish', units: '40', fees: [{ label: 'Fish (per kilo)', amount: '1', unit: 'per kilo' }] },
-              { name: 'Meat', units: '30', fees: [] },
-              { name: 'Vegetables', units: '50', fees: [] },
-            ],
-            addOns: [
-              { label: 'Electricity', basis: 'Per consumption', amount: '', unit: 'per month', mode: 'Optional (per stall)' },
-              { label: 'Water', basis: 'Per consumption', amount: '', unit: 'per month', mode: 'Optional (per stall)' },
-            ],
-            rateItems: [],
-          },
-          {
-            name: 'Commercial Center', type: 'Monthly rental', rateAmount: '2400', rateUnit: 'per month', unitLabel: 'spaces', units: '24',
-            sections: [], addOns: [], rateItems: [],
-          },
-          {
-            name: 'Slaughterhouse', type: 'Per head', rateAmount: '', rateUnit: 'per head', unitLabel: 'heads', units: '',
-            sections: [], addOns: [],
-            rateItems: [{ label: 'Hog', amount: '250' }, { label: 'Cattle / Carabao', amount: '365' }],
-          },
-          {
-            name: 'Transport Terminal', type: 'Per trip', rateAmount: '10', rateUnit: 'per trip', unitLabel: 'trips', units: '',
-            sections: [], addOns: [], rateItems: [],
-          },
-          {
-            name: 'Weekly / Tabo Market', type: 'Weekly market', rateAmount: '100', rateUnit: 'per vendor', unitLabel: 'vendors', units: '',
-            sections: [], addOns: [], rateItems: [],
-          },
-        ],
-        orSeries: 'CAR-2026-000001',
-        users: [
-          { name: 'Maria Santos', role: 'Administrator (Super Admin)', email: 'treasury.carmen@example.gov.ph' },
-        ],
-      },
-      log: [
-        { at: '2026-07-01T10:00:00', text: 'Assessment approved. Onboarding link issued to the LGU focal person.' },
-        { at: '2026-07-02T16:05:00', text: 'LGU submitted their onboarding checklist for validation.' },
-        { at: '2026-07-02T16:30:00', text: 'Onboarding accepted — advanced to the Validation stage.' },
-      ],
-    },
-    {
-      id: nid(),
-      municipality: 'Carrascal',
-      province: 'Surigao del Sur',
-      facilitiesManaged: 'Public Market — daily stalls, Slaughterhouse, Weekly market',
-      requestingOffice: 'Local Economic Enterprise Office (LEEO)',
-      focalPerson: 'Jose Reyes',
-      position: 'LEEO Head',
-      officialEmail: 'leeo.carrascal@example.gov.ph',
-      contactNumber: '0918 555 1212',
-      approxVendors: '~140',
-      authorizationStatus: 'Approved by Sangguniang Bayan',
-      acknowledged: true,
-      notes: '',
-      submittedAt: '2026-06-28T14:05:00',
-      status: STATUS.APPROVED,
-      stage: 'Onboarding',
-      activated: false,
-      decisionMessage: '',
-      onboardingLink: 'https://stalltrack.site/onboarding/carrascal-7f3a9c2e',
-      lguAcknowledgedAt: '2026-06-29T09:15:00',
-      lguSubmittedForValidation: '2026-06-30T14:20:00',
-      checklist: ONBOARDING_CHECKLIST.map((label) => ({ label, done: true })),
-      config: {
-        facilities: [
-          {
-            name: 'Public Market', type: 'Daily stall', rateAmount: '30', rateUnit: 'per day', unitLabel: 'stalls', units: '',
-            sections: [
-              { name: 'Fish', units: '50', fees: [{ label: 'Fish (per kilo)', amount: '1', unit: 'per kilo' }] },
-              { name: 'Meat', units: '40', fees: [] },
-              { name: 'Vegetables', units: '50', fees: [] },
-            ],
-            addOns: [
-              { label: 'Electricity', basis: 'Per consumption', amount: '', unit: 'per month', mode: 'Optional (per stall)' },
-              { label: 'Water', basis: 'Per consumption', amount: '', unit: 'per month', mode: 'Optional (per stall)' },
-            ],
-            rateItems: [],
-          },
-          {
-            name: 'Slaughterhouse', type: 'Per head', rateAmount: '', rateUnit: 'per head', unitLabel: 'heads', units: '',
-            sections: [], addOns: [],
-            rateItems: [
-              { label: 'Hog', amount: '250' },
-              { label: 'Cattle / Carabao', amount: '365' },
-            ],
-          },
-          {
-            name: 'Weekly Market', type: 'Weekly market', rateAmount: '100', rateUnit: 'per vendor', unitLabel: 'vendors', units: '60',
-            sections: [], addOns: [], rateItems: [],
-          },
-        ],
-        orSeries: 'CARR-2026-000001',
-        users: [
-          { name: 'Jose Reyes', role: 'Administrator (Super Admin)', email: 'leeo.carrascal@example.gov.ph' },
-        ],
-      },
-      log: [
-        { at: '2026-06-28T15:00:00', text: 'Assessment approved. Onboarding link issued to the LGU focal person.' },
-        { at: '2026-06-29T10:30:00', text: 'Facility inventory and rate schedule received; preparing the onboarding workspace.' },
-      ],
-    },
-    {
-      id: nid(),
-      municipality: 'Lanuza',
-      province: 'Surigao del Sur',
-      facilitiesManaged: 'Public Market — daily stalls',
-      requestingOffice: 'Office of the Mayor',
-      focalPerson: 'Ana Cruz',
-      position: 'Administrative Officer',
-      officialEmail: 'mayor.lanuza@example.gov.ph',
-      contactNumber: '0920 111 8899',
-      approxVendors: '~40',
-      authorizationStatus: 'Preliminary inquiry',
-      acknowledged: false,
-      notes: '',
-      submittedAt: '2026-06-25T11:00:00',
-      status: STATUS.DECLINED,
-      stage: 'Assessment',
-      activated: false,
-      decisionMessage:
-        'Thank you for your interest in StallTrack. We are unable to proceed with Lanuza at this time because the request has not yet been formally authorized by the LGU. You are welcome to re-submit once an official endorsement from the Mayor\u2019s Office or Sangguniang Bayan is in place.',
-      onboardingLink: '',
-      log: [],
-    },
-  ];
-}
-
 export function approvalTemplate(m: string): string {
   return (
     `Congratulations! Your StallTrack assessment for ${m} has been reviewed and approved.\n\n` +
@@ -336,8 +163,3 @@ export const CHAT_TEMPLATES: ReadonlyArray<{ label: string; text: (m: string) =>
   { label: 'Reminder', text: (m) => `Friendly reminder regarding ${m}'s onboarding — please complete the pending items so we can proceed to validation.` },
   { label: 'Sorry / issue', text: (m) => `We're sorry — we found an issue that needs to be resolved before ${m} can proceed. Our team will coordinate with your office on the details.` },
 ];
-
-export function makeLink(m: string): string {
-  const token = Math.random().toString(16).slice(2, 10);
-  return `https://stalltrack.site/onboarding/${m.toLowerCase()}-${token}`;
-}
