@@ -32,7 +32,7 @@ export class ConsoleSetup {
   readonly error = signal('');
 
   constructor() {
-    this.title.setTitle('First-run setup — StallTrack Admin');
+    this.title.setTitle('First-run setup - StallTrack Admin');
     void this.check();
   }
 

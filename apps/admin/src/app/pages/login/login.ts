@@ -4,11 +4,16 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { Icon } from '../../shared/icon/icon';
 import { AuthService } from '../../core/auth.service';
+import { PlatformSetupService } from '../../core/platform-setup.service';
 
 /**
- * Faithful Angular port of the React apps/admin/src/pages/Login.jsx.
- * Split brand/form panel. Mock sign-in with simulated latency; on success routes to the
- * attempted path (`from` query param, default '/'). Real auth is enforced by the API.
+ * Sign-in for the platform operator. Split brand/form panel; authorization is enforced by the API, which
+ * admits the dedicated operator account only.
+ *
+ * When the platform has NO operator yet there is nobody who can sign in, so this page sends the visitor to
+ * /setup to create the first one. Without that check the console offered a sign-in form and nothing else -
+ * the operator account had been deleted, the API was reporting isSetupRequired, and the only way to reach
+ * the form that fixes it was to know the /setup address by heart.
  */
 @Component({
   selector: 'app-login',
@@ -18,6 +23,7 @@ import { AuthService } from '../../core/auth.service';
 })
 export class Login {
   private readonly auth = inject(AuthService);
+  private readonly setup = inject(PlatformSetupService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly title = inject(Title);
@@ -30,8 +36,17 @@ export class Login {
   readonly busy = signal(false);
 
   constructor() {
-    this.title.setTitle('Sign in — StallTrack Admin');
-    if (this.auth.isAuthenticated()) this.router.navigate(['/'], { replaceUrl: true });
+    this.title.setTitle('Sign in - StallTrack Admin');
+    if (this.auth.isAuthenticated()) {
+      this.router.navigate(['/'], { replaceUrl: true });
+      return;
+    }
+
+    // Fail-safe by design: isSetupRequired() answers false if the check itself fails, so a network blip leaves
+    // the sign-in form exactly as it is rather than sending anyone to a bootstrap screen.
+    void this.setup.isSetupRequired().then((required) => {
+      if (required) this.router.navigate(['/setup'], { replaceUrl: true });
+    });
   }
 
   submit(): void {

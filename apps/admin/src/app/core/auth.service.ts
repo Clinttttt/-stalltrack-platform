@@ -3,18 +3,22 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api.config';
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------------------------
 // Platform-operator authentication for the StallTrack admin console.
 //
-// The JWT access + refresh tokens are NEVER exposed to JavaScript. POST /api/adminauth/login
+// The JWT access + refresh tokens are NEVER exposed to JavaScript. POST /api/adminauth/console-login
 // sets them as HttpOnly, Secure, SameSite cookies on the api.stalltrack.site domain (same site as
 // admin.stalltrack.site), so the browser attaches them automatically on every credentialed API call
 // (see auth.interceptor.ts, which sets withCredentials) and an XSS payload cannot read them. The access
 // token is short-lived (15 min); when it expires the interceptor silently refreshes it via the refresh
 // cookie (POST /api/adminauth/refresh-token), so the operator stays signed in without re-entering
-// credentials. Only a NON-SENSITIVE display marker (name/username) is kept client-side; authorization
-// (platform operator = SuperAdmin of the default LGU) is enforced SERVER-SIDE on every request.
-// ─────────────────────────────────────────────────────────────────────────────
+// credentials. Only a NON-SENSITIVE display marker (name/username) is kept client-side.
+//
+// The endpoint is console-login, NOT the shared administrator login. This console is the platform
+// operator's screen for onboarding LGUs; posting to the login every LGU administrator uses is why the
+// office Head of the default municipality could sign in here and see the onboarding queue. The console
+// endpoint admits the DEDICATED operator account only, and refuses the rest server-side.
+// ---------------------------------------------------------------------------------------------
 
 const DISPLAY_KEY = 'st_admin_operator';
 
@@ -33,7 +37,7 @@ interface TokenResponse {
   refreshToken?: string;
 }
 
-/** Best-effort read of a JWT claim (no verification — display only; the token is never stored). */
+/** Best-effort read of a JWT claim (no verification - display only; the token is never stored). */
 function jwtClaim(token: string, claim: string): string | undefined {
   try {
     const payload = token.split('.')[1];
@@ -58,19 +62,27 @@ export class AuthService {
       // withCredentials lets the API set the HttpOnly auth cookies on this response.
       const res = await firstValueFrom(
         this.http.post<TokenResponse>(
-          `${API_BASE_URL}/api/adminauth/login`,
+          `${API_BASE_URL}/api/adminauth/console-login`,
           { username: u, password },
           { withCredentials: true },
         ),
       );
       // The token also comes back in the body; we read the display name from it in-memory (for the UI
-      // chrome) but never persist the token — the browser holds it as an HttpOnly cookie.
+      // chrome) but never persist the token - the browser holds it as an HttpOnly cookie.
       const displayName = res?.accessToken ? jwtClaim(res.accessToken, NAME_CLAIM) || u : u;
       this.setSession({ username: u, displayName });
       return { ok: true };
     } catch (e: unknown) {
       const status = (e as { status?: number })?.status;
       if (status === 401 || status === 404) return { ok: false, error: 'Invalid administrator credentials.' };
+      // The credentials were right, the account is simply not the platform operator. Said plainly, because the
+      // alternative is an operator staring at "invalid credentials" for a password they know is correct.
+      if (status === 403) {
+        return {
+          ok: false,
+          error: 'This account is not a platform operator, so it cannot sign in to the onboarding console.',
+        };
+      }
       if (status === 429) return { ok: false, error: 'Too many attempts. Please wait a minute and try again.' };
       if (status === 0) return { ok: false, error: 'Cannot reach the server. Please check your connection.' };
       return { ok: false, error: 'Unable to sign in. Please try again.' };
@@ -82,7 +94,7 @@ export class AuthService {
     try {
       await firstValueFrom(this.http.post(`${API_BASE_URL}/api/adminauth/logout`, {}, { withCredentials: true }));
     } catch {
-      /* best-effort — always clear the local marker below */
+      /* best-effort - always clear the local marker below */
     }
     this.clearSession();
   }
@@ -110,7 +122,7 @@ export class AuthService {
     try {
       localStorage.setItem(DISPLAY_KEY, JSON.stringify(session));
     } catch {
-      /* storage unavailable — session still lives in-memory for this tab */
+      /* storage unavailable - session still lives in-memory for this tab */
     }
   }
 }
