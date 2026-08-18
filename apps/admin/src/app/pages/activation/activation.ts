@@ -158,15 +158,12 @@ export class Activation {
     this.warnings.set(warnings);
     this.link.set('');
     this.draft.set(activationTemplate(r.municipality));
-    // Pre-fill the Head's username as "{municipality}.head" (editable by the operator). Keeping the
-    // "{tenant}.head" shape lets the login page theme itself to the LGU from the typed username.
-    this.headUsername.set(this.defaultHeadUsername(r.municipality));
+    // Left blank for the LGU's own operator to fill in. It used to be pre-filled with "{municipality}.head", to keep the
+    // "{tenant}.head" shape the login page once relied on to theme itself from the typed username. The login page no
+    // longer depends on that: the activation link, signing out, and the browser's memory of the last LGU all name the
+    // municipality outright. So the office chooses its Head's username, rather than inheriting one this console invented.
+    this.headUsername.set('');
     this.composing.set(true);
-  }
-
-  private defaultHeadUsername(municipality: string): string {
-    const slug = (municipality || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '') || 'lgu';
-    return `${slug}.head`;
   }
 
   async confirmActivate(): Promise<void> {

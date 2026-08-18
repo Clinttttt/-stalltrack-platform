@@ -178,7 +178,12 @@
                 <div class="a-label mb-2">Branding &amp; receipts</div>
                 <div class="space-y-1.5 text-sm">
                   <div class="flex justify-between gap-3"><span class="text-muted">Office</span><span class="text-right font-medium text-navy">{{ r.requestingOffice }}</span></div>
-                  <div class="flex justify-between gap-3"><span class="text-muted">OR series</span><span class="font-medium text-navy">{{ r.config.orSeries }}</span></div>
+                  <!-- Only when the LGU actually set one. An OR series is optional, and the label was printed
+                       regardless, so an office that had not chosen one showed "OR series" with nothing beside it -
+                       a heading for a value that does not exist, on the screen where the operator approves the LGU. -->
+                  @if (r.config.orSeries) {
+                    <div class="flex justify-between gap-3"><span class="text-muted">OR series</span><span class="font-medium text-navy">{{ r.config.orSeries }}</span></div>
+                  }
                 </div>
               </div>
               <div class="rounded-xl border border-line p-4">
