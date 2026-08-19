@@ -21,7 +21,7 @@
   },
   "madrid": {
     "name": "Madrid",
-    "status": "Upcoming",
-    "isActive": false
+    "status": "Active",
+    "isActive": true
   }
 }
