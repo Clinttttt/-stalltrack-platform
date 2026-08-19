@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, afterNextRender, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { Footer } from '../../shared/footer/footer';
@@ -68,9 +68,50 @@ export class MunicipalityRollout {
 
   readonly assessmentOpen = signal(false);
 
+  /** The activation requirements section, and the gap to clear the 4.25rem sticky header. */
+  private static readonly REQUIREMENTS_ID = 'requirements';
+  private static readonly HEADER_OFFSET = 96;
+
   constructor() {
     const m = this.municipality();
     this.title.setTitle(m ? `${m.name} — StallTrack Rollout` : 'Municipality not found — StallTrack');
+
+    // A fragment present on first load cannot be handled by the router here: the requirements
+    // section lives inside an @if block, so it is not in the DOM at the moment the router looks
+    // for it. Once the view has rendered, honour the fragment ourselves.
+    afterNextRender(() => {
+      if (window.location.hash === `#${MunicipalityRollout.REQUIREMENTS_ID}`) {
+        this.scrollToRequirements();
+      }
+    });
+  }
+
+  /**
+   * Takes the reader to the activation requirements.
+   *
+   * The plain anchor jump this replaces moved the viewport and nothing else: keyboard and screen
+   * reader users were left where they started, and the fragment it wrote to the address bar was
+   * never honoured on a reload. This scrolls to the section, moves focus into it so the next Tab
+   * continues from there, and records the fragment so the position stays shareable.
+   */
+  scrollToRequirements(event?: Event): void {
+    event?.preventDefault();
+
+    const target = document.getElementById(MunicipalityRollout.REQUIREMENTS_ID);
+    if (!target) return;
+
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const top =
+      target.getBoundingClientRect().top + window.scrollY - MunicipalityRollout.HEADER_OFFSET;
+
+    window.scrollTo({ top: Math.max(0, top), behavior: reduceMotion ? 'auto' : 'smooth' });
+    target.focus({ preventScroll: true });
+
+    window.history.replaceState(
+      null,
+      '',
+      `${window.location.pathname}#${MunicipalityRollout.REQUIREMENTS_ID}`,
+    );
   }
 
   /** Presentation state per pipeline card (mirrors the React inline state logic). */

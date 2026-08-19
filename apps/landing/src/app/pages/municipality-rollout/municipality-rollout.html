@@ -87,7 +87,7 @@
                   <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                 </a>
               } @else {
-                <a href="#requirements" class="btn-gold">
+                <a href="#requirements" (click)="scrollToRequirements($event)" class="btn-gold">
                   <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13" /><path d="M8 12h13" /><path d="M8 18h13" /><path d="M3 6h.01" /><path d="M3 12h.01" /><path d="M3 18h.01" /></svg>
                   View Rollout Requirements
                 </a>
@@ -177,7 +177,12 @@
       </section>
 
       <!-- ── Requirements ───────────────────────────────── -->
-      <section id="requirements" class="scroll-mt-24 bg-[#eef3f8] py-12 sm:py-16">
+      <section
+        id="requirements"
+        tabindex="-1"
+        aria-label="Activation requirements"
+        class="scroll-mt-24 bg-[#eef3f8] py-12 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold/60 sm:py-16"
+      >
         <div class="container-px">
           <div reveal>
             <span class="eyebrow">Activation requirements</span>

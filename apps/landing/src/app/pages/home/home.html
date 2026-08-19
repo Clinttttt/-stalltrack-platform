@@ -82,8 +82,8 @@
           <div class="mt-1 text-xs text-muted sm:text-sm">Configurable facility types</div>
         </div>
         <div class="text-center">
-          <div class="font-display text-2xl font-bold text-navy sm:text-3xl">3</div>
-          <div class="mt-1 text-xs text-muted sm:text-sm">Role-based access levels</div>
+          <div class="font-display text-2xl font-bold text-navy sm:text-3xl">4</div>
+          <div class="mt-1 text-xs text-muted sm:text-sm">Distinct user roles</div>
         </div>
         <div class="text-center">
           <div class="font-display text-2xl font-bold text-navy sm:text-3xl">100%</div>
@@ -496,49 +496,124 @@
     <!-- ───────────────────────── Security ───────────────────────── -->
     <section id="security" class="scroll-mt-20 bg-navy py-8 text-white sm:py-10">
       <div class="container-px">
-        <div reveal class="max-w-2xl">
-          <span class="eyebrow">Security & privacy</span>
-          <h2 class="mt-2.5 font-display text-3xl font-bold leading-[1.1] sm:text-4xl text-white">Private by design.</h2>
-          <p class="mt-4 text-lg text-white/65">StallTrack treats operational data as private. This website is a public company page — the admin system itself is access-controlled and does not need to be public.</p>
+        <div reveal class="max-w-3xl">
+          <span class="eyebrow">Security &amp; privacy</span>
+          <h2 class="mt-2.5 font-display text-3xl font-bold leading-[1.1] sm:text-4xl text-white">Built for records an audit will ask about.</h2>
+          <p class="mt-4 text-lg text-white/65">
+            These records account for public funds, so the controls below are part of the system rather
+            than settings an office has to remember to switch on. Each one is enforced in the platform
+            and covered by its automated test suite.
+          </p>
         </div>
-        <div class="mt-12 grid gap-5 sm:grid-cols-2">
+
+        <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <div reveal [delay]="0">
-            <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:bg-white/[0.07]">
+            <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:border-gold/25 hover:bg-white/[0.07]">
               <span class="grid h-10 w-10 place-items-center rounded-lg bg-gold/15 text-gold">
-                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
               </span>
-              <h3 class="mt-4 font-display text-lg font-bold">Role-based access</h3>
-              <p class="mt-2 text-sm leading-relaxed text-white/55">Head, Admin, and Collector roles with least-privilege, facility-scoped permissions.</p>
+              <h3 class="mt-4 font-display text-lg font-bold">Role-scoped access</h3>
+              <p class="mt-2 text-sm leading-relaxed text-white/55">
+                Head, Admin, Collector, and Payor sign in to separate areas. A collector sees only the
+                facilities they are assigned, and a payor sees only their own stall.
+              </p>
             </div>
           </div>
+
           <div reveal [delay]="80">
-            <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:bg-white/[0.07]">
+            <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:border-gold/25 hover:bg-white/[0.07]">
               <span class="grid h-10 w-10 place-items-center rounded-lg bg-gold/15 text-gold">
-                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></svg>
               </span>
-              <h3 class="mt-4 font-display text-lg font-bold">Admin-only dashboard</h3>
-              <p class="mt-2 text-sm leading-relaxed text-white/55">The operational system stays private behind authentication — not publicly exposed.</p>
+              <h3 class="mt-4 font-display text-lg font-bold">Two-step sign-in</h3>
+              <p class="mt-2 text-sm leading-relaxed text-white/55">
+                Office accounts add an authenticator-app code after the password. Repeated failed
+                attempts lock the account for 15 minutes, and sign-in endpoints are rate-limited per client.
+              </p>
             </div>
           </div>
+
           <div reveal [delay]="160">
-            <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:bg-white/[0.07]">
+            <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:border-gold/25 hover:bg-white/[0.07]">
               <span class="grid h-10 w-10 place-items-center rounded-lg bg-gold/15 text-gold">
-                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><path d="M14 2v6h6" /><path d="M9 13h6" /><path d="M9 17h5" /></svg>
               </span>
-              <h3 class="mt-4 font-display text-lg font-bold">Audit trail support</h3>
-              <p class="mt-2 text-sm leading-relaxed text-white/55">Financial transactions are recorded with actor, timestamp, and before/after values.</p>
+              <h3 class="mt-4 font-display text-lg font-bold">Independent audit trail</h3>
+              <p class="mt-2 text-sm leading-relaxed text-white/55">
+                Every payment, collection, and contract change writes its own log entry — actor, role,
+                timestamp, IP address, and before/after values — held separately from the record it describes.
+              </p>
             </div>
           </div>
-          <div reveal [delay]="240">
-            <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:bg-white/[0.07]">
+
+          <div reveal [delay]="0">
+            <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:border-gold/25 hover:bg-white/[0.07]">
               <span class="grid h-10 w-10 place-items-center rounded-lg bg-gold/15 text-gold">
-                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>
               </span>
-              <h3 class="mt-4 font-display text-lg font-bold">Secure records management</h3>
-              <p class="mt-2 text-sm leading-relaxed text-white/55">Operational data is handled privately and never surfaced on this public site.</p>
+              <h3 class="mt-4 font-display text-lg font-bold">One office cannot see another</h3>
+              <p class="mt-2 text-sm leading-relaxed text-white/55">
+                Each municipality's records are filtered at the data layer, not hidden on the screen.
+                An automated test fails if any table is ever left outside that boundary.
+              </p>
+            </div>
+          </div>
+
+          <div reveal [delay]="80">
+            <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:border-gold/25 hover:bg-white/[0.07]">
+              <span class="grid h-10 w-10 place-items-center rounded-lg bg-gold/15 text-gold">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="M7 21h10" /><path d="M12 3v18" /><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold">Separation of duties</h3>
+              <p class="mt-2 text-sm leading-relaxed text-white/55">
+                Whole-database operations such as backup, restore, and onboarding sit behind a platform
+                operator role. No municipal Head can trigger them over another office's data.
+              </p>
+            </div>
+          </div>
+
+          <div reveal [delay]="160">
+            <div class="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:border-gold/25 hover:bg-white/[0.07]">
+              <span class="grid h-10 w-10 place-items-center rounded-lg bg-gold/15 text-gold">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 8v4l3 2" /></svg>
+              </span>
+              <h3 class="mt-4 font-display text-lg font-bold">Rehearsed recovery</h3>
+              <p class="mt-2 text-sm leading-relaxed text-white/55">
+                Backups are restored into a disposable environment as a drill, so recovery is a practised
+                procedure rather than an assumption made on the day it is needed.
+              </p>
             </div>
           </div>
         </div>
+
+        <div reveal [delay]="80">
+          <div class="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:p-7">
+            <h3 class="text-xs font-bold uppercase tracking-[0.18em] text-white/45">Technical summary</h3>
+            <dl class="mt-5 grid gap-x-10 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <dt class="text-sm font-bold text-gold-light">Transport</dt>
+                <dd class="mt-1.5 text-sm leading-relaxed text-white/55">HTTPS with HSTS, a restrictive content-security policy, and framing denied.</dd>
+              </div>
+              <div>
+                <dt class="text-sm font-bold text-gold-light">Credentials</dt>
+                <dd class="mt-1.5 text-sm leading-relaxed text-white/55">Passwords hashed, never stored; stored secrets encrypted; first sign-in forces a change.</dd>
+              </div>
+              <div>
+                <dt class="text-sm font-bold text-gold-light">Sessions</dt>
+                <dd class="mt-1.5 text-sm leading-relaxed text-white/55">15-minute access tokens, hashed refresh tokens, and automatic session expiry.</dd>
+              </div>
+              <div>
+                <dt class="text-sm font-bold text-gold-light">This website</dt>
+                <dd class="mt-1.5 text-sm leading-relaxed text-white/55">A public information page. The operational system is separate and access-controlled.</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+
+        <p class="mt-6 text-xs leading-relaxed text-white/40">
+          StallTrack is a privately developed system for LGU use and is not an official government
+          platform. No real operational, personal, or government data appears on this website.
+        </p>
       </div>
     </section>
 
@@ -561,7 +636,7 @@
               <div>
                 <span class="eyebrow text-green">Project Representative</span>
                 <h2 class="mt-2 font-display text-3xl font-bold text-navy">Clint Villanueva</h2>
-                <p class="mt-1 text-sm font-semibold text-muted">.NET Developer · Project Representative</p>
+                <p class="mt-1 text-sm font-semibold text-muted">.NET Developer</p>
                 <p class="mt-4 max-w-2xl leading-relaxed text-navy/75">
                   Clint Villanueva is a software developer building StallTrack to help modernize LGU
                   economic enterprise, public market, and facility operations through clean, practical,
@@ -571,7 +646,6 @@
                   <span class="rounded-full border border-line bg-white px-3 py-1.5 font-medium text-navy/70">Early-stage / MVP</span>
                   <span class="rounded-full border border-line bg-white px-3 py-1.5 font-medium text-navy/70">Bootstrapped</span>
                   <span class="rounded-full border border-line bg-white px-3 py-1.5 font-medium text-navy/70">GovTech</span>
-                  <span class="rounded-full border border-line bg-white px-3 py-1.5 font-medium text-navy/70">Cantilan EEMO pilot</span>
                 </div>
               </div>
             </div>
