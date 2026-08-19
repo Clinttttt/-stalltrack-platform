@@ -6,12 +6,26 @@
   @if (!slim()) {
     <div class="container-px grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
       <div class="lg:col-span-2">
-        <div class="flex items-center gap-2.5">
-          <img src="/carcanmadcarlan/logo/stalltrack-seal-logo.png" alt="StallTrack seal" class="h-10 w-10 rounded-full object-contain" />
-          <span class="font-display text-xl font-bold">Stall<span class="text-gold">Track</span></span>
+        <div class="flex items-center gap-3.5">
+          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#fdfdfd] ring-1 ring-gold/40">
+            <img
+              src="/carcanmadcarlan/logo/stalltrack-seal-logo.png"
+              alt=""
+              aria-hidden="true"
+              width="44"
+              height="44"
+              class="h-11 w-11 rounded-full object-contain"
+            />
+          </span>
+          <span class="min-w-0">
+            <span class="block font-display text-xl font-bold leading-none">Stall<span class="text-gold">Track</span></span>
+            <span class="mt-1.5 block text-[10px] font-semibold uppercase leading-tight tracking-[0.14em] text-white/45">
+              LGU Revenue and Collection Management System
+            </span>
+          </span>
         </div>
-        <p class="mt-4 max-w-sm text-sm leading-relaxed text-white/55">
-          A GovTech SaaS platform for LGU economic enterprise operations — helping public market
+        <p class="mt-5 max-w-sm text-sm leading-relaxed text-white/55">
+          A GovTech platform for LGU economic enterprise operations — helping public market
           offices and LGU-managed facilities digitize records, collections, reporting, and audit trails.
         </p>
       </div>
@@ -20,7 +34,7 @@
         <h4 class="text-xs font-bold uppercase tracking-wider text-white/40">Product</h4>
         <ul class="mt-4 space-y-2.5 text-sm text-white/70">
           <li><a href="/#features" class="hover:text-gold">Features</a></li>
-          <li><a routerLink="/ai-roadmap" class="hover:text-gold">AI Roadmap</a></li>
+          <li><a href="/#facilities" class="hover:text-gold">Facilities</a></li>
           <li><a href="/#usecases" class="hover:text-gold">Use Cases</a></li>
           <li><a href="/#preview" class="hover:text-gold">Product Preview</a></li>
           <li><a href="/#security" class="hover:text-gold">Security</a></li>
@@ -30,7 +44,8 @@
       <div>
         <h4 class="text-xs font-bold uppercase tracking-wider text-white/40">Company</h4>
         <ul class="mt-4 space-y-2.5 text-sm text-white/70">
-          <li><a href="/#founder" class="hover:text-gold">Founder</a></li>
+          <li><a routerLink="/municipalities" class="hover:text-gold">Municipalities</a></li>
+          <li><a href="/#representative" class="hover:text-gold">Project Representative</a></li>
           <li><a href="/#contact" class="hover:text-gold">Contact</a></li>
           <li><a routerLink="/privacy" class="hover:text-gold">Privacy Policy</a></li>
           <li><a routerLink="/terms" class="hover:text-gold">Terms of Service</a></li>

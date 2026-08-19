@@ -12,42 +12,84 @@
 
     <div class="hidden items-center gap-7 md:flex">
       @for (l of links; track l.href) {
-        <a [href]="l.href" (click)="onDesktopLinkClick(l, $event)" class="text-sm font-medium text-navy/70 transition hover:text-navy">
-          {{ l.label }}
-        </a>
+        @if (l.route) {
+          <a [routerLink]="l.route" class="text-sm font-medium text-navy/70 transition hover:text-navy">
+            {{ l.label }}
+          </a>
+        } @else {
+          <a [href]="l.href" (click)="onDesktopLinkClick(l, $event)" class="text-sm font-medium text-navy/70 transition hover:text-navy">
+            {{ l.label }}
+          </a>
+        }
       }
-      <button type="button" (click)="requestDemo.emit()" class="btn-navy py-2.5">Explore StallTrack</button>
+      <button type="button" (click)="requestDemo.emit()" class="btn-navy py-2.5">Request a Demo</button>
     </div>
 
     <button
       class="grid h-10 w-10 place-items-center rounded-lg border border-line md:hidden"
       (click)="toggle()"
-      aria-label="Toggle menu"
+      aria-label="Open navigation menu"
+      [attr.aria-expanded]="open()"
     >
       <svg viewBox="0 0 24 24" class="h-5 w-5 stroke-navy" fill="none" stroke-width="2" stroke-linecap="round">
-        @if (open()) {
-          <path d="M18 6 6 18M6 6l12 12" />
-        } @else {
-          <path d="M4 7h16M4 12h16M4 17h16" />
-        }
+        <path d="M4 7h16M4 12h16M4 17h16" />
       </svg>
     </button>
   </nav>
-
-  @if (open()) {
-    <div class="border-t border-line bg-white md:hidden">
-      <div class="container-px flex flex-col py-3">
-        @for (l of links; track l.href) {
-          <a
-            [href]="l.href"
-            (click)="onMobileLinkClick(l, $event)"
-            class="py-2.5 text-sm font-medium text-navy/80"
-          >
-            {{ l.label }}
-          </a>
-        }
-        <button type="button" (click)="onMobileCta()" class="btn-navy mt-2">Explore StallTrack</button>
-      </div>
-    </div>
-  }
 </header>
+
+<!-- Kept outside <header>: the header's backdrop-blur makes it a containing block for
+     fixed-position children, which would trap this overlay inside the 4rem header strip. -->
+@if (open()) {
+  <div class="fixed inset-0 z-50 md:hidden" role="presentation">
+    <button
+      type="button"
+      class="absolute inset-0 bg-navy/55 backdrop-blur-sm motion-safe:animate-[sidebarOverlayIn_180ms_ease-out]"
+      (click)="closeMenu()"
+      aria-label="Close navigation menu"
+    ></button>
+    <aside class="absolute right-0 top-0 flex h-[100dvh] w-[min(20rem,86vw)] flex-col border-l border-gold/30 bg-white shadow-2xl motion-safe:animate-[sidebarPanelIn_240ms_cubic-bezier(0.22,1,0.36,1)]">
+      <div class="flex items-center justify-between border-b border-line px-5 py-4">
+        <span class="flex items-center gap-2.5">
+          <img src="/carcanmadcarlan/logo/stalltrack-seal-logo.png" alt="" aria-hidden="true" width="36" height="36" class="h-9 w-9 rounded-full object-contain" />
+          <span class="font-display text-lg font-bold text-navy">Stall<span class="text-gold">Track</span></span>
+        </span>
+        <button
+          type="button"
+          (click)="closeMenu()"
+          class="grid h-10 w-10 place-items-center rounded-xl border border-line bg-mist text-navy transition hover:border-gold/50 hover:bg-white"
+          aria-label="Close navigation menu"
+        >
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" /><path d="M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <nav class="flex flex-1 flex-col gap-2 overflow-y-auto px-5 py-5" aria-label="Mobile navigation">
+        @for (l of links; track l.href) {
+          @if (l.route) {
+            <a
+              [routerLink]="l.route"
+              (click)="closeMenu()"
+              class="rounded-2xl border border-line bg-white px-4 py-3 text-sm font-semibold text-navy/75 transition hover:border-gold/45 hover:text-navy"
+            >
+              {{ l.label }}
+            </a>
+          } @else {
+            <a
+              [href]="l.href"
+              (click)="onMobileLinkClick(l, $event)"
+              class="rounded-2xl border border-line bg-white px-4 py-3 text-sm font-semibold text-navy/75 transition hover:border-gold/45 hover:text-navy"
+            >
+              {{ l.label }}
+            </a>
+          }
+        }
+        <button type="button" (click)="onMobileCta()" class="btn-gold mt-2">Request a Demo</button>
+      </nav>
+
+      <div class="border-t border-line px-5 py-4 text-xs leading-relaxed text-muted">
+        StallTrack · LGU Revenue and Collection Management System
+      </div>
+    </aside>
+  </div>
+}

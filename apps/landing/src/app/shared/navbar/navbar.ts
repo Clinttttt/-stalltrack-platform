@@ -1,15 +1,17 @@
-import { Component, afterNextRender, inject, DestroyRef, output, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, afterNextRender, inject, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 interface NavLink {
   href: string;
   label: string;
+  /** Set for in-app pages so navigation stays client-side; anchors keep using `href`. */
+  route?: string;
 }
 
 /**
- * Faithful Angular port of the React <Navbar>. Sticky header that gains a border/shadow on scroll,
- * a desktop link row + "Explore StallTrack" CTA, and a mobile toggle menu. The React `onRequestDemo`
- * prop becomes the `requestDemo` output.
+ * Sticky site header that gains a border/shadow on scroll, a desktop link row + "Request a Demo"
+ * CTA, and a mobile toggle menu. Anchor links scroll within the landing page; entries with a
+ * `route` navigate client-side. The CTA is surfaced through the `requestDemo` output.
  */
 @Component({
   selector: 'app-navbar',
@@ -29,10 +31,10 @@ export class Navbar {
   readonly links: ReadonlyArray<NavLink> = [
     { href: '/#features', label: 'Features' },
     { href: '/#facilities', label: 'Facilities' },
-    { href: '/ai-roadmap', label: 'AI Roadmap' },
     { href: '/#usecases', label: 'Use Cases' },
     { href: '/#preview', label: 'Product' },
     { href: '/#security', label: 'Security' },
+    { href: '/municipalities', label: 'Municipalities', route: '/municipalities' },
     { href: '/#contact', label: 'Contact' },
   ];
 
@@ -47,6 +49,15 @@ export class Navbar {
 
   toggle(): void {
     this.open.update((v) => !v);
+  }
+
+  closeMenu(): void {
+    this.open.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.open()) this.closeMenu();
   }
 
   navigateToContact(event: Event): void {

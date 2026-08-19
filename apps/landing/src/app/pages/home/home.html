@@ -18,14 +18,13 @@
             Run public market &amp; facility collections on one clean platform.
           </h1>
           <p class="mt-6 max-w-xl text-base leading-relaxed text-white/65 sm:text-lg">
-            StallTrack is a GovTech SaaS platform for Economic Enterprise Management Offices and
+            StallTrack is a GovTech platform for Economic Enterprise Management Offices and
             LGU-managed facilities — digitizing stall records, rental collections, payment tracking,
-            audit logs, operational reports, and planned AI-assisted workflows.
+            audit logs, and operational reports.
           </p>
           <div class="mt-8 flex flex-wrap gap-3">
             <a href="#features" class="btn-gold">View Features</a>
-            <a href="/ai-roadmap" class="btn-ghost">AI Roadmap</a>
-            <a href="#contact" class="btn-ghost">Contact Founder</a>
+            <a routerLink="/municipalities" class="btn-ghost">Select Municipality</a>
           </div>
           <div class="mt-9 flex flex-wrap items-center gap-x-7 gap-y-3 text-sm text-white/55">
             <span class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-gold"></span> Public markets</span>
@@ -190,67 +189,6 @@
               <div class="rounded-2xl border border-line bg-white p-5">
                 <div class="font-display text-lg font-bold text-navy">Audit</div>
                 <div class="mt-1 text-xs text-muted">Actor · timestamp · before/after</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ───────────────────────── AI Roadmap Teaser ───────────────────────── -->
-    <section id="ai" class="scroll-mt-20 bg-navy py-8 text-white sm:py-10">
-      <div class="container-px grid items-center gap-10 lg:grid-cols-[0.92fr,1.08fr]">
-        <div>
-          <div reveal class="max-w-2xl">
-            <span class="eyebrow">Future AI capability</span>
-            <h2 class="mt-2.5 font-display text-3xl font-bold leading-[1.1] sm:text-4xl text-white">An agentic AI roadmap for revenue offices.</h2>
-            <p class="mt-4 text-lg text-white/65">StallTrack is being designed with a practical AI layer that can assist staff with risk detection, report preparation, audit review, and collector task planning.</p>
-          </div>
-          <div reveal [delay]="80">
-            <div class="mt-7 flex flex-wrap gap-3">
-              <a href="/ai-roadmap" class="btn-gold">View AI Roadmap</a>
-              <a href="#contact" class="btn-ghost">Discuss Pilot</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid gap-4">
-          <div reveal [delay]="0">
-            <div class="rounded-2xl border border-white/10 bg-white/[0.05] p-5 transition hover:bg-white/[0.075]">
-              <div class="flex items-start gap-4">
-                <span class="mt-0.5 grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-gold/15 text-gold">
-                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4" /><path d="M12 18v4" /><path d="m4.93 4.93 2.83 2.83" /><path d="m16.24 16.24 2.83 2.83" /><path d="M2 12h4" /><path d="M18 12h4" /><path d="m4.93 19.07 2.83-2.83" /><path d="m16.24 7.76 2.83-2.83" /><circle cx="12" cy="12" r="3" /></svg>
-                </span>
-                <div>
-                  <h3 class="font-display text-lg font-bold">Collection Risk Agent</h3>
-                  <p class="mt-1 text-sm leading-relaxed text-white/58">Prioritizes vendors, stalls, and facilities that may need follow-up before arrears grow.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div reveal [delay]="90">
-            <div class="rounded-2xl border border-white/10 bg-white/[0.05] p-5 transition hover:bg-white/[0.075]">
-              <div class="flex items-start gap-4">
-                <span class="mt-0.5 grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-gold/15 text-gold">
-                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4" /><path d="M12 18v4" /><path d="m4.93 4.93 2.83 2.83" /><path d="m16.24 16.24 2.83 2.83" /><path d="M2 12h4" /><path d="M18 12h4" /><path d="m4.93 19.07 2.83-2.83" /><path d="m16.24 7.76 2.83-2.83" /><circle cx="12" cy="12" r="3" /></svg>
-                </span>
-                <div>
-                  <h3 class="font-display text-lg font-bold">Report Drafting Agent</h3>
-                  <p class="mt-1 text-sm leading-relaxed text-white/58">Prepares collection summaries, delinquency narratives, and variance notes for staff review.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div reveal [delay]="180">
-            <div class="rounded-2xl border border-white/10 bg-white/[0.05] p-5 transition hover:bg-white/[0.075]">
-              <div class="flex items-start gap-4">
-                <span class="mt-0.5 grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-gold/15 text-gold">
-                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4" /><path d="M12 18v4" /><path d="m4.93 4.93 2.83 2.83" /><path d="m16.24 16.24 2.83 2.83" /><path d="M2 12h4" /><path d="M18 12h4" /><path d="m4.93 19.07 2.83-2.83" /><path d="m16.24 7.76 2.83-2.83" /><circle cx="12" cy="12" r="3" /></svg>
-                </span>
-                <div>
-                  <h3 class="font-display text-lg font-bold">Audit Review Agent</h3>
-                  <p class="mt-1 text-sm leading-relaxed text-white/58">Flags unusual edits, OR sequence gaps, and transaction patterns that may need supervisor attention.</p>
-                </div>
               </div>
             </div>
           </div>
@@ -604,19 +542,26 @@
       </div>
     </section>
 
-    <!-- ───────────────────────── Founder ───────────────────────── -->
-    <section id="founder" class="scroll-mt-20 py-8 sm:py-10">
+    <!-- ───────────────────────── Project Representative ───────────────────────── -->
+    <section id="representative" class="scroll-mt-20 py-8 sm:py-10">
       <div class="container-px">
         <div reveal>
           <div class="rounded-3xl border border-line bg-mist p-8 sm:p-12">
             <div class="flex flex-col items-center gap-8 text-center sm:flex-row sm:items-start sm:text-left lg:gap-10">
               <div class="h-28 w-28 flex-shrink-0 overflow-hidden rounded-2xl">
-                <img src="/founder.png" alt="Clint Villanueva" class="h-full w-full object-cover" />
+                <img
+                  src="/representative.png"
+                  alt="Clint Villanueva"
+                  width="112"
+                  height="112"
+                  loading="lazy"
+                  class="h-full w-full object-cover"
+                />
               </div>
               <div>
-                <span class="eyebrow text-green">Founder</span>
+                <span class="eyebrow text-green">Project Representative</span>
                 <h2 class="mt-2 font-display text-3xl font-bold text-navy">Clint Villanueva</h2>
-                <p class="mt-1 text-sm font-semibold text-muted">.NET Software Developer</p>
+                <p class="mt-1 text-sm font-semibold text-muted">.NET Developer · Project Representative</p>
                 <p class="mt-4 max-w-2xl leading-relaxed text-navy/75">
                   Clint Villanueva is a software developer building StallTrack to help modernize LGU
                   economic enterprise, public market, and facility operations through clean, practical,
@@ -625,8 +570,8 @@
                 <div class="mt-5 flex flex-wrap justify-center gap-2 text-xs sm:justify-start">
                   <span class="rounded-full border border-line bg-white px-3 py-1.5 font-medium text-navy/70">Early-stage / MVP</span>
                   <span class="rounded-full border border-line bg-white px-3 py-1.5 font-medium text-navy/70">Bootstrapped</span>
-                  <span class="rounded-full border border-line bg-white px-3 py-1.5 font-medium text-navy/70">Solo founder</span>
-                  <span class="rounded-full border border-line bg-white px-3 py-1.5 font-medium text-navy/70">GovTech · SaaS</span>
+                  <span class="rounded-full border border-line bg-white px-3 py-1.5 font-medium text-navy/70">GovTech</span>
+                  <span class="rounded-full border border-line bg-white px-3 py-1.5 font-medium text-navy/70">Cantilan EEMO pilot</span>
                 </div>
               </div>
             </div>
@@ -647,8 +592,8 @@
                   Interested in StallTrack for your office or facility? Tell us about your operations and see how we can support your team.
                 </p>
                 <div class="mt-7 flex flex-wrap gap-3">
-                  <button type="button" (click)="openFounder()" class="btn-gold">Email the Founder</button>
-                  <button type="button" (click)="openDemo()" class="btn-ghost">Explore StallTrack</button>
+                  <button type="button" (click)="openContact()" class="btn-gold">Email Project Representative</button>
+                  <button type="button" (click)="openDemo()" class="btn-ghost">Request a Demo</button>
                 </div>
               </div>
               <div class="rounded-2xl border border-white/10 bg-white/[0.05] p-6">
@@ -662,7 +607,7 @@
                 </div>
                 <div class="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 border-b border-white/10">
                   <span class="text-xs text-white/45 sm:text-sm">Product</span>
-                  <span class="break-all text-sm font-semibold text-white sm:break-normal sm:text-right">StallTrack (GovTech SaaS)</span>
+                  <span class="break-all text-sm font-semibold text-white sm:break-normal sm:text-right">StallTrack (GovTech)</span>
                 </div>
                 <div class="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                   <span class="text-xs text-white/45 sm:text-sm">Stage</span>
@@ -692,7 +637,7 @@
   @if (demoModalOpen()) {
     <app-demo-request-modal (close)="closeDemo()" />
   }
-  @if (founderModalOpen()) {
-    <app-founder-contact-modal (close)="closeFounder()" />
+  @if (contactModalOpen()) {
+    <app-representative-contact-modal (close)="closeContact()" />
   }
 </div>

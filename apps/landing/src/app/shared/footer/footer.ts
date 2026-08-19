@@ -12,7 +12,7 @@ export class Footer {
   readonly year = new Date().getFullYear();
 
   /**
-   * Drops the product marketing - the StallTrack seal, the "GovTech SaaS platform" blurb, and the Product/Company
+   * Drops the product marketing - the StallTrack seal, the "GovTech platform" blurb, and the Product/Company
    * link columns - keeping only the copyright bar and the legal links.
    *
    * For pages that belong to a MUNICIPALITY rather than to the product. A page headed "Municipality of Carrascal"

@@ -22,10 +22,12 @@ export class SelectMunicipality {
   readonly sidebarOpen = signal(false);
 
   readonly navLinks: ReadonlyArray<{ href: string; label: string }> = [
-    { href: '#overview', label: 'Overview' },
     { href: '#municipalities', label: 'Municipalities' },
-    { href: '#architecture', label: 'Architecture' },
-    { href: '#about', label: 'About' },
+    { href: '/#features', label: 'Features' },
+    { href: '/#facilities', label: 'Facilities' },
+    { href: '/#usecases', label: 'Use Cases' },
+    { href: '/#preview', label: 'Product' },
+    { href: '/#security', label: 'Security' },
   ];
 
   readonly overviewItems: ReadonlyArray<{ title: string; body: string }> = [

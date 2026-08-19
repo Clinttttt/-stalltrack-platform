@@ -1,18 +1,17 @@
 import { Route } from '@angular/router';
 
 /**
- * Route map mirrors the React App.jsx <Routes>:
+ * Route map:
  *   '/'                        -> Home (public landing)
  *   '/municipalities'          -> SelectMunicipality (CARCANMADCARLAN selector)
  *   '/municipalities/:code'    -> MunicipalityRollout
  *   '/select-municipality'     -> SelectMunicipality
  *   '/assessment-received'     -> AssessmentReceived
  *   '/onboarding/:token'       -> Onboarding
- *   '/ai-roadmap'              -> AIRoadmap
  *   '/privacy'                 -> Privacy
  *   '/terms'                   -> Terms
  *   '/thanks'                  -> ThankYou
- * Unknown paths fall back to Home (React had no explicit 404 route; '**' -> '' mirrors that).
+ * Unknown paths fall back to Home.
  */
 export const appRoutes: Route[] = [
   { path: '', loadComponent: () => import('./pages/home/home').then((m) => m.Home) },
@@ -39,10 +38,6 @@ export const appRoutes: Route[] = [
   {
     path: 'onboarding/:token',
     loadComponent: () => import('./pages/onboarding/onboarding').then((m) => m.Onboarding),
-  },
-  {
-    path: 'ai-roadmap',
-    loadComponent: () => import('./pages/ai-roadmap/ai-roadmap').then((m) => m.AIRoadmap),
   },
   {
     path: 'privacy',

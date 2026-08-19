@@ -1,19 +1,18 @@
 import { Component, DestroyRef, afterNextRender, inject, output, signal } from '@angular/core';
 
 /**
- * Faithful Angular port of the React <FounderContactModal>. A native formsubmit.co form that mails
- * the founder. Locks body scroll while open, closes on Escape / backdrop click. The React `onClose`
- * prop becomes the `close` output.
+ * Direct-message form for the project representative. A native formsubmit.co form that mails the
+ * project inbox. Locks body scroll while open and closes on Escape / backdrop click; the host page
+ * listens to the `close` output.
  */
 @Component({
-  selector: 'app-founder-contact-modal',
+  selector: 'app-representative-contact-modal',
   standalone: true,
-  templateUrl: './founder-contact-modal.html',
+  templateUrl: './representative-contact-modal.html',
 })
-export class FounderContactModal {
+export class RepresentativeContactModal {
   private readonly destroyRef = inject(DestroyRef);
 
-  /** Mirrors the React `onClose` prop. */
   readonly close = output<void>();
 
   readonly confirmationUrl = signal('');
