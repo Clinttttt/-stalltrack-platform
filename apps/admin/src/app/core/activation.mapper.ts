@@ -8,6 +8,7 @@ import {
   BillingArchetypeStr,
   FacilityCodeStr,
 } from './activation.api';
+import { hasUndeclaredAreas, marketSectionLabelOf, withDeclaredAreas } from './market-sections';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Maps a staged onboarding RequestRecord (the admin console's working config) to the
@@ -150,12 +151,32 @@ export function mapRequestToCommand(
     // Stalls/units (and their occupants/payors), collectors, and additional admins are created later in
     // the live portal — NOT at onboarding — so we never auto-provision stall groups here.
 
+    // A daily-stall market carries the LGU's own name for each collection area of its sheet. The LGU declared
+    // which area each of its sections is, so its names travel to its portal verbatim.
+    const sections = archetype === 'DailyStall' ? withDeclaredAreas(f.sections || []) : [];
+    if (archetype === 'DailyStall' && hasUndeclaredAreas(f.sections || [])) {
+      warnings.push(
+        `"${f.name}" was configured before onboarding asked which collection area each market section is; ` +
+          `areas were assumed in the order they were entered (${sections
+            .map((s) => `${s.name || 'unnamed'} = ${marketSectionLabelOf(s.kind)}`)
+            .join(', ')}). Confirm this before committing.`,
+      );
+    }
+
     facilities.push({
       code,
       name: f.name.trim(),
       shortName: facilityShortName(f.name, code),
       archetype,
       stallGroups: undefined,
+      sectionLabels:
+        archetype === 'DailyStall'
+          ? {
+              vegetable: sections.find((s) => s.kind === 'VegetableArea')?.name?.trim() || null,
+              fish: sections.find((s) => s.kind === 'FishSection')?.name?.trim() || null,
+              meat: sections.find((s) => s.kind === 'MeatSection')?.name?.trim() || null,
+            }
+          : undefined,
     });
 
     // Fixed ordinance rates.
@@ -173,11 +194,14 @@ export function mapRequestToCommand(
       if (monthlyRent && monthlyRent > 0) {
         rates.push({ facilityCode: code, key: 'NpmMonthlyStall', amount: monthlyRent });
       }
-      for (const s of f.sections || []) {
-        for (const fee of s.fees || []) {
-          if (/kilo|fish/.test(fee.label.toLowerCase())) {
-            rates.push({ facilityCode: code, key: 'NpmFishPerKilo', amount: num(fee.amount) ?? 0 });
-          }
+      // The per-kilo weighing fee belongs to whichever area the LGU declared as its fish section, whatever it
+      // calls that area. Reading the fee's own wording was how an LGU that wrote "Isda" was seeded no fee at all.
+      const fishFee = (sections.find((s) => s.kind === 'FishSection')?.fees || [])[0];
+      if (fishFee) {
+        const perKilo = num(fishFee.amount) ?? 0;
+        rates.push({ facilityCode: code, key: 'NpmFishPerKilo', amount: perKilo });
+        if (perKilo <= 0) {
+          warnings.push(`"${f.name}" states no per-kilo weighing fee for its fish area; it will be seeded at 0.`);
         }
       }
       for (const a of f.addOns || []) {

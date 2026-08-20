@@ -2,7 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon/icon';
 import { AssessmentApi } from '../../core/assessment.api';
 import { fmtLog } from '../../core/format';
-import { Config, Facility, Fee, RequestRecord, STATUS } from '../../core/demo';
+import { Config, Facility, Fee, RequestRecord, STATUS, Section } from '../../core/demo';
+import { marketSectionLabelOf, withDeclaredAreas } from '../../core/market-sections';
 
 const inScope = (r: RequestRecord): boolean =>
   r.status === STATUS.APPROVED && r.stage === 'Validation' && !r.activated;
@@ -17,7 +18,11 @@ function parseConfig(json: string | null): Config {
       branding?: { orPrefix?: string };
     };
     return {
-      facilities: Array.isArray(c.facilities) ? c.facilities : [],
+      facilities: Array.isArray(c.facilities)
+        ? // Areas an LGU declared are kept; a draft that predates the question has them filled in the order it
+          // entered them, so the operator reviews the areas that will actually be committed.
+          c.facilities.map((f) => ({ ...f, sections: withDeclaredAreas(Array.isArray(f?.sections) ? f.sections : []) }))
+        : [],
       orSeries: c.branding?.orPrefix ?? '',
       users: c.administrator
         ? [{ name: c.administrator.name ?? '', role: 'Administrator (Super Admin)', email: c.administrator.email ?? '' }]
@@ -126,6 +131,10 @@ export class Validation {
   }
   feesText(fees: Fee[]): string {
     return fees.map((z) => `${z.label} ₱${z.amount} ${z.unit}`).join(', ');
+  }
+  /** Which collection area of the daily sheet a section stands for, for the operator's review. */
+  areaLabel(s: Section): string {
+    return marketSectionLabelOf(s.kind);
   }
 
   select(id: string): void {

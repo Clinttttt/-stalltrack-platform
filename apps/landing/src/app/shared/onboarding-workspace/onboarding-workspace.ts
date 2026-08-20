@@ -14,9 +14,20 @@ interface SectionFee {
   amount: string;
   unit: string;
 }
+/**
+ * The collection area a market section stands for on the daily sheet. These values are the backend's
+ * MarketSection names verbatim, so the LGU's own declaration travels all the way to its portal without
+ * anyone interpreting the section's wording along the way. The section's `name` is the LGU's own label
+ * for that area in its own language; the `kind` is what the sheet, the stalls and the fees are keyed on.
+ */
+type MarketSectionKind = 'VegetableArea' | 'FishSection' | 'MeatSection';
+
 interface FacilitySection {
   id: string;
+  /** The LGU's own name for this area, in its own language (e.g. "Gulayan", "Isda", "Karne"). */
   name: string;
+  /** Which collection area of the daily sheet this section is. Declared by the LGU, never inferred. */
+  kind: MarketSectionKind;
   units: string;
   rate: string;
   fees: SectionFee[];
@@ -69,6 +80,20 @@ const shortName = (label: string): string => label.split(' — ')[0].split(' / '
 
 const FEE_UNITS = ['per month', 'per day', 'per kilo', 'per use', 'one-time'];
 const FEE_MODES = ['Applies to all', 'Optional (per stall)'];
+
+// The three collection areas a public-market daily sheet is organised into. An LGU declares which area each
+// of its sections is and names it itself; the platform never reads meaning out of the name.
+const SECTION_KINDS: ReadonlyArray<{ value: MarketSectionKind; label: string }> = [
+  { value: 'VegetableArea', label: 'Vegetable area' },
+  { value: 'FishSection', label: 'Fish section (weighed)' },
+  { value: 'MeatSection', label: 'Meat section' },
+];
+const MAX_SECTIONS = SECTION_KINDS.length;
+const SECTION_NAME_PLACEHOLDER: Record<MarketSectionKind, string> = {
+  VegetableArea: 'e.g. Vegetable Area, or Gulayan',
+  FishSection: 'e.g. Fish Section, or Isda',
+  MeatSection: 'e.g. Meat Section, or Karne',
+};
 const FEE_BASIS = ['Per consumption', 'Fixed amount'];
 // Utility add-ons are capped at these two presets (chosen from a fixed dropdown, not free text).
 const FEE_NAMES = ['Electricity', 'Water'];
@@ -120,6 +145,31 @@ const RATE_HELP: Record<string, string> = {
   'Weekly market': 'per vendor, per market day',
   Custom: 'per unit',
 };
+
+function newSection(kind: MarketSectionKind): FacilitySection {
+  return { id: uid(), name: '', kind, units: '', rate: '', fees: kind === 'FishSection' ? fishFeesFor([]) : [] };
+}
+
+/** The fish area's per-kilo weighing fee, keeping whatever amount the LGU has already entered. */
+function fishFeesFor(existing: SectionFee[]): SectionFee[] {
+  if (existing.length > 0) return existing;
+  return [{ id: uid(), label: 'Fish (per kilo)', amount: '', unit: 'per kilo' }];
+}
+
+/**
+ * Fills in the collection area for sections saved before an LGU was asked to declare one, taking them in
+ * the order they were entered. This is a starting point the LGU sees and can correct in the form before it
+ * submits, never a final answer read out of the section's wording.
+ */
+function normalizeSections(sections: FacilitySection[]): FacilitySection[] {
+  const taken = new Set(sections.map((s) => s?.kind).filter((k): k is MarketSectionKind => Boolean(k)));
+  return sections.map((s) => {
+    if (s?.kind && SECTION_KINDS.some((k) => k.value === s.kind)) return s;
+    const kind = SECTION_KINDS.find((k) => !taken.has(k.value))?.value ?? 'VegetableArea';
+    taken.add(kind);
+    return { ...s, kind, fees: kind === 'FishSection' ? fishFeesFor(s?.fees ?? []) : [] };
+  });
+}
 
 function facilityFrom(c: CatalogItem): Facility {
   return {
@@ -213,12 +263,23 @@ export class OnboardingWorkspace {
   readonly pct = computed(() => Math.round((this.doneCount() / this.sectionFlags().length) * 100));
 
   isPerHead = (f: Facility): boolean => f.type === 'Per head';
-  /** A market section is a "fish" section when its name mentions fish — those carry the per-kilo weighing fee. */
-  isFishSection = (s: FacilitySection): boolean => /fish/i.test(s.name || '');
-  /** Varied example placeholder per section row (Fish, Vegetables, Meat…) instead of always "Fish". */
-  sectionNamePlaceholder(i: number): string {
-    const examples = ['e.g. Fish', 'e.g. Vegetables', 'e.g. Meat', 'e.g. Dry goods', 'e.g. Rice'];
-    return examples[i] ?? 'e.g. Section name';
+  /**
+   * A section is the fish section when the LGU said so, not when its wording happens to contain "fish" —
+   * an LGU naming it "Isda" keeps the per-kilo weighing fee it is entitled to.
+   */
+  isFishSection = (s: FacilitySection): boolean => s.kind === 'FishSection';
+  /** Example name for this area, in the LGU's own words. */
+  sectionNamePlaceholder(s: FacilitySection): string {
+    return SECTION_NAME_PLACEHOLDER[s.kind] ?? 'e.g. Section name';
+  }
+  /** The areas this row may be set to: its own, plus any not already taken by another section. */
+  sectionKindOptions(f: Facility, s: FacilitySection): ReadonlyArray<{ value: string; label: string }> {
+    const taken = new Set(f.sections.filter((x) => x.id !== s.id).map((x) => x.kind));
+    return SECTION_KINDS.filter((k) => k.value === s.kind || !taken.has(k.value));
+  }
+  /** A market keeps at most one section per collection area, so adding stops once all three are defined. */
+  canAddSection(f: Facility): boolean {
+    return f.sections.length < MAX_SECTIONS;
   }
   /** Whether this facility keeps a single facility-level base rate (all types except Daily stall / Per head). */
   showBaseRate = (f: Facility): boolean => f.type !== 'Daily stall' && f.type !== 'Per head';
@@ -299,30 +360,39 @@ export class OnboardingWorkspace {
 
   // sections
   addSection(fid: string): void {
-    this.mapFacility(fid, (x) => ({ ...x, sections: [...x.sections, { id: uid(), name: '', units: '', rate: '', fees: [] }] }));
+    this.mapFacility(fid, (x) => {
+      // One section per collection area; the new row takes the first area the market has not defined yet.
+      const taken = new Set(x.sections.map((s) => s.kind));
+      const kind = SECTION_KINDS.find((k) => !taken.has(k.value))?.value;
+      if (!kind) return x;
+      return { ...x, sections: [...x.sections, newSection(kind)] };
+    });
   }
   removeSection(fid: string, sid: string): void {
     this.mapFacility(fid, (x) => ({ ...x, sections: x.sections.filter((s) => s.id !== sid) }));
   }
-  setSection(fid: string, sid: string, key: keyof FacilitySection, val: string): void {
+  /**
+   * Changes which collection area a section stands for. The per-kilo weighing fee belongs to the fish area,
+   * so it is added when the LGU says a section is the fish section and withdrawn when it says otherwise.
+   */
+  setSectionKind(fid: string, sid: string, kind: string): void {
+    if (!SECTION_KINDS.some((k) => k.value === kind)) return;
     this.mapFacility(fid, (x) => ({
       ...x,
       sections: x.sections.map((s) => {
         if (s.id !== sid) return s;
-        const next: FacilitySection = { ...s, [key]: val };
-        // The per-kilo weighing fee is shown only on Fish sections and is managed automatically:
-        // naming a section "Fish" auto-adds the fee row; renaming away from fish removes it.
-        if (key === 'name') {
-          if (/fish/i.test(val)) {
-            if (next.fees.length === 0) {
-              next.fees = [{ id: uid(), label: 'Fish (per kilo)', amount: '', unit: 'per kilo' }];
-            }
-          } else {
-            next.fees = [];
-          }
-        }
+        const next: FacilitySection = { ...s, kind: kind as MarketSectionKind };
+        next.fees = kind === 'FishSection' ? fishFeesFor(s.fees) : [];
         return next;
       }),
+    }));
+  }
+  setSection(fid: string, sid: string, key: keyof FacilitySection, val: string): void {
+    this.mapFacility(fid, (x) => ({
+      ...x,
+      // The name is the LGU's own label and carries no meaning to the platform — renaming an area never
+      // adds or removes a fee. The area's fees follow its declared kind (see setSectionKind).
+      sections: x.sections.map((s) => (s.id === sid ? { ...s, [key]: val } : s)),
     }));
   }
   addSecFee(fid: string, sid: string): void {
@@ -432,7 +502,10 @@ export class OnboardingWorkspace {
         administrator?: { name?: string; position?: string; email?: string };
         branding?: { officeName?: string; orPrefix?: string; orStart?: string; logoName?: string; logoDataUri?: string };
       };
-      if (Array.isArray(cfg.facilities)) this.facilities.set(cfg.facilities);
+      if (Array.isArray(cfg.facilities))
+        this.facilities.set(
+          cfg.facilities.map((f) => ({ ...f, sections: normalizeSections(Array.isArray(f?.sections) ? f.sections : []) })),
+        );
       if (cfg.administrator)
         this.admin.set({
           name: cfg.administrator.name ?? '',

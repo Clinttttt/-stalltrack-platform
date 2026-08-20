@@ -38,12 +38,25 @@ export interface ActivationStallGroup {
   section: MarketSectionStr | null;
 }
 
+/**
+ * The LGU's own names for the three collection areas of its public-market daily sheet, taken from what it
+ * declared during onboarding. Each is optional: an area the LGU did not define keeps the platform's
+ * canonical wording until its Head sets one in the portal.
+ */
+export interface ActivationSectionLabels {
+  vegetable?: string | null;
+  fish?: string | null;
+  meat?: string | null;
+}
+
 export interface ActivationFacility {
   code: FacilityCodeStr;
   name: string;
   shortName: string;
   archetype: BillingArchetypeStr;
   stallGroups?: ActivationStallGroup[];
+  /** Daily-stall markets only: the LGU's own name for each collection area. */
+  sectionLabels?: ActivationSectionLabels;
 }
 
 export interface ActivationRate {

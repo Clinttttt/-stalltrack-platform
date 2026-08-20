@@ -16,6 +16,8 @@
 // says on screen that it is sample data.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { MarketSectionKind } from './market-sections';
+
 export const STAGES = ['Assessment', 'Onboarding', 'Validation', 'Activation'] as const;
 
 // The onboarding checklist an LGU works through on their onboarding page.
@@ -43,6 +45,11 @@ export interface Fee {
 
 export interface Section {
   name: string;
+  /**
+   * Which collection area of the daily sheet this section is, as declared by the LGU during onboarding.
+   * Absent on drafts saved before the question was asked; the platform never infers it from `name`.
+   */
+  kind?: MarketSectionKind;
   units: string;
   rate?: string;
   fees: Fee[];

@@ -137,7 +137,10 @@
                           <div class="overflow-hidden rounded-lg border border-line">
                             @for (s of f.sections; track s.name) {
                               <div class="flex items-center justify-between gap-3 border-t border-line px-3 py-2 first:border-t-0">
-                                <span class="text-navy">{{ s.name }}</span>
+                                <span class="text-navy">
+                                  {{ s.name }}
+                                  @if (areaLabel(s)) { <span class="ml-2 text-xs text-muted">{{ areaLabel(s) }}</span> }
+                                </span>
                                 <span class="text-right text-xs text-muted">
                                   @if (s.rate) { <span class="font-semibold text-navy">₱{{ s.rate }}</span> / day }
                                   @if (s.fees.length > 0) { <span class="ml-2">· {{ feesText(s.fees) }}</span> }
