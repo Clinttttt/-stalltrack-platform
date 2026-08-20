@@ -1,6 +1,12 @@
-<div class="grid min-h-[100dvh] bg-mist lg:grid-cols-[1.05fr,0.95fr]">
+<!--
+  Viewport-locked split screen: the page itself never scrolls. The brand panel is fixed furniture, so only the
+  form column scrolls, and only when the form is taller than the screen. The brand panel's message sits in the
+  space left between the mark and the footnote rather than being pushed to the middle by justify-between, which
+  left a dead band across the panel on a tall window.
+-->
+<div class="grid h-[100dvh] overflow-hidden bg-mist lg:grid-cols-[1.05fr,0.95fr]">
   <!-- Brand panel -->
-  <div class="relative hidden overflow-hidden bg-navy text-white lg:flex lg:flex-col lg:justify-between lg:p-12">
+  <div class="relative hidden overflow-hidden bg-navy text-white lg:flex lg:flex-col lg:p-12">
     <div
       class="pointer-events-none absolute inset-0 opacity-[0.07]"
       style="background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.35) 1px, transparent 0); background-size: 22px 22px;"
@@ -15,17 +21,19 @@
       </div>
     </div>
 
-    <div class="relative max-w-md">
-      <span class="eyebrow">First-run setup</span>
-      <h1 class="mt-4 font-display text-4xl font-bold leading-tight">Create the platform operator.</h1>
-      <p class="mt-4 text-base leading-relaxed text-white/70">
-        This one-time step creates the dedicated console operator who manages assessment, onboarding,
-        validation, and activation across the CARCANMADCARLAN cluster — separate from each municipality's Head.
-      </p>
-      <p class="mt-4 text-sm leading-relaxed text-white/50">
-        Because it is a separate account, it needs its own username and its own e-mail address — not those of
-        any municipality's Head.
-      </p>
+    <div class="relative flex flex-1 flex-col justify-center py-10">
+      <div class="max-w-md">
+        <span class="eyebrow">First-run setup</span>
+        <h1 class="mt-4 font-display text-4xl font-bold leading-tight">Create the platform operator.</h1>
+        <p class="mt-4 text-base leading-relaxed text-white/70">
+          This one-time step creates the dedicated console operator who manages assessment, onboarding,
+          validation, and activation across the CARCANMADCARLAN cluster — separate from each municipality's Head.
+        </p>
+        <p class="mt-4 text-sm leading-relaxed text-white/50">
+          Because it is a separate account, it needs its own username and its own e-mail address — not those of
+          any municipality's Head.
+        </p>
+      </div>
     </div>
 
     <div class="relative flex items-center gap-3 text-sm text-white/60">
@@ -34,9 +42,10 @@
     </div>
   </div>
 
-  <!-- Form panel -->
-  <div class="flex items-center justify-center px-5 py-12 sm:px-10">
-    <div class="w-full max-w-sm">
+  <!-- Form panel: the only scrolling region. my-auto centres it when it fits and lets it scroll from the top
+       when it does not, so a long form is never clipped at the head. -->
+  <div class="flex items-start justify-center overflow-y-auto px-5 py-12 sm:px-10">
+    <div class="my-auto w-full max-w-sm">
       <div class="mb-8 flex items-center gap-3 lg:hidden">
         <img src="/stalltrack-logo.png" alt="StallTrack" class="h-10 w-10 shrink-0 object-contain" />
         <div class="leading-tight">
@@ -72,7 +81,7 @@
               <app-icon name="user" className="h-4 w-4 text-muted" />
               <input id="username" type="text" name="username" autocomplete="username" [(ngModel)]="username" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="e.g. console.admin" required />
             </div>
-            <p class="mt-1.5 text-[11px] leading-snug text-muted">Used to sign in to this console. It cannot be one already in use on the platform.</p>
+            <p class="mt-1.5 text-[11px] leading-snug text-muted">Not one already in use on the platform.</p>
           </div>
 
           <div>
@@ -81,7 +90,7 @@
               <app-icon name="inbox" className="h-4 w-4 text-muted" />
               <input id="email" type="email" name="email" autocomplete="email" [(ngModel)]="email" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="name@stalltrack.site" required />
             </div>
-            <p class="mt-1.5 text-[11px] leading-snug text-muted">The operator's own address. An address already held by a municipality's Head or staff cannot be reused.</p>
+            <p class="mt-1.5 text-[11px] leading-snug text-muted">The operator's own address, not a Head's or a staff member's.</p>
           </div>
 
           <div>
@@ -94,7 +103,7 @@
               </button>
             </div>
             <p class="mt-1.5 text-[11px] leading-snug" [class]="passwordTooShort ? 'text-red' : 'text-muted'">
-              At least 8 characters, including a letter and a number.
+              At least 8 characters, with a letter and a number.
             </p>
           </div>
 
@@ -130,11 +139,6 @@
             </button>
           }
         </form>
-
-        <div class="mt-6 rounded-xl border border-dashed border-line bg-white px-4 py-3 text-xs text-muted">
-          <span class="font-semibold text-navy">One-time step.</span>
-          <div class="mt-1 text-[11px]">This form closes itself once the operator exists. Afterwards, sign in at the console.</div>
-        </div>
       }
     </div>
   </div>
