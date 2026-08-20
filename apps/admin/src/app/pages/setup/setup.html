@@ -23,15 +23,16 @@
 
     <div class="relative flex flex-1 flex-col justify-center py-10">
       <div class="max-w-md">
-        <span class="eyebrow">First-run setup</span>
+        <span class="eyebrow">Initial setup</span>
         <h1 class="mt-4 font-display text-4xl font-bold leading-tight">Create the platform operator.</h1>
         <p class="mt-4 text-base leading-relaxed text-white/70">
-          This one-time step creates the dedicated console operator who manages assessment, onboarding,
-          validation, and activation across the CARCANMADCARLAN cluster — separate from each municipality's Head.
+          The platform operator administers assessment, onboarding, validation and activation for the
+          municipalities of the CARCANMADCARLAN cluster. The account is held separately from the accounts of
+          each municipality's Head, and is created once.
         </p>
         <p class="mt-4 text-sm leading-relaxed text-white/50">
-          Because it is a separate account, it needs its own username and its own e-mail address — not those of
-          any municipality's Head.
+          Being a separate account, it requires its own username and its own email address. An address already
+          recorded for a Head or for a member of staff cannot be used.
         </p>
       </div>
     </div>
@@ -44,8 +45,11 @@
 
   <!-- Form panel: the only scrolling region. my-auto centres it when it fits and lets it scroll from the top
        when it does not, so a long form is never clipped at the head. -->
-  <div class="flex items-start justify-center overflow-y-auto px-5 py-12 sm:px-10">
-    <div class="my-auto w-full max-w-sm">
+  <!-- Form panel. Sized to fit the screen: the fields that belong together share a row, so the form does not
+       need to scroll on an ordinary display. overflow-y-auto stays as a floor for short windows, where content
+       must remain reachable rather than being cut off. -->
+  <div class="flex items-start justify-center overflow-y-auto px-5 py-10 sm:px-10">
+    <div class="my-auto w-full max-w-md">
       <div class="mb-8 flex items-center gap-3 lg:hidden">
         <img src="/stalltrack-logo.png" alt="StallTrack" class="h-10 w-10 shrink-0 object-contain" />
         <div class="leading-tight">
@@ -59,29 +63,30 @@
       } @else if (done()) {
         <span class="eyebrow">Setup complete</span>
         <h2 class="mt-2 font-display text-3xl font-bold text-navy">Operator created.</h2>
-        <p class="mt-2 text-sm text-muted">Your platform-operator account is ready. You can now sign in to the console.</p>
+        <p class="mt-2 text-sm text-muted">The operator account is ready. You may now sign in to the console.</p>
         <button type="button" (click)="goToLogin()" class="a-btn-navy mt-6 w-full !py-3">Continue to sign in</button>
       } @else {
-        <span class="eyebrow">First-run setup</span>
+        <span class="eyebrow">Initial setup</span>
         <h2 class="mt-2 font-display text-3xl font-bold text-navy">Create console operator.</h2>
-        <p class="mt-2 text-sm text-muted">Set up the first platform-operator account for this console.</p>
+        <p class="mt-2 text-sm text-muted">Record the operator account for this console.</p>
 
-        <form (ngSubmit)="submit()" class="mt-8 space-y-4">
-          <div>
-            <label class="a-label" for="fullName">Full name</label>
-            <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
-              <app-icon name="user" className="h-4 w-4 text-muted" />
-              <input id="fullName" type="text" name="fullName" autocomplete="name" autofocus [(ngModel)]="fullName" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="e.g. Juan D. Dela Cruz" required />
+        <form (ngSubmit)="submit()" class="mt-6 space-y-4">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="a-label" for="fullName">Full name</label>
+              <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
+                <app-icon name="user" className="h-4 w-4 text-muted" />
+                <input id="fullName" type="text" name="fullName" autocomplete="name" autofocus [(ngModel)]="fullName" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="Juan D. Dela Cruz" required />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label class="a-label" for="username">Username</label>
-            <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
-              <app-icon name="user" className="h-4 w-4 text-muted" />
-              <input id="username" type="text" name="username" autocomplete="username" [(ngModel)]="username" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="e.g. console.admin" required />
+            <div>
+              <label class="a-label" for="username">Username</label>
+              <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
+                <app-icon name="user" className="h-4 w-4 text-muted" />
+                <input id="username" type="text" name="username" autocomplete="username" [(ngModel)]="username" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="console.admin" required />
+              </div>
             </div>
-            <p class="mt-1.5 text-[11px] leading-snug text-muted">Not one already in use on the platform.</p>
           </div>
 
           <div>
@@ -93,30 +98,34 @@
             <p class="mt-1.5 text-[11px] leading-snug text-muted">The operator's own address, not a Head's or a staff member's.</p>
           </div>
 
-          <div>
-            <label class="a-label" for="password">Password</label>
-            <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
-              <app-icon name="lock" className="h-4 w-4 text-muted" />
-              <input id="password" [type]="showPassword() ? 'text' : 'password'" name="password" autocomplete="new-password" [(ngModel)]="password" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="At least 8 characters" required />
-              <button type="button" (click)="togglePassword()" class="shrink-0 rounded-lg px-1.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted transition hover:text-navy" [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
-                {{ showPassword() ? 'Hide' : 'Show' }}
-              </button>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="a-label" for="password">Password</label>
+              <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
+                <app-icon name="lock" className="h-4 w-4 text-muted" />
+                <input id="password" [type]="showPassword() ? 'text' : 'password'" name="password" autocomplete="new-password" [(ngModel)]="password" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="At least 8 characters" required />
+                <button type="button" (click)="togglePassword()" class="shrink-0 rounded-lg px-1.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted transition hover:text-navy" [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+                  {{ showPassword() ? 'Hide' : 'Show' }}
+                </button>
+              </div>
             </div>
-            <p class="mt-1.5 text-[11px] leading-snug" [class]="passwordTooShort ? 'text-red' : 'text-muted'">
-              At least 8 characters, with a letter and a number.
-            </p>
+
+            <div>
+              <label class="a-label" for="confirm">Confirm password</label>
+              <div class="mt-1.5 flex items-center gap-2 rounded-xl border bg-white px-3 focus-within:ring-2 focus-within:ring-gold/20" [class]="passwordsDiffer ? 'border-[#e6c4c4] focus-within:border-red' : 'border-line focus-within:border-gold'">
+                <app-icon name="lock" className="h-4 w-4 text-muted" />
+                <input id="confirm" [type]="showPassword() ? 'text' : 'password'" name="confirm" autocomplete="new-password" [(ngModel)]="confirm" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="Repeat the password" required />
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label class="a-label" for="confirm">Confirm password</label>
-            <div class="mt-1.5 flex items-center gap-2 rounded-xl border bg-white px-3 focus-within:ring-2 focus-within:ring-gold/20" [class]="passwordsDiffer ? 'border-[#e6c4c4] focus-within:border-red' : 'border-line focus-within:border-gold'">
-              <app-icon name="lock" className="h-4 w-4 text-muted" />
-              <input id="confirm" [type]="showPassword() ? 'text' : 'password'" name="confirm" autocomplete="new-password" [(ngModel)]="confirm" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="Re-enter password" required />
-            </div>
+          <p class="text-[11px] leading-snug" [class]="passwordsDiffer ? 'text-red' : (passwordTooShort ? 'text-red' : 'text-muted')">
             @if (passwordsDiffer) {
-              <p class="mt-1.5 text-[11px] leading-snug text-red">Both entries must match.</p>
+              Both entries must match.
+            } @else {
+              At least 8 characters, with a letter and a number.
             }
-          </div>
+          </p>
 
           @if (error()) {
             <div class="flex items-start gap-2 rounded-xl border border-[#e6c4c4] bg-red-bg px-3 py-2.5 text-sm text-red">

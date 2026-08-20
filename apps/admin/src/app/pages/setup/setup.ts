@@ -35,7 +35,7 @@ export class ConsoleSetup {
   readonly showPassword = signal(false);
 
   constructor() {
-    this.title.setTitle('First-run setup - StallTrack Admin');
+    this.title.setTitle('Initial setup | StallTrack Admin');
     void this.check();
   }
 
