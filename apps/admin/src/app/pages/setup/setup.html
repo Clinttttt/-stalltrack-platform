@@ -8,7 +8,7 @@
     <div class="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-gold/10 blur-3xl"></div>
 
     <div class="relative flex items-center gap-3">
-      <span class="grid h-10 w-10 place-items-center rounded-xl bg-gold font-display text-xl font-bold text-navy">S</span>
+      <img src="/stalltrack-logo.png" alt="StallTrack" class="h-11 w-11 shrink-0 object-contain" />
       <div class="leading-tight">
         <div class="font-display text-xl font-bold tracking-wide">StallTrack</div>
         <div class="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">Platform Admin</div>
@@ -22,6 +22,10 @@
         This one-time step creates the dedicated console operator who manages assessment, onboarding,
         validation, and activation across the CARCANMADCARLAN cluster — separate from each municipality's Head.
       </p>
+      <p class="mt-4 text-sm leading-relaxed text-white/50">
+        Because it is a separate account, it needs its own username and its own e-mail address — not those of
+        any municipality's Head.
+      </p>
     </div>
 
     <div class="relative flex items-center gap-3 text-sm text-white/60">
@@ -34,7 +38,7 @@
   <div class="flex items-center justify-center px-5 py-12 sm:px-10">
     <div class="w-full max-w-sm">
       <div class="mb-8 flex items-center gap-3 lg:hidden">
-        <span class="grid h-10 w-10 place-items-center rounded-xl bg-navy font-display text-xl font-bold text-gold">S</span>
+        <img src="/stalltrack-logo.png" alt="StallTrack" class="h-10 w-10 shrink-0 object-contain" />
         <div class="leading-tight">
           <div class="font-display text-lg font-bold text-navy">StallTrack</div>
           <div class="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">Platform Admin</div>
@@ -58,7 +62,7 @@
             <label class="a-label" for="fullName">Full name</label>
             <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
               <app-icon name="user" className="h-4 w-4 text-muted" />
-              <input id="fullName" type="text" name="fullName" autocomplete="name" [(ngModel)]="fullName" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="e.g. Juan D. Dela Cruz" required />
+              <input id="fullName" type="text" name="fullName" autocomplete="name" autofocus [(ngModel)]="fullName" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="e.g. Juan D. Dela Cruz" required />
             </div>
           </div>
 
@@ -68,6 +72,7 @@
               <app-icon name="user" className="h-4 w-4 text-muted" />
               <input id="username" type="text" name="username" autocomplete="username" [(ngModel)]="username" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="e.g. console.admin" required />
             </div>
+            <p class="mt-1.5 text-[11px] leading-snug text-muted">Used to sign in to this console. It cannot be one already in use on the platform.</p>
           </div>
 
           <div>
@@ -76,22 +81,32 @@
               <app-icon name="inbox" className="h-4 w-4 text-muted" />
               <input id="email" type="email" name="email" autocomplete="email" [(ngModel)]="email" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="name@stalltrack.site" required />
             </div>
+            <p class="mt-1.5 text-[11px] leading-snug text-muted">The operator's own address. An address already held by a municipality's Head or staff cannot be reused.</p>
           </div>
 
           <div>
             <label class="a-label" for="password">Password</label>
             <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
               <app-icon name="lock" className="h-4 w-4 text-muted" />
-              <input id="password" type="password" name="password" autocomplete="new-password" [(ngModel)]="password" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="Min. 8 chars, a letter and a number" required />
+              <input id="password" [type]="showPassword() ? 'text' : 'password'" name="password" autocomplete="new-password" [(ngModel)]="password" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="At least 8 characters" required />
+              <button type="button" (click)="togglePassword()" class="shrink-0 rounded-lg px-1.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted transition hover:text-navy" [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+                {{ showPassword() ? 'Hide' : 'Show' }}
+              </button>
             </div>
+            <p class="mt-1.5 text-[11px] leading-snug" [class]="passwordTooShort ? 'text-red' : 'text-muted'">
+              At least 8 characters, including a letter and a number.
+            </p>
           </div>
 
           <div>
             <label class="a-label" for="confirm">Confirm password</label>
-            <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
+            <div class="mt-1.5 flex items-center gap-2 rounded-xl border bg-white px-3 focus-within:ring-2 focus-within:ring-gold/20" [class]="passwordsDiffer ? 'border-[#e6c4c4] focus-within:border-red' : 'border-line focus-within:border-gold'">
               <app-icon name="lock" className="h-4 w-4 text-muted" />
-              <input id="confirm" type="password" name="confirm" autocomplete="new-password" [(ngModel)]="confirm" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="Re-enter password" required />
+              <input id="confirm" [type]="showPassword() ? 'text' : 'password'" name="confirm" autocomplete="new-password" [(ngModel)]="confirm" class="w-full bg-transparent py-2.5 text-sm text-navy outline-none" placeholder="Re-enter password" required />
             </div>
+            @if (passwordsDiffer) {
+              <p class="mt-1.5 text-[11px] leading-snug text-red">Both entries must match.</p>
+            }
           </div>
 
           @if (error()) {
@@ -101,13 +116,25 @@
             </div>
           }
 
-          <button type="submit" [disabled]="busy()" class="a-btn-navy w-full !py-3">
-            {{ busy() ? 'Creating…' : 'Create operator' }}
-            @if (!busy()) {
+          @if (alreadySetUp()) {
+            <button type="button" (click)="goToLogin()" class="a-btn-navy w-full !py-3">
+              Continue to sign in
               <app-icon name="arrowRight" className="h-4 w-4" />
-            }
-          </button>
+            </button>
+          } @else {
+            <button type="submit" [disabled]="busy()" class="a-btn-navy w-full !py-3">
+              {{ busy() ? 'Creating…' : 'Create operator' }}
+              @if (!busy()) {
+                <app-icon name="arrowRight" className="h-4 w-4" />
+              }
+            </button>
+          }
         </form>
+
+        <div class="mt-6 rounded-xl border border-dashed border-line bg-white px-4 py-3 text-xs text-muted">
+          <span class="font-semibold text-navy">One-time step.</span>
+          <div class="mt-1 text-[11px]">This form closes itself once the operator exists. Afterwards, sign in at the console.</div>
+        </div>
       }
     </div>
   </div>

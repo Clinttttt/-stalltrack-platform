@@ -30,6 +30,9 @@ export class ConsoleSetup {
   readonly busy = signal(false);
   readonly done = signal(false);
   readonly error = signal('');
+  /** Set when the API says an operator already exists: the form is finished, so offer the way out. */
+  readonly alreadySetUp = signal(false);
+  readonly showPassword = signal(false);
 
   constructor() {
     this.title.setTitle('First-run setup - StallTrack Admin');
@@ -40,6 +43,20 @@ export class ConsoleSetup {
     const required = await this.setup.isSetupRequired();
     this.checking.set(false);
     if (!required) this.router.navigate(['/login'], { replaceUrl: true });
+  }
+
+  togglePassword(): void {
+    this.showPassword.update((v) => !v);
+  }
+
+  /** Whether the two password fields agree, once the second has been typed in. */
+  get passwordsDiffer(): boolean {
+    return this.confirm.length > 0 && this.password !== this.confirm;
+  }
+
+  /** The password rule, stated once and used for both the hint and the check. */
+  get passwordTooShort(): boolean {
+    return this.password.length > 0 && this.password.length < 8;
   }
 
   async submit(): Promise<void> {
@@ -64,8 +81,13 @@ export class ConsoleSetup {
       password: this.password,
     });
     this.busy.set(false);
-    if (res.ok) this.done.set(true);
-    else this.error.set(res.error);
+    if (res.ok) {
+      this.done.set(true);
+      return;
+    }
+    this.error.set(res.error);
+    // An operator already exists: no wording on this form can help, so stop offering it and point at sign-in.
+    if (res.alreadySetUp) this.alreadySetUp.set(true);
   }
 
   goToLogin(): void {
