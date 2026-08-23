@@ -225,6 +225,38 @@ export function mapRequestToCommand(
   }
 
   const users = r.config?.users ?? [];
+
+  // One rate per facility and key. The platform files a single amount per rate on a single effective date, so two rows
+  // under one key cannot both be stored — and until 2026-08-23 the second one reached Postgres, which answered the
+  // operator with the single word "Conflict" on an LGU that had never been activated. It happens honestly: the
+  // platform holds ONE large-animal rate, so a slaughterhouse listing carabao and cow produces two rows under
+  // SlhLargePerHead. Stated at the same amount they are one statement and are sent once. Stated at different amounts
+  // they contradict each other, and the operator is told before committing rather than after being refused.
+  const deduped: ActivationRate[] = [];
+  const seen = new Map<string, ActivationRate>();
+  for (const rate of rates) {
+    const id = `${rate.facilityCode}|${rate.key}`;
+    const first = seen.get(id);
+    if (!first) {
+      seen.set(id, rate);
+      deduped.push(rate);
+      continue;
+    }
+    if (first.amount === rate.amount) {
+      warnings.push(
+        `${rate.facilityCode} states its ${rate.key} rate more than once at the same amount (${rate.amount}); it is filed once.`,
+      );
+    } else {
+      warnings.push(
+        `${rate.facilityCode} states two different amounts for one rate, ${rate.key} (${first.amount} and ${rate.amount}). ` +
+          `The platform files one amount per rate, so activation is refused until the office says which its ordinance charges.`,
+      );
+      // Sent as given. Choosing between an office's two amounts is not the console's decision, and the backend names
+      // the contradiction precisely.
+      deduped.push(rate);
+    }
+  }
+
   const admin = users.find((u) => /admin|super/i.test(u.role)) ?? users[0];
   if (!admin) warnings.push('No administrator account was configured for this LGU.');
 
@@ -257,7 +289,7 @@ export function mapRequestToCommand(
       email: (admin?.email || '').trim(),
     },
     facilities,
-    rates,
+    rates: deduped,
     customAnimals: customAnimals.length ? customAnimals : undefined,
     orSeries: parseOrSeries(r.config?.orSeries),
     tpmMarketDay,

@@ -66,6 +66,60 @@ function configOf(sections: Section[]): Config {
   return { facilities: [market(sections)], orSeries: '', users: [] };
 }
 
+describe('activation mapper: one amount per rate', () => {
+  // Reported 2026-08-23: activating Carrascal answered the operator with the single word "Conflict" on an LGU that had
+  // never been activated. The production log named it: a duplicate key on
+  // IX_FacilityRates_MunicipalityId_FacilityCode_RateKey_Effective. The platform holds ONE large-animal rate, so a
+  // slaughterhouse listing carabao and cow sends two rows under SlhLargePerHead, and Postgres answered the operator.
+  function slaughterhouse(items: { label: string; amount: string }[]): Facility {
+    return {
+      name: 'Carrascal Slaughterhouse',
+      type: 'Per head',
+      rateAmount: '',
+      rateUnit: 'per head',
+      unitLabel: 'heads',
+      units: '',
+      sections: [],
+      addOns: [],
+      rateItems: items.map((i) => ({ label: i.label, amount: i.amount, unit: 'per head' })),
+    } as Facility;
+  }
+
+  function slhRequest(items: { label: string; amount: string }[]): RequestRecord {
+    return request({ facilities: [slaughterhouse(items)], orSeries: '', users: [] } as Config);
+  }
+
+  it('files one row when carabao and cow state the same large-animal amount, and says so', () => {
+    const { command, warnings } = mapRequestToCommand(
+      slhRequest([
+        { label: 'Hog', amount: '250' },
+        { label: 'Carabao', amount: '365' },
+        { label: 'Cow', amount: '365' },
+      ]),
+    );
+
+    const large = command.rates.filter((r) => r.key === 'SlhLargePerHead');
+    expect(large.length).toBe(1);
+    expect(large[0].amount).toBe(365);
+    expect(command.rates.length).toBe(2);
+    expect(warnings.join(' ')).toContain('filed once');
+  });
+
+  it('sends both when they differ, and warns that activation will be refused until the office says which', () => {
+    // Choosing between an office's two amounts is not the console's decision. The backend names the contradiction.
+    const { command, warnings } = mapRequestToCommand(
+      slhRequest([
+        { label: 'Carabao', amount: '365' },
+        { label: 'Cow', amount: '400' },
+      ]),
+    );
+
+    expect(command.rates.filter((r) => r.key === 'SlhLargePerHead').length).toBe(2);
+    expect(warnings.join(' ')).toContain('two different amounts');
+    expect(warnings.join(' ')).toContain('400');
+  });
+});
+
 describe('activation mapper: market collection areas', () => {
   it("carries the LGU's own names to the area it declared, whatever language they are in", () => {
     const { command } = mapRequestToCommand(
