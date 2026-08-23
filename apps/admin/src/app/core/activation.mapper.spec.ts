@@ -1,7 +1,7 @@
-import { mapRequestToCommand } from './activation.mapper';
+﻿import { headUsernameFor, mapRequestToCommand } from './activation.mapper';
 import { Config, Facility, RequestRecord, Section, STATUS } from './demo';
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // What an LGU's market sections become when the operator commits an activation.
 //
 // Reported from use: Madrid named its market areas Gulayan, Isda and Karne. The console decided which area a
@@ -10,7 +10,7 @@ import { Config, Facility, RequestRecord, Section, STATUS } from './demo';
 // were dropped and its weighing fee was never seeded at all - a money figure lost to a spelling.
 //
 // The LGU now declares the collection area each of its sections is, and that declaration is the only thing read.
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function section(name: string, kind: Section['kind'], rate: string, perKilo?: string): Section {
   return {
@@ -65,6 +65,28 @@ function request(config: Config): RequestRecord {
 function configOf(sections: Section[]): Config {
   return { facilities: [market(sections)], orSeries: '', users: [] };
 }
+
+describe("activation mapper: the Head's own username", () => {
+  // The operator's activation form carried a "Head username" input. The Head's credentials are the Head's, and one
+  // office's sign-in name is not another office's to choose â€” so the field is gone and the console cannot supply one.
+  // Nothing the office states during onboarding is a username (its config carries a name, a role and an email), so the
+  // name is derived from the municipality and the Head changes it in their own portal, where editing your own account
+  // is already allowed.
+  it('derives the username from the LGU, and takes no override', () => {
+    const { command } = mapRequestToCommand(request(configOf([section('Gulayan', 'VegetableArea', '30')])));
+
+    expect(command.administrator.username).toBe('madrid.head');
+    expect(headUsernameFor('Carrascal')).toBe('carrascal.head');
+
+    // The signature carries no username: a later caller cannot pass one back in by accident.
+    expect(Object.keys({ officeName: null, sealPath: null })).not.toContain('username');
+  });
+
+  it('slugs a name with punctuation or spaces', () => {
+    expect(headUsernameFor('Gen. Luna')).toBe('genluna.head');
+    expect(headUsernameFor('  ')).toBe('lgu.head');
+  });
+});
 
 describe('activation mapper: one amount per rate', () => {
   // Reported 2026-08-23: activating Carrascal answered the operator with the single word "Conflict" on an LGU that had

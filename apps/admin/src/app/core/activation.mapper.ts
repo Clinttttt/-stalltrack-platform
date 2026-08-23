@@ -118,9 +118,21 @@ function facilityShortName(name: string, code: FacilityCodeStr): string {
   return code;
 }
 
+/**
+ * The Head's username, derived from the LGU's own name (e.g. Carrascal → `carrascal.head`).
+ *
+ * The operator does NOT choose it. It used to be an input on the activation form, which put one office's sign-in name
+ * in another office's hands — the Head's credentials are the Head's. Nothing the office states during onboarding is a
+ * username (its config carries a name, a role and an email), so activation derives one from the municipality and the
+ * Head changes it in their own portal, where editing your own account is already allowed.
+ */
+export function headUsernameFor(municipality: string): string {
+  return `${usernameSlug(municipality)}.head`;
+}
+
 export function mapRequestToCommand(
   r: RequestRecord,
-  overrides?: { officeName?: string | null; sealPath?: string | null; username?: string | null },
+  overrides?: { officeName?: string | null; sealPath?: string | null },
 ): MappedActivation {
   const warnings: string[] = [];
   const facilities: ActivationFacility[] = [];
@@ -285,7 +297,7 @@ export function mapRequestToCommand(
     },
     administrator: {
       fullName: (admin?.name || '').trim(),
-      username: overrides?.username?.trim() || `${usernameSlug(r.municipality)}.head`,
+      username: headUsernameFor(r.municipality),
       email: (admin?.email || '').trim(),
     },
     facilities,

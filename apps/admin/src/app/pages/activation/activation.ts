@@ -3,7 +3,7 @@ import { Icon } from '../../shared/icon/icon';
 import { Config, Facility, RequestRecord, STATUS } from '../../core/demo';
 import { AssessmentApi } from '../../core/assessment.api';
 import { ActivationApi } from '../../core/activation.api';
-import { mapRequestToCommand } from '../../core/activation.mapper';
+import { headUsernameFor, mapRequestToCommand } from '../../core/activation.mapper';
 
 const inScope = (r: RequestRecord): boolean => r.status === STATUS.APPROVED && r.stage === 'Activation';
 
@@ -71,7 +71,14 @@ export class Activation {
   readonly copied = signal(false);
   readonly composing = signal(false);
   readonly draft = signal('');
-  readonly headUsername = signal('');
+  /**
+   * Shown, never typed. The operator used to enter the Head's username here, which put one office's sign-in name in
+   * another office's hands. It is derived from the LGU's own name and the Head changes it in their own portal.
+   */
+  readonly headUsername = computed(() => {
+    const r = this.selected();
+    return r ? headUsernameFor(r.municipality) : '';
+  });
   readonly link = signal('');
   readonly activating = signal(false);
   readonly activateError = signal('');
@@ -158,11 +165,6 @@ export class Activation {
     this.warnings.set(warnings);
     this.link.set('');
     this.draft.set(activationTemplate(r.municipality));
-    // Left blank for the LGU's own operator to fill in. It used to be pre-filled with "{municipality}.head", to keep the
-    // "{tenant}.head" shape the login page once relied on to theme itself from the typed username. The login page no
-    // longer depends on that: the activation link, signing out, and the browser's memory of the last LGU all name the
-    // municipality outright. So the office chooses its Head's username, rather than inheriting one this console invented.
-    this.headUsername.set('');
     this.composing.set(true);
   }
 
@@ -175,7 +177,7 @@ export class Activation {
     }
     const username = this.headUsername().trim();
     if (!username) {
-      this.activateError.set("Please enter the Head's username for this LGU.");
+      this.activateError.set('Select the municipality to activate first.');
       return;
     }
     this.activating.set(true);
@@ -185,7 +187,6 @@ export class Activation {
       const { command } = mapRequestToCommand(r, {
         officeName: wc?.branding?.officeName,
         sealPath: wc?.branding?.logoDataUri,
-        username,
       });
       const res = await this.activationApi.activate(command);
       if (!res.ok) {
