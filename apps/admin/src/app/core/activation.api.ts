@@ -18,6 +18,12 @@ export type BillingArchetypeStr = 'DailyStall' | 'MonthlyRental' | 'WeeklyMarket
 export type MarketSectionStr = 'VegetableArea' | 'FishSection' | 'MeatSection';
 export type FeeRateKeyStr =
   | 'NpmDailyStall'
+  // A market's per-area daily rates, for an office whose ordinance prices one area apart from the rest (say vegetables
+  // at 35 while fish stays at 30). An office that charges the same across its market sends none of these, and every area
+  // is billed NpmDailyStall. Each is resolved for the stalls of that area alone.
+  | 'NpmDailyStallVegetable'
+  | 'NpmDailyStallFish'
+  | 'NpmDailyStallMeat'
   // The rent a market space is let for. The daily fee above is the installment it is collected in; this is what a
   // month owes. Omitted or 0 means the LGU has not stated one, and a month is then thirty daily fees — which is the
   // reference municipality's own ordinance. An LGU whose ordinance states otherwise sends it here.

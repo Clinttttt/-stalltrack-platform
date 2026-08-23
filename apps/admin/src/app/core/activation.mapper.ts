@@ -7,8 +7,9 @@ import {
   ActivationRate,
   BillingArchetypeStr,
   FacilityCodeStr,
+  FeeRateKeyStr,
 } from './activation.api';
-import { hasUndeclaredAreas, isCustomArea, marketSectionLabelOf, withDeclaredAreas } from './market-sections';
+import { hasUndeclaredAreas, isCustomArea, MarketSectionKind, marketSectionLabelOf, withDeclaredAreas } from './market-sections';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Maps a staged onboarding RequestRecord (the admin console's working config) to the
@@ -25,6 +26,13 @@ export interface MappedActivation {
 }
 
 const ALL_CODES: FacilityCodeStr[] = ['NPM', 'TCC', 'NCC', 'BBQ', 'ICE', 'SLH', 'TRM', 'TPM'];
+
+/** The rate key that carries one collection area's own daily fee. Mirrors FacilityRateKeys.PerAreaDailyKey. */
+const PER_AREA_RATE_KEY: Record<MarketSectionKind, FeeRateKeyStr> = {
+  VegetableArea: 'NpmDailyStallVegetable',
+  FishSection: 'NpmDailyStallFish',
+  MeatSection: 'NpmDailyStallMeat',
+};
 
 const VALID_MARKET_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -216,26 +224,34 @@ export function mapRequestToCommand(
 
     // Fixed ordinance rates.
     if (archetype === 'DailyStall') {
-      // The daily stall rate now lives on the market sections; use the first section
-      // with a base rate set, falling back to any legacy facility-level rateAmount.
-      const sectionRate = (f.sections || []).find((s) => (s.rate ?? '').trim())?.rate;
-      rates.push({ facilityCode: code, key: 'NpmDailyStall', amount: num(sectionRate) ?? num(f.rateAmount) ?? 0 });
+      // The market's own daily rate: the first of the THREE areas the office priced, falling back to any priced row and
+      // then to a legacy facility-level amount. It answers for an area the office did not price and for a stall of its
+      // own areas that carries no rate, so it is read from a canonical area rather than from a custom one — a rice
+      // section priced at 45 is not the market's rate for everybody else.
+      const canonicalPriced = sections.filter((s) => !isCustomArea(s.kind) && num(s.rate));
+      const marketRate =
+        num(canonicalPriced[0]?.rate) ?? num((f.sections || []).find((s) => (s.rate ?? '').trim())?.rate) ?? num(f.rateAmount) ?? 0;
+      rates.push({ facilityCode: code, key: 'NpmDailyStall', amount: marketRate });
 
-      // A market has ONE daily stall rate today. Where an office prices its areas differently, only the first is filed,
-      // and that was happening silently - so the operator is told which figure the market will bill at and which were
-      // not kept. Not resolved here: choosing among an office's figures is not the console's decision. A per-area rate
-      // is being built (the API already resolves one where it is stated); a market's OWN area is separate again, since
-      // its stalls carry the rate they were let at.
-      const pricedAreas = (f.sections || [])
-        .map((s) => ({ name: (s.name || '').trim(), amount: num(s.rate) }))
-        .filter((s): s is { name: string; amount: number } => typeof s.amount === 'number' && s.amount > 0);
-      const distinct = Array.from(new Set(pricedAreas.map((s) => s.amount)));
-      if (distinct.length > 1) {
+      // And the rate of each area the office priced, so an office that prices its areas apart is billed area by area.
+      // Filed for every priced area including the first: stating it twice costs nothing (the API files one row per key)
+      // and it means the office's own figure for an area never depends on which row it happened to enter first.
+      //
+      // Until 2026-08-23 only the market's rate was filed and the rest were dropped, silently at first and then with a
+      // warning. Nothing is dropped now, so the warning is gone; what remains worth saying is when an area was left
+      // unpriced and will therefore bill at the market's rate.
+      const unpriced: string[] = [];
+      for (const s of sections) {
+        if (isCustomArea(s.kind)) continue;   // a market's own area is billed at the rate its stalls were let at
+        const key = PER_AREA_RATE_KEY[s.kind as MarketSectionKind];
+        const amount = num(s.rate);
+        if (amount && amount > 0) rates.push({ facilityCode: code, key, amount });
+        else unpriced.push(`${s.name || marketSectionLabelOf(s.kind)}`);
+      }
+      if (unpriced.length && canonicalPriced.length) {
         warnings.push(
-          `"${f.name}" prices its areas differently (${pricedAreas
-            .map((s) => `${s.name || 'unnamed'} ${s.amount}`)
-            .join(', ')}). A market bills one daily rate today, so ${distinct[0]} is filed and the others are not kept. ` +
-            `Confirm this with the office before activating.`,
+          `"${f.name}" states no daily rate for ${unpriced.join(', ')}; those areas will bill at the market's ` +
+            `${marketRate}. The office can set an area's own rate in its portal later.`,
         );
       }
 

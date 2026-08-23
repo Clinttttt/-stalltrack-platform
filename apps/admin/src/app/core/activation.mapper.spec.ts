@@ -124,15 +124,70 @@ describe("activation mapper: the market's own areas", () => {
     expect(warnings.join(' ')).not.toContain('areas were assumed');
   });
 
-  it('says which daily rate is filed when a market prices its areas differently', () => {
-    // A market bills one daily rate. Only the first priced area was ever filed, silently.
+  it('files a rate for each area the office priced, so nothing is dropped', () => {
+    // Until 2026-08-23 a market had one daily rate: the first priced area was filed and the others were dropped, at
+    // first silently and then with a warning. Each area the office prices is now filed against its own rate key, and the
+    // market's rate remains as the answer for an area it did not price.
     const { command, warnings } = mapRequestToCommand(
-      request(configOf([section('Gulayan', 'VegetableArea', '30'), customSection('Rice Section', '45')])),
+      request(
+        configOf([
+          section('Gulayan', 'VegetableArea', '35'),
+          section('Isda', 'FishSection', '30', '1'),
+          section('Karne', 'MeatSection', '40'),
+        ]),
+      ),
+    );
+
+    const amountOf = (key: string) => command.rates.find((r) => r.key === key)?.amount;
+
+    expect(amountOf('NpmDailyStallVegetable')).toBe(35);
+    expect(amountOf('NpmDailyStallFish')).toBe(30);
+    expect(amountOf('NpmDailyStallMeat')).toBe(40);
+
+    // The market's own rate is the first of the three the office priced: it answers for an area left unpriced and for a
+    // stall of the market's own areas that carries no rate of its own.
+    expect(amountOf('NpmDailyStall')).toBe(35);
+
+    // Nothing is dropped any more, so nothing is warned about.
+    expect(warnings.join(' ')).not.toContain('prices its areas differently');
+    expect(warnings.join(' ')).not.toContain('are not kept');
+  });
+
+  it('says which areas were left unpriced, since those bill at the market rate', () => {
+    const { command, warnings } = mapRequestToCommand(
+      request(configOf([section('Gulayan', 'VegetableArea', '35'), section('Isda', 'FishSection', '')])),
+    );
+
+    expect(command.rates.find((r) => r.key === 'NpmDailyStallVegetable')?.amount).toBe(35);
+    expect(command.rates.some((r) => r.key === 'NpmDailyStallFish')).toBe(false);
+    expect(warnings.join(' ')).toContain('states no daily rate for Isda');
+  });
+
+  it("does not take a market's OWN area as the market's rate", () => {
+    // A rice section priced at 45 is that area's rate, not everybody's: its stalls carry the rate they were let at, and
+    // the market's rate must come from one of the three.
+    const { command } = mapRequestToCommand(
+      request(
+        configOf([
+          { name: 'Rice Section', kind: 'CustomArea', units: '10', rate: '45', fees: [] },
+          section('Gulayan', 'VegetableArea', '30'),
+        ]),
+      ),
     );
 
     expect(command.rates.find((r) => r.key === 'NpmDailyStall')?.amount).toBe(30);
-    expect(warnings.join(' ')).toContain('prices its areas differently');
-    expect(warnings.join(' ')).toContain('45');
+    expect(command.rates.some((r) => r.key === 'NpmDailyStallVegetable' && r.amount === 30)).toBe(true);
+  });
+
+  it('an office charging the same across its market states the same figure everywhere', () => {
+    // Cantilan's shape. Every area is filed at ₱30 and the market's rate is ₱30, so every path resolves ₱30 whichever
+    // way it asks.
+    const { command } = mapRequestToCommand(
+      request(configOf([section('Vegetable Area', 'VegetableArea', '30'), section('Fish Area', 'FishSection', '30', '1')])),
+    );
+
+    const daily = command.rates.filter((r) => r.key.startsWith('NpmDailyStall'));
+    expect(daily.every((r) => r.amount === 30)).toBe(true);
   });
 
   it('a market with only the three is unchanged', () => {
