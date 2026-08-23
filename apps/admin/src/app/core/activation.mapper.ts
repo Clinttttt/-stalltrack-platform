@@ -221,10 +221,11 @@ export function mapRequestToCommand(
       const sectionRate = (f.sections || []).find((s) => (s.rate ?? '').trim())?.rate;
       rates.push({ facilityCode: code, key: 'NpmDailyStall', amount: num(sectionRate) ?? num(f.rateAmount) ?? 0 });
 
-      // A market has ONE daily stall rate. Where an office prices its areas differently, only the first is filed, and
-      // that was happening silently - so the operator is told which figure the market will bill at and which ones were
-      // not kept. Not resolved here: the platform holds one rate per market, and choosing among an office's figures is
-      // not the console's decision. A stall may carry its own rate in the live portal.
+      // A market has ONE daily stall rate today. Where an office prices its areas differently, only the first is filed,
+      // and that was happening silently - so the operator is told which figure the market will bill at and which were
+      // not kept. Not resolved here: choosing among an office's figures is not the console's decision. A per-area rate
+      // is being built (the API already resolves one where it is stated); a market's OWN area is separate again, since
+      // its stalls carry the rate they were let at.
       const pricedAreas = (f.sections || [])
         .map((s) => ({ name: (s.name || '').trim(), amount: num(s.rate) }))
         .filter((s): s is { name: string; amount: number } => typeof s.amount === 'number' && s.amount > 0);
@@ -233,8 +234,8 @@ export function mapRequestToCommand(
         warnings.push(
           `"${f.name}" prices its areas differently (${pricedAreas
             .map((s) => `${s.name || 'unnamed'} ${s.amount}`)
-            .join(', ')}). A market bills one daily rate, so ${distinct[0]} is filed; set a stall's own rate in the ` +
-            `portal where an area differs.`,
+            .join(', ')}). A market bills one daily rate today, so ${distinct[0]} is filed and the others are not kept. ` +
+            `Confirm this with the office before activating.`,
         );
       }
 
