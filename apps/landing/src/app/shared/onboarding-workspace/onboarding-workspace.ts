@@ -15,12 +15,15 @@ interface SectionFee {
   unit: string;
 }
 /**
- * The collection area a market section stands for on the daily sheet. These values are the backend's
- * MarketSection names verbatim, so the LGU's own declaration travels all the way to its portal without
- * anyone interpreting the section's wording along the way. The section's `name` is the LGU's own label
- * for that area in its own language; the `kind` is what the sheet, the stalls and the fees are keyed on.
+ * The collection area a market section stands for on the daily sheet. The three named values are the backend's
+ * MarketSection names verbatim, so the LGU's own declaration travels all the way to its portal without anyone
+ * interpreting the section's wording along the way. The section's `name` is the LGU's own label for that area in its
+ * own language; the `kind` is what the sheet, the stalls and the fees are keyed on.
+ *
+ * 'CustomArea' is a market's OWN area, which the platform keys on nothing: it is kept by name in the facility's section
+ * registry. A market may have several, and each needs a name - there is nothing else to file it under.
  */
-type MarketSectionKind = 'VegetableArea' | 'FishSection' | 'MeatSection';
+type MarketSectionKind = 'VegetableArea' | 'FishSection' | 'MeatSection' | 'CustomArea';
 
 interface FacilitySection {
   id: string;
@@ -81,18 +84,24 @@ const shortName = (label: string): string => label.split(' — ')[0].split(' / '
 const FEE_UNITS = ['per month', 'per day', 'per kilo', 'per use', 'one-time'];
 const FEE_MODES = ['Applies to all', 'Optional (per stall)'];
 
-// The three collection areas a public-market daily sheet is organised into. An LGU declares which area each
-// of its sections is and names it itself; the platform never reads meaning out of the name.
+// The three collection areas a public-market daily sheet is organised into, plus the market's own. An LGU declares
+// which area each of its sections is and names it itself; the platform never reads meaning out of the name.
 const SECTION_KINDS: ReadonlyArray<{ value: MarketSectionKind; label: string }> = [
   { value: 'VegetableArea', label: 'Vegetable area' },
   { value: 'FishSection', label: 'Fish section (weighed)' },
   { value: 'MeatSection', label: 'Meat section' },
+  { value: 'CustomArea', label: 'Another area of your market' },
 ];
-const MAX_SECTIONS = SECTION_KINDS.length;
+// The three canonical areas may each be defined once. A market's own areas are as many as it has, capped so the form
+// stays a form; five is more than any market in the cluster keeps beyond the three.
+const CANONICAL_KINDS: ReadonlyArray<MarketSectionKind> = ['VegetableArea', 'FishSection', 'MeatSection'];
+const MAX_CUSTOM_SECTIONS = 5;
+const MAX_SECTIONS = CANONICAL_KINDS.length + MAX_CUSTOM_SECTIONS;
 const SECTION_NAME_PLACEHOLDER: Record<MarketSectionKind, string> = {
   VegetableArea: 'e.g. Vegetable Area, or Gulayan',
   FishSection: 'e.g. Fish Section, or Isda',
   MeatSection: 'e.g. Meat Section, or Karne',
+  CustomArea: 'e.g. Rice Section, or Bigasan',
 };
 const FEE_BASIS = ['Per consumption', 'Fixed amount'];
 // Utility add-ons are capped at these two presets (chosen from a fixed dropdown, not free text).
@@ -159,13 +168,16 @@ function fishFeesFor(existing: SectionFee[]): SectionFee[] {
 /**
  * Fills in the collection area for sections saved before an LGU was asked to declare one, taking them in
  * the order they were entered. This is a starting point the LGU sees and can correct in the form before it
- * submits, never a final answer read out of the section's wording.
+ * submits, never a final answer read out of the section's wording. A section already declared as the market's own area
+ * is left alone and takes none of the three slots.
  */
 function normalizeSections(sections: FacilitySection[]): FacilitySection[] {
-  const taken = new Set(sections.map((s) => s?.kind).filter((k): k is MarketSectionKind => Boolean(k)));
+  const taken = new Set(
+    sections.map((s) => s?.kind).filter((k): k is MarketSectionKind => Boolean(k) && CANONICAL_KINDS.includes(k)),
+  );
   return sections.map((s) => {
     if (s?.kind && SECTION_KINDS.some((k) => k.value === s.kind)) return s;
-    const kind = SECTION_KINDS.find((k) => !taken.has(k.value))?.value ?? 'VegetableArea';
+    const kind = CANONICAL_KINDS.find((k) => !taken.has(k)) ?? 'VegetableArea';
     taken.add(kind);
     return { ...s, kind, fees: kind === 'FishSection' ? fishFeesFor(s?.fees ?? []) : [] };
   });
@@ -272,21 +284,33 @@ export class OnboardingWorkspace {
   sectionNamePlaceholder(s: FacilitySection): string {
     return SECTION_NAME_PLACEHOLDER[s.kind] ?? 'e.g. Section name';
   }
-  /** The areas this row may be set to: its own, plus any not already taken by another section. */
+  /** The market's own area, which the platform keys on nothing: it is kept by name. */
+  isCustomArea = (s: FacilitySection): boolean => s.kind === 'CustomArea';
+  /**
+   * The areas this row may be set to: the three, minus any another row has already taken, plus the market's own -
+   * which is always available, because a market may have several and each is told apart by its name.
+   */
   sectionKindOptions(f: Facility, s: FacilitySection): ReadonlyArray<{ value: string; label: string }> {
     const taken = new Set(f.sections.filter((x) => x.id !== s.id).map((x) => x.kind));
-    return SECTION_KINDS.filter((k) => k.value === s.kind || !taken.has(k.value));
+    return SECTION_KINDS.filter((k) => k.value === 'CustomArea' || k.value === s.kind || !taken.has(k.value));
   }
-  /** A market keeps at most one section per collection area, so adding stops once all three are defined. */
+  /** A market keeps one section per canonical area, and as many of its own as it has, up to the form's cap. */
   canAddSection(f: Facility): boolean {
     return f.sections.length < MAX_SECTIONS;
   }
+  /** An area of the market's own must be named: the name is the only thing it can be filed under. */
+  needsOwnName = (s: FacilitySection): boolean => s.kind === 'CustomArea' && !(s.name || '').trim();
   /** Whether this facility keeps a single facility-level base rate (all types except Daily stall / Per head). */
   showBaseRate = (f: Facility): boolean => f.type !== 'Daily stall' && f.type !== 'Per head';
   isFacilityDone = (f: Facility): boolean => {
     if (!f.name.trim()) return false;
     if (f.type === 'Per head') return f.rateItems.some((r) => r.amount);
-    if (f.type === 'Daily stall') return f.sections.some((s) => (s.rate || '').trim());
+    if (f.type === 'Daily stall') {
+      // An area of the market's own is filed under its name, so an unnamed one holds the facility open rather than
+      // being quietly dropped on the way to the platform.
+      if (f.sections.some((s) => this.needsOwnName(s))) return false;
+      return f.sections.some((s) => (s.rate || '').trim());
+    }
     return Boolean(f.rateAmount);
   };
 
@@ -361,10 +385,11 @@ export class OnboardingWorkspace {
   // sections
   addSection(fid: string): void {
     this.mapFacility(fid, (x) => {
-      // One section per collection area; the new row takes the first area the market has not defined yet.
+      if (x.sections.length >= MAX_SECTIONS) return x;
+      // One section per canonical area: the new row takes the first of the three the market has not defined yet, and
+      // once all three are defined it is an area of the market's own, which it names itself.
       const taken = new Set(x.sections.map((s) => s.kind));
-      const kind = SECTION_KINDS.find((k) => !taken.has(k.value))?.value;
-      if (!kind) return x;
+      const kind = CANONICAL_KINDS.find((k) => !taken.has(k)) ?? 'CustomArea';
       return { ...x, sections: [...x.sections, newSection(kind)] };
     });
   }

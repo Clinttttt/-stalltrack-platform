@@ -175,7 +175,7 @@
                           <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Market areas / sections</span>
                         </div>
                         <p class="mt-1 text-xs text-muted">
-                          Define each area of your public market and its daily stall rate. Say which collection area a row is, then name it in your own language &mdash; that name is what your collection sheet will show. The fish area carries a per-kilo weighing fee. Stalls and vendors are added later in your live portal.
+                          Define each area of your public market and its daily stall rate. Say which collection area a row is, then name it in your own language &mdash; that name is what your collection sheet will show. If your market has an area beyond the three, choose &ldquo;Another area of your market&rdquo; and name it. The fish area carries a per-kilo weighing fee. Stalls and vendors are added later in your live portal.
                         </p>
                         <div class="mt-3 space-y-2">
                           @for (s of f.sections; track s.id) {
@@ -188,6 +188,9 @@
                                 <div>
                                   <label [class]="LABEL">Your name for it</label>
                                   <input [class]="INPUT" [value]="s.name" (input)="setSection(f.id, s.id, 'name', $any($event.target).value)" [placeholder]="sectionNamePlaceholder(s)" />
+                                  @if (needsOwnName(s)) {
+                                    <p class="mt-1 text-[11px] leading-snug text-amber">Name this area &mdash; it is what your sheet and your stalls will be filed under.</p>
+                                  }
                                 </div>
                                 <div>
                                   <label [class]="LABEL">Base rate</label>

@@ -16,7 +16,7 @@
 // says on screen that it is sample data.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { MarketSectionKind } from './market-sections';
+import { SectionKind } from './market-sections';
 
 export const STAGES = ['Assessment', 'Onboarding', 'Validation', 'Activation'] as const;
 
@@ -46,10 +46,11 @@ export interface Fee {
 export interface Section {
   name: string;
   /**
-   * Which collection area of the daily sheet this section is, as declared by the LGU during onboarding.
-   * Absent on drafts saved before the question was asked; the platform never infers it from `name`.
+   * Which collection area of the daily sheet this section is, as declared by the LGU during onboarding, or
+   * 'CustomArea' where the LGU declared an area of its own. Absent on drafts saved before the question was asked; the
+   * platform never infers it from `name`.
    */
-  kind?: MarketSectionKind;
+  kind?: SectionKind;
   units: string;
   rate?: string;
   fees: Fee[];

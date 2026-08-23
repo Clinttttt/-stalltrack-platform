@@ -8,7 +8,7 @@ import {
   BillingArchetypeStr,
   FacilityCodeStr,
 } from './activation.api';
-import { hasUndeclaredAreas, marketSectionLabelOf, withDeclaredAreas } from './market-sections';
+import { hasUndeclaredAreas, isCustomArea, marketSectionLabelOf, withDeclaredAreas } from './market-sections';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Maps a staged onboarding RequestRecord (the admin console's working config) to the
@@ -175,12 +175,35 @@ export function mapRequestToCommand(
       );
     }
 
+    // The market's OWN areas, beyond the three the platform keys on: a rice section, a dry goods row, a carinderia
+    // line. Each travels by name and is registered in the facility's section registry, so the office's stalls can be
+    // filed under it from the first day. An area with no name is dropped, because there is nothing to register and
+    // nothing to print on a sheet, and the operator is told which row went.
+    const customAreas: string[] = [];
+    if (archetype === 'DailyStall') {
+      const seen = new Set<string>();
+      for (const s of sections.filter((x) => isCustomArea(x.kind))) {
+        const name = (s.name || '').trim();
+        if (!name) {
+          warnings.push(`"${f.name}" declared an area of its own without naming it; that row was left out.`);
+          continue;
+        }
+        if (seen.has(name.toLowerCase())) {
+          warnings.push(`"${f.name}" declared the area "${name}" more than once; it is registered once.`);
+          continue;
+        }
+        seen.add(name.toLowerCase());
+        customAreas.push(name);
+      }
+    }
+
     facilities.push({
       code,
       name: f.name.trim(),
       shortName: facilityShortName(f.name, code),
       archetype,
       stallGroups: undefined,
+      customSections: customAreas.length ? customAreas : undefined,
       sectionLabels:
         archetype === 'DailyStall'
           ? {
@@ -197,6 +220,23 @@ export function mapRequestToCommand(
       // with a base rate set, falling back to any legacy facility-level rateAmount.
       const sectionRate = (f.sections || []).find((s) => (s.rate ?? '').trim())?.rate;
       rates.push({ facilityCode: code, key: 'NpmDailyStall', amount: num(sectionRate) ?? num(f.rateAmount) ?? 0 });
+
+      // A market has ONE daily stall rate. Where an office prices its areas differently, only the first is filed, and
+      // that was happening silently - so the operator is told which figure the market will bill at and which ones were
+      // not kept. Not resolved here: the platform holds one rate per market, and choosing among an office's figures is
+      // not the console's decision. A stall may carry its own rate in the live portal.
+      const pricedAreas = (f.sections || [])
+        .map((s) => ({ name: (s.name || '').trim(), amount: num(s.rate) }))
+        .filter((s): s is { name: string; amount: number } => typeof s.amount === 'number' && s.amount > 0);
+      const distinct = Array.from(new Set(pricedAreas.map((s) => s.amount)));
+      if (distinct.length > 1) {
+        warnings.push(
+          `"${f.name}" prices its areas differently (${pricedAreas
+            .map((s) => `${s.name || 'unnamed'} ${s.amount}`)
+            .join(', ')}). A market bills one daily rate, so ${distinct[0]} is filed; set a stall's own rate in the ` +
+            `portal where an area differs.`,
+        );
+      }
 
       // The MONTHLY rent a space is let for, when the LGU's ordinance states one. The daily rate above is the
       // installment it is collected in; this is what a month owes. Omitted (or 0) leaves it unstated, and a month is

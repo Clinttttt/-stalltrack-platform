@@ -57,6 +57,11 @@ export interface ActivationFacility {
   stallGroups?: ActivationStallGroup[];
   /** Daily-stall markets only: the LGU's own name for each collection area. */
   sectionLabels?: ActivationSectionLabels;
+  /**
+   * Daily-stall markets only: the market's OWN areas, beyond the three above (a rice section, a dry goods row). Each is
+   * registered in the facility's section registry so the office's stalls can be filed under it from the first day.
+   */
+  customSections?: string[];
 }
 
 export interface ActivationRate {

@@ -66,6 +66,84 @@ function configOf(sections: Section[]): Config {
   return { facilities: [market(sections)], orSeries: '', users: [] };
 }
 
+describe("activation mapper: the market's own areas", () => {
+  // The platform keys a daily sheet on three collection areas. A market that also has a rice section or a dry goods row
+  // kept those in the facility's section registry, which onboarding could not reach: the only way one came into being
+  // was for the Head to type the name into the first stall filed under it.
+  function customSection(name: string, rate = '30'): Section {
+    return { name, kind: 'CustomArea', units: '10', rate, fees: [] };
+  }
+
+  it("registers the market's own areas by name, and keeps them out of the three", () => {
+    const { command } = mapRequestToCommand(
+      request(
+        configOf([
+          section('Gulayan', 'VegetableArea', '30'),
+          section('Isda', 'FishSection', '30', '1'),
+          customSection('Rice Section'),
+          customSection('Dry Goods'),
+        ]),
+      ),
+    );
+
+    const market = command.facilities[0];
+    expect(market.customSections).toEqual(['Rice Section', 'Dry Goods']);
+
+    // The three carry only what was declared as one of the three; the meat area was not declared at all.
+    expect(market.sectionLabels).toEqual({ vegetable: 'Gulayan', fish: 'Isda', meat: null });
+  });
+
+  it('leaves out an area it was not given a name for, and says which row went', () => {
+    const { command, warnings } = mapRequestToCommand(
+      request(configOf([section('Gulayan', 'VegetableArea', '30'), customSection('   ')])),
+    );
+
+    expect(command.facilities[0].customSections).toBeUndefined();
+    expect(warnings.join(' ')).toContain('without naming it');
+  });
+
+  it('registers a repeated area once', () => {
+    // The registry is case-insensitive, so these are one area.
+    const { command, warnings } = mapRequestToCommand(
+      request(configOf([customSection('Rice Section'), customSection('rice section')])),
+    );
+
+    expect(command.facilities[0].customSections).toEqual(['Rice Section']);
+    expect(warnings.join(' ')).toContain('more than once');
+  });
+
+  it('never treats a declared own area as an undeclared one', () => {
+    // withDeclaredAreas fills in the area for a draft that predates the question. An own area is a declaration, so it
+    // must not be overwritten with a canonical one, and it must not consume one of the three slots.
+    const { command, warnings } = mapRequestToCommand(
+      request(configOf([customSection('Rice Section'), section('Gulayan', 'VegetableArea', '30')])),
+    );
+
+    expect(command.facilities[0].customSections).toEqual(['Rice Section']);
+    expect(command.facilities[0].sectionLabels?.vegetable).toBe('Gulayan');
+    expect(warnings.join(' ')).not.toContain('areas were assumed');
+  });
+
+  it('says which daily rate is filed when a market prices its areas differently', () => {
+    // A market bills one daily rate. Only the first priced area was ever filed, silently.
+    const { command, warnings } = mapRequestToCommand(
+      request(configOf([section('Gulayan', 'VegetableArea', '30'), customSection('Rice Section', '45')])),
+    );
+
+    expect(command.rates.find((r) => r.key === 'NpmDailyStall')?.amount).toBe(30);
+    expect(warnings.join(' ')).toContain('prices its areas differently');
+    expect(warnings.join(' ')).toContain('45');
+  });
+
+  it('a market with only the three is unchanged', () => {
+    const { command } = mapRequestToCommand(
+      request(configOf([section('Gulayan', 'VegetableArea', '30'), section('Isda', 'FishSection', '30', '1')])),
+    );
+
+    expect(command.facilities[0].customSections).toBeUndefined();
+  });
+});
+
 describe("activation mapper: the Head's own username", () => {
   // The operator's activation form carried a "Head username" input. The Head's credentials are the Head's, and one
   // office's sign-in name is not another office's to choose â€” so the field is gone and the console cannot supply one.
