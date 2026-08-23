@@ -59,7 +59,7 @@ body {
     @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
   }
   .eyebrow {
-    @apply inline-block text-[11px] font-bold uppercase leading-none tracking-[0.18em] text-gold;
+    @apply inline-block text-[10px] font-bold uppercase leading-[1.65] tracking-[0.14em] text-gold sm:text-[11px] sm:leading-[1.5] sm:tracking-[0.18em];
   }
   .btn-gold {
     @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-bold text-navy transition hover:bg-gold-light;
