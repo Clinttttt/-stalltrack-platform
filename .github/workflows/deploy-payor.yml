@@ -1,0 +1,142 @@
+name: Deploy payor portal
+
+# Deploys apps/payor (payor.stalltrack.site, hosted on Vercel) exactly as the admin console is deployed, so one
+# path is proven rather than two invented. The landing site keeps its own Vercel Git deployment; neither this
+# workflow nor the admin one touches it.
+#
+# ON DEMAND ONLY, for now. The portal answers with a "not yet in service" page until its screens exist, and a
+# push trigger would publish every intermediate state of it to a public address. Add the push block below once
+# the portal carries the real thing:
+#
+#   push:
+#     branches: [main]
+#     paths:
+#       - 'apps/payor/**'
+#       - 'libs/**'
+#       - 'package.json'
+#       - 'package-lock.json'
+#       - 'nx.json'
+#       - 'tsconfig*.json'
+#       - '.github/workflows/deploy-payor.yml'
+#
+# One-time setup (repository Settings -> Secrets and variables -> Actions):
+#   VERCEL_TOKEN             reused from the admin console
+#   VERCEL_ORG_ID            reused from the admin console
+#   VERCEL_PAYOR_PROJECT_ID  the PAYOR project's id, not the admin or landing one
+# Without these three the deploy job fails fast with a clear message rather than half-deploying.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Never let two portal deployments race each other.
+  group: payor-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy payor portal
+    runs-on: ubuntu-latest
+    environment:
+      name: payor-production
+      url: https://payor.stalltrack.site
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Verify deployment credentials are configured
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PAYOR_PROJECT_ID }}
+        run: |
+          missing=""
+          [ -z "$VERCEL_TOKEN" ] && missing="$missing VERCEL_TOKEN"
+          [ -z "$VERCEL_ORG_ID" ] && missing="$missing VERCEL_ORG_ID"
+          [ -z "$VERCEL_PROJECT_ID" ] && missing="$missing VERCEL_PAYOR_PROJECT_ID"
+          if [ -n "$missing" ]; then
+            echo "Missing repository secrets:$missing"
+            echo "Add them under Settings -> Secrets and variables -> Actions, then re-run this workflow."
+            exit 1
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # Node 24 / npm 11 is the toolchain that generated package-lock.json (see ci.yml for the detail).
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build payor portal
+        run: npx nx build payor
+
+      # Packaged with Vercel's Build Output API so the deployment is PREBUILT. Without this, Vercel runs the
+      # project's own build inside the uploaded folder, where nx is not installed, and fails with
+      # "nx: command not found" (exit 127) — the same trap the admin workflow documents.
+      #
+      # NOTE the "browser" subfolder: Angular's application builder emits dist/apps/payor/browser/index.html,
+      # with 3rdpartylicenses.txt and prerendered-routes.json one level up. Copying the parent deploys a tree
+      # with no index.html at its root, which serves 404 on every request.
+      #
+      # The routes serve real files first and fall back to index.html, which Angular deep links require so a
+      # refresh does not 404.
+      - name: Package bundle for a prebuilt deployment
+        run: |
+          test -f dist/apps/payor/browser/index.html || { echo "index.html not found - check the Angular output path."; exit 1; }
+          rm -rf .vercel/output
+          mkdir -p .vercel/output/static
+          cp -R dist/apps/payor/browser/. .vercel/output/static/
+          cat > .vercel/output/config.json <<'JSON'
+          {
+            "version": 3,
+            "routes": [
+              { "handle": "filesystem" },
+              { "src": "/.*", "dest": "/index.html" }
+            ]
+          }
+          JSON
+
+      - name: Deploy to Vercel (production)
+        id: deploy
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PAYOR_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          url=$(npx --yes vercel@latest deploy --prebuilt --prod --yes --archive=tgz --token "$VERCEL_TOKEN")
+          echo "Deployment URL: $url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # Proves the deployment actually serves the portal, rather than trusting the upload step. The custom domain
+      # is checked, so a DNS record that has not been created yet fails here rather than passing quietly.
+      - name: Verify the portal responds
+        shell: bash
+        run: |
+          for attempt in {1..20}; do
+            if curl --fail --silent --show-error --output /dev/null "https://payor.stalltrack.site/"; then
+              echo "payor.stalltrack.site is responding."
+              exit 0
+            fi
+            echo "Portal not ready yet (attempt $attempt/20). Waiting 10 seconds..."
+            sleep 10
+          done
+          echo "payor.stalltrack.site did not respond after ~3 minutes. Check the Vercel deployment logs and the DNS record."
+          exit 1
+
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo "### Payor portal deployment"
+            echo ""
+            echo "- Commit: ${GITHUB_SHA}"
+            echo "- Deployment: ${{ steps.deploy.outputs.url }}"
+            echo "- Address: https://payor.stalltrack.site"
+          } >> "$GITHUB_STEP_SUMMARY"

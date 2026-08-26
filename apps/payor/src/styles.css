@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply font-sans text-ink bg-mist antialiased;
+}
+
+/* The portal is read on a phone at a market stall, so a tap target is never smaller than a finger and the
+   type never smaller than a receipt's. Components arrive with the screens; nothing is invented here ahead
+   of them. */
+@layer components {
+  .p-shell {
+    @apply mx-auto flex min-h-dvh w-full max-w-md flex-col;
+  }
+}

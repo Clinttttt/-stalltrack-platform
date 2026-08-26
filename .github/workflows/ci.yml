@@ -43,6 +43,10 @@ jobs:
       - name: Build admin console
         run: npx nx build admin
 
+      # Built on every push like the console, so the portal cannot rot while its screens are being written.
+      - name: Build payor portal
+        run: npx nx build payor
+
       # The landing site pulls the municipality registry first (the same script Vercel runs), so a broken
       # sync script is caught here rather than at deploy time.
       - name: Build landing site
