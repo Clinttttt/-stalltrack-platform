@@ -1,18 +1,22 @@
 import { Route } from '@angular/router';
+import { authGuard } from './core/auth.guard';
 
 /**
  * The portal's routes.
  *
- * One route for now, and it says plainly that the portal is not in service. The screens themselves (the payor's
- * accounts, their balances, their history and a receipt) come next, and each needs the session question answered
- * first: the API's payor endpoints hand tokens back in the response body, while the operator console keeps its
- * access token in memory behind a refresh cookie. Shipping a login against the wrong one is worse than shipping
- * none.
+ * Sign-in is public; everything else is the payor's own account and is guarded. The guard asks the API whether the
+ * refresh cookie is still good before turning anyone away, because a reload leaves this app with no memory of a
+ * session and no cookie it is allowed to read.
  */
 export const appRoutes: Route[] = [
   {
+    path: 'login',
+    loadComponent: () => import('./pages/login/login').then((m) => m.Login),
+  },
+  {
     path: '',
-    loadComponent: () => import('./pages/not-in-service/not-in-service').then((m) => m.NotInService),
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/home/home').then((m) => m.Home),
   },
   { path: '**', redirectTo: '' },
 ];
