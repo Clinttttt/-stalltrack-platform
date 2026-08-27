@@ -18,7 +18,6 @@ export class Activate {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  fullName = '';
   activationCode = '';
   contactNumber = '';
   password = '';
@@ -30,13 +29,12 @@ export class Activate {
   /**
    * Whether the form can be sent. The office refuses a short password, so the button does not invite one.
    *
-   * A METHOD rather than a computed, deliberately: the four fields above are plain properties bound with ngModel, and a
+   * A METHOD rather than a computed, deliberately: the fields above are plain properties bound with ngModel, and a
    * computed only recomputes when a SIGNAL it reads changes. As a computed this evaluated once against an empty form and
    * stayed false, which left the button disabled no matter what the payor typed.
    */
   protected ready(): boolean {
     return (
-      this.fullName.trim().length > 0 &&
       this.activationCode.trim().length > 0 &&
       this.contactNumber.trim().length > 0 &&
       this.password.length >= 8
@@ -56,7 +54,6 @@ export class Activate {
     const failure = await this.auth.activate(
       this.activationCode.trim(),
       this.contactNumber.trim(),
-      this.fullName.trim(),
       this.password,
     );
 

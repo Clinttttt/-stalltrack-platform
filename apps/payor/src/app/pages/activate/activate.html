@@ -14,13 +14,6 @@
 
       <form class="mt-6 flex flex-col gap-4" (ngSubmit)="submit()">
         <label class="flex flex-col gap-1.5">
-          <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Full name</span>
-          <input class="rounded-xl border border-line px-4 py-3 text-base text-ink outline-none focus:border-navy"
-                 type="text" autocomplete="name" placeholder="Name on your account"
-                 name="fullName" [(ngModel)]="fullName" [disabled]="busy()" />
-        </label>
-
-        <label class="flex flex-col gap-1.5">
           <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Activation code</span>
           <input class="rounded-xl border border-line px-4 py-3 text-base uppercase text-ink outline-none focus:border-navy"
                  type="text" autocomplete="one-time-code" placeholder="XXXX-XXXX"

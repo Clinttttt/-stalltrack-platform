@@ -40,17 +40,17 @@ export class AuthService {
     return this.exchange(`${API_BASE_URL}/api/payorauth/login`, { contactNumber, password });
   }
 
-  /** First sign-in with the code the office issued; it sets the payor's password and signs them in. */
-  async activate(
-    activationCode: string,
-    contactNumber: string,
-    fullName: string,
-    password: string,
-  ): Promise<string | null> {
+  /**
+   * First sign-in with the code the office issued; it sets the payor's password and signs them in.
+   *
+   * No name is sent. The code and the registered number are the whole proof of ownership, and the API takes the payor's
+   * name from the office's own register for the stall the code was issued for, so a typo can no longer become the name
+   * on the account.
+   */
+  async activate(activationCode: string, contactNumber: string, password: string): Promise<string | null> {
     return this.exchange(`${API_BASE_URL}/api/payorauth/activate`, {
       activationCode,
       contactNumber,
-      fullName,
       password,
     });
   }
