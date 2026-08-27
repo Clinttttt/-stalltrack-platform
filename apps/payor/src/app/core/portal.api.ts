@@ -20,10 +20,58 @@ export interface PayorBalance {
 }
 
 /**
- * The payor's own account data. Read-only here; paying is a separate step and a separate screen.
+ * The kinds of thing a payor can owe. Serialised as names by the API, so they are compared as names here.
+ * A market stall can owe all three at once: its daily fees, its metered utilities, and a fish day it declares.
+ */
+export type PayableKind = 'Monthly' | 'NpmDaily' | 'NpmUtility' | 'NpmFish';
+
+/** One payable item. Mirrors the API's PayorPayableItemDto. */
+export interface PayableItem {
+  stallId: string;
+  stallNo: string;
+  facility: string;
+  year: number;
+  month: number;
+  period: string;
+  balanceDue: number;
+  kind: PayableKind;
+  /** NpmFish only: the days still open for the payor to declare kilos against. */
+  uncollectedDays: string[] | null;
+  baseFee: number | null;
+  fishRatePerKilo: number | null;
+  /** NpmDaily only: how many days the amount is made of, and the fee for one of them. */
+  days: number | null;
+  dailyRate: number | null;
+}
+
+/** One day inside a daily-billed month, as the payor's own record of it. */
+export interface HistoryDay {
+  day: string;
+  amount: number;
+  orNumber: string | null;
+  recordedByName: string | null;
+}
+
+/** One month of a space's ledger. Mirrors the API's PaymentHistoryDto. */
+export interface HistoryMonth {
+  period: string;
+  status: 'Unpaid' | 'Partial' | 'Paid';
+  totalBill: number;
+  amountPaid: number;
+  balanceDue: number;
+  orNumber: string | null;
+  paidAt: string | null;
+  isExcused: boolean;
+  recordedByName: string | null;
+  /** The days behind a market month, earliest first. Absent for monthly facilities. */
+  days: HistoryDay[] | null;
+}
+
+/**
+ * The payor's own account data.
  *
- * No token is passed: the interceptor attaches the cookies, and the API decides which payor is asking. This service
- * cannot see another payor's account even if it asked, because the endpoint is scoped to the caller.
+ * No token is passed anywhere: the interceptor attaches the cookies and the API decides which payor is asking. These
+ * endpoints are scoped to the caller, so this service could not read another payor's account even if it asked.
  */
 @Injectable({ providedIn: 'root' })
 export class PortalApi {
@@ -31,8 +79,20 @@ export class PortalApi {
 
   async balances(): Promise<PayorBalance[]> {
     return (
+      (await firstValueFrom(this.http.get<PayorBalance[]>(`${API_BASE_URL}/api/payorportal/balances`))) ?? []
+    );
+  }
+
+  async payableItems(): Promise<PayableItem[]> {
+    return (
+      (await firstValueFrom(this.http.get<PayableItem[]>(`${API_BASE_URL}/api/payorportal/payable-items`))) ?? []
+    );
+  }
+
+  async history(stallId: string): Promise<HistoryMonth[]> {
+    return (
       (await firstValueFrom(
-        this.http.get<PayorBalance[]>(`${API_BASE_URL}/api/payorportal/balances`),
+        this.http.get<HistoryMonth[]>(`${API_BASE_URL}/api/payorportal/stalls/${stallId}/history`),
       )) ?? []
     );
   }

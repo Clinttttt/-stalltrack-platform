@@ -18,5 +18,15 @@ export const appRoutes: Route[] = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/home/home').then((m) => m.Home),
   },
+  {
+    path: 'balances',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/balances/balances').then((m) => m.Balances),
+  },
+  {
+    path: 'history',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/history/history').then((m) => m.History),
+  },
   { path: '**', redirectTo: '' },
 ];
