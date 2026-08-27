@@ -1,0 +1,67 @@
+<app-payor-layout>
+  <div class="pt-5">
+    <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">What you owe</p>
+    <h1 class="mt-1 font-display text-xl text-navy">Balances</h1>
+    <p class="mt-0.5 text-xs text-muted">
+      {{ items().length }} unpaid {{ items().length === 1 ? 'item' : 'items' }}
+    </p>
+  </div>
+
+  @if (loading()) {
+    <p class="mt-10 text-center text-sm text-muted">Reading your balances…</p>
+  } @else if (error()) {
+    <p class="mt-8 rounded-xl bg-red-bg px-4 py-3 text-sm text-red">{{ error() }}</p>
+  } @else {
+    <section class="mt-5 rounded-2xl bg-navy p-5 text-white shadow-soft">
+      <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70">Total to pay</p>
+      <p class="mt-1 font-display text-3xl">{{ money(total()) }}</p>
+    </section>
+
+    @for (item of items(); track key(item)) {
+      <article class="mt-3 rounded-2xl border border-line bg-white p-4 shadow-soft">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-navy">{{ item.period }}</p>
+            <p class="mt-0.5 truncate text-xs text-muted">
+              {{ item.facility }}{{ item.stallNo ? ' · Stall ' + item.stallNo : '' }}{{ kindLabel(item.kind) }}
+            </p>
+            @if (item.kind === 'NpmDaily' && item.days && item.dailyRate) {
+              <p class="mt-1 text-xs text-muted">
+                {{ item.days }} {{ item.days === 1 ? 'day' : 'days' }} × {{ money(item.dailyRate) }}
+              </p>
+            }
+            @if (item.kind === 'NpmFish') {
+              <p class="mt-1 text-xs text-muted">
+                A fish day is priced from the kilos weighed at your stall, so it is declared with the collector.
+              </p>
+            }
+          </div>
+          <div class="shrink-0 text-right">
+            <p class="font-display text-base text-navy">
+              {{ item.kind === 'NpmFish' ? money(item.baseFee ?? 0) + ' + kilos' : money(item.balanceDue) }}
+            </p>
+            @if (item.kind !== 'NpmFish') {
+              <button class="mt-2 rounded-lg bg-gold px-3.5 py-1.5 text-xs font-bold text-navy disabled:opacity-50"
+                      type="button" [disabled]="paying() !== null" (click)="pay(item)">
+                {{ paying() === key(item) ? 'Opening…' : 'Pay' }}
+              </button>
+            }
+          </div>
+        </div>
+      </article>
+    } @empty {
+      <p class="mt-3 rounded-2xl border border-line bg-white p-4 text-sm text-muted shadow-soft">
+        Nothing is outstanding. Anything collected today may take a moment to appear.
+      </p>
+    }
+
+    @if (payError()) {
+      <p class="mt-4 rounded-xl bg-red-bg px-4 py-3 text-sm text-red">{{ payError() }}</p>
+    }
+
+    <p class="mt-7 rounded-2xl border border-line bg-white p-4 text-xs leading-relaxed text-muted shadow-soft">
+      Paying here opens your office's payment gateway. An Official Receipt is issued by the office once your payment is
+      validated.
+    </p>
+  }
+</app-payor-layout>

@@ -14,6 +14,10 @@ export const appRoutes: Route[] = [
     loadComponent: () => import('./pages/login/login').then((m) => m.Login),
   },
   {
+    path: 'activate',
+    loadComponent: () => import('./pages/activate/activate').then((m) => m.Activate),
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/home/home').then((m) => m.Home),

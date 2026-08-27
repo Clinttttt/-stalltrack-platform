@@ -79,13 +79,13 @@ export class PortalApi {
 
   async balances(): Promise<PayorBalance[]> {
     return (
-      (await firstValueFrom(this.http.get<PayorBalance[]>(`${API_BASE_URL}/api/payorportal/balances`))) ?? []
+      (await firstValueFrom(this.http.get<PayorBalance[]>(`${API_BASE_URL}/api/payor/balances`))) ?? []
     );
   }
 
   async payableItems(): Promise<PayableItem[]> {
     return (
-      (await firstValueFrom(this.http.get<PayableItem[]>(`${API_BASE_URL}/api/payorportal/payable-items`))) ?? []
+      (await firstValueFrom(this.http.get<PayableItem[]>(`${API_BASE_URL}/api/payor/payable-items`))) ?? []
     );
   }
 
@@ -121,7 +121,7 @@ export class PortalApi {
   async history(stallId: string): Promise<HistoryMonth[]> {
     return (
       (await firstValueFrom(
-        this.http.get<HistoryMonth[]>(`${API_BASE_URL}/api/payorportal/stalls/${stallId}/history`),
+        this.http.get<HistoryMonth[]>(`${API_BASE_URL}/api/payor/stalls/${stallId}/history`),
       )) ?? []
     );
   }

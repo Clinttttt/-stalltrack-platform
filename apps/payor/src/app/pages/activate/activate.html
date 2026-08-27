@@ -1,0 +1,72 @@
+<div class="p-shell">
+  <header class="bg-navy px-5 pb-4 pt-5 text-white">
+    <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70">StallTrack</p>
+    <p class="font-display text-xl leading-tight">Payor Portal</p>
+  </header>
+  <div class="h-[3px] bg-gold"></div>
+
+  <main class="flex-1 px-5 py-6">
+    <section class="rounded-2xl border border-line bg-white p-6 shadow-soft">
+      <h1 class="font-display text-2xl text-navy">Activate your account</h1>
+      <p class="mt-1 text-sm text-muted">
+        Use the one-time code on your bill and the contact number on file.
+      </p>
+
+      <form class="mt-6 flex flex-col gap-4" (ngSubmit)="submit()">
+        <label class="flex flex-col gap-1.5">
+          <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Full name</span>
+          <input class="rounded-xl border border-line px-4 py-3 text-base text-ink outline-none focus:border-navy"
+                 type="text" autocomplete="name" placeholder="Name on your account"
+                 name="fullName" [(ngModel)]="fullName" [disabled]="busy()" />
+        </label>
+
+        <label class="flex flex-col gap-1.5">
+          <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Activation code</span>
+          <input class="rounded-xl border border-line px-4 py-3 text-base uppercase text-ink outline-none focus:border-navy"
+                 type="text" autocomplete="one-time-code" placeholder="XXXX-XXXX"
+                 name="activationCode" [(ngModel)]="activationCode" [disabled]="busy()" />
+        </label>
+
+        <label class="flex flex-col gap-1.5">
+          <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Registered mobile no.</span>
+          <input class="rounded-xl border border-line px-4 py-3 text-base text-ink outline-none focus:border-navy"
+                 type="tel" inputmode="tel" autocomplete="username" placeholder="09xx xxx xxxx"
+                 name="contactNumber" [(ngModel)]="contactNumber" [disabled]="busy()" />
+        </label>
+
+        <hr class="border-line" />
+
+        <label class="flex flex-col gap-1.5">
+          <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Create password</span>
+          <span class="relative flex items-center">
+            <input class="w-full rounded-xl border border-line px-4 py-3 pr-11 text-base text-ink outline-none focus:border-navy"
+                   [type]="revealed() ? 'text' : 'password'" autocomplete="new-password"
+                   placeholder="At least 8 characters" name="password" [(ngModel)]="password" [disabled]="busy()" />
+            <button class="absolute right-3 text-muted" type="button" (click)="reveal()"
+                    [attr.aria-label]="revealed() ? 'Hide password' : 'Show password'">
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
+          </span>
+        </label>
+
+        @if (error()) {
+          <p class="rounded-xl bg-red-bg px-4 py-3 text-sm text-red">{{ error() }}</p>
+        }
+
+        <button class="mt-1 rounded-xl bg-navy px-4 py-3.5 text-base font-semibold text-white disabled:opacity-50"
+                type="submit" [disabled]="busy() || !ready()">
+          {{ busy() ? 'Activating…' : 'Activate & Continue' }}
+        </button>
+      </form>
+
+      <p class="mt-5 text-center text-sm text-muted">
+        Already activated?
+        <a class="font-semibold text-green" routerLink="/login">Sign in</a>
+      </p>
+    </section>
+  </main>
+</div>

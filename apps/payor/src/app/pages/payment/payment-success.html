@@ -1,0 +1,37 @@
+﻿<main class="p-shell items-center justify-center px-6 text-center">
+  @switch (state()) {
+    @case ('confirming') {
+      <p class="font-display text-xl text-navy">Confirming your payment…</p>
+      <p class="mt-2 text-sm text-muted">This takes a moment. Please do not close this page.</p>
+    }
+    @case ('paid') {
+      <div class="flex h-14 w-14 items-center justify-center rounded-full bg-green-bg">
+        <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="#2d7a5f" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </div>
+      <h1 class="mt-4 font-display text-2xl text-navy">Payment received</h1>
+      <p class="mt-2 max-w-sm text-sm leading-relaxed text-muted">
+        Your account has been credited. The office issues your Official Receipt once it validates the payment.
+      </p>
+    }
+    @case ('pending') {
+      <h1 class="font-display text-2xl text-navy">Payment is being confirmed</h1>
+      <p class="mt-2 max-w-sm text-sm leading-relaxed text-muted">
+        The gateway has your payment and the office's record is catching up. Your balances will show it shortly. There is
+        no need to pay again.
+      </p>
+    }
+    @case ('failed') {
+      <h1 class="font-display text-2xl text-navy">Payment not completed</h1>
+      <p class="mt-2 max-w-sm text-sm leading-relaxed text-muted">
+        Nothing was charged. You can try again, or pay the collector at your stall.
+      </p>
+    }
+  }
+
+  <a class="mt-8 rounded-xl bg-navy px-5 py-3 text-sm font-semibold text-white" routerLink="/balances">
+    Back to balances
+  </a>
+</main>
