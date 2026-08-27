@@ -94,14 +94,22 @@ export class PortalApi {
    *
    * The amount is not sent: the API prices the item again at initiation, so a figure altered on the way out cannot
    * become the figure charged. Where the payor returns afterwards is decided by the API too.
+   *
+   * A fish day carries the day it is for and the kilos the payor declared, since its price cannot be known without
+   * them. Kilos may be zero, which is what an office that has set no per-kilo rate will charge for anyway.
    */
-  async initiate(item: PayableItem): Promise<{ checkoutUrl: string; reference: string }> {
+  async initiate(
+    item: PayableItem,
+    fish?: { day: number; kilos: number },
+  ): Promise<{ checkoutUrl: string; reference: string }> {
     return await firstValueFrom(
       this.http.post<{ checkoutUrl: string; reference: string }>(`${API_BASE_URL}/api/onlinepayments/initiate`, {
         stallId: item.stallId,
         year: item.year,
         month: item.month,
         kind: item.kind,
+        day: fish?.day ?? null,
+        fishKilos: fish?.kilos ?? null,
       }),
     );
   }
