@@ -28,5 +28,17 @@ export const appRoutes: Route[] = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/history/history').then((m) => m.History),
   },
+  // The gateway's own return addresses. The API builds them, and it keeps the path it has always used so the same
+  // shape serves both payor portals while the Blazor one is retired; only the host differs.
+  {
+    path: 'payor/payment/success',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/payment/payment-success').then((m) => m.PaymentSuccess),
+  },
+  {
+    path: 'payor/payment/cancelled',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/payment/payment-cancelled').then((m) => m.PaymentCancelled),
+  },
   { path: '**', redirectTo: '' },
 ];

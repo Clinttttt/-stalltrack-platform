@@ -89,6 +89,35 @@ export class PortalApi {
     );
   }
 
+  /**
+   * Starts a payment and answers with the gateway's checkout address.
+   *
+   * The amount is not sent: the API prices the item again at initiation, so a figure altered on the way out cannot
+   * become the figure charged. Where the payor returns afterwards is decided by the API too.
+   */
+  async initiate(item: PayableItem): Promise<{ checkoutUrl: string; reference: string }> {
+    return await firstValueFrom(
+      this.http.post<{ checkoutUrl: string; reference: string }>(`${API_BASE_URL}/api/onlinepayments/initiate`, {
+        stallId: item.stallId,
+        year: item.year,
+        month: item.month,
+        kind: item.kind,
+      }),
+    );
+  }
+
+  /**
+   * Asks the API to reconcile a payment on return from checkout. The gateway's own webhook is what settles a payment;
+   * this only reads the outcome, and says so plainly when it is not settled yet.
+   */
+  async confirm(reference: string): Promise<{ status: string; settled: boolean }> {
+    return await firstValueFrom(
+      this.http.post<{ status: string; settled: boolean }>(`${API_BASE_URL}/api/onlinepayments/confirm`, {
+        reference,
+      }),
+    );
+  }
+
   async history(stallId: string): Promise<HistoryMonth[]> {
     return (
       (await firstValueFrom(
