@@ -48,7 +48,7 @@
               {{ a.stallNo ? 'Stall ' + a.stallNo + ' · ' : '' }}{{ a.occupant }}
             </p>
             @if (a.isDailyBilled) {
-              <p class="mt-1 text-xs text-muted">
+              <p class="mt-1 truncate text-xs text-muted">
                 {{ a.daysOwed > 0 ? a.daysOwed + (a.daysOwed === 1 ? ' day owed' : ' days owed') + ' this month' : 'No days owed this month' }}
               </p>
             }

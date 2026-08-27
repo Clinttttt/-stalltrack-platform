@@ -49,12 +49,15 @@
 
                 @if (expanded(entry.account.stallId, month.period)) {
                   @for (day of month.days; track day.day) {
-                    <div class="flex items-baseline gap-2 border-l-2 border-line py-1.5 pl-2.5 text-[11.5px]">
-                      <span class="w-[92px] shrink-0 text-navy">{{ date(day.day) }}</span>
-                      <span class="min-w-0 flex-1 truncate text-muted">
+                    <!-- Three columns: the date takes what it needs, the receipt line gives way to an ellipsis, and the
+                         amount never shrinks. A fixed date column left a broad gap after every short date and a long
+                         receipt-and-collector line then had nowhere to go. -->
+                    <div class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-x-2.5 border-l-2 border-line py-1.5 pl-2.5 text-[11.5px]">
+                      <span class="whitespace-nowrap text-navy">{{ date(day.day) }}</span>
+                      <span class="truncate text-muted">
                         {{ day.orNumber ? 'OR ' + day.orNumber : 'awaiting OR' }}{{ day.recordedByName ? ' · ' + day.recordedByName : '' }}
                       </span>
-                      <span class="shrink-0 font-semibold text-navy">{{ money(day.amount) }}</span>
+                      <span class="whitespace-nowrap font-semibold text-navy">{{ money(day.amount) }}</span>
                     </div>
                   }
                 }
