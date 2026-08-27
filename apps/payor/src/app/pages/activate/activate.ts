@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
@@ -27,14 +27,21 @@ export class Activate {
   protected readonly error = signal<string | null>(null);
   protected readonly revealed = signal(false);
 
-  /** The office refuses a short password, so the button does not invite one. */
-  protected readonly ready = computed(
-    () =>
+  /**
+   * Whether the form can be sent. The office refuses a short password, so the button does not invite one.
+   *
+   * A METHOD rather than a computed, deliberately: the four fields above are plain properties bound with ngModel, and a
+   * computed only recomputes when a SIGNAL it reads changes. As a computed this evaluated once against an empty form and
+   * stayed false, which left the button disabled no matter what the payor typed.
+   */
+  protected ready(): boolean {
+    return (
       this.fullName.trim().length > 0 &&
       this.activationCode.trim().length > 0 &&
       this.contactNumber.trim().length > 0 &&
-      this.password.length >= 8,
-  );
+      this.password.length >= 8
+    );
+  }
 
   protected reveal(): void {
     this.revealed.update((shown) => !shown);
