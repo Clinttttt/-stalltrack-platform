@@ -63,6 +63,29 @@
     </header>
 
     <main class="flex-1 min-h-0 overflow-y-auto px-5 py-6 sm:px-8 lg:overflow-hidden">
+      <!-- Confirming the address is what allows a password reset later, and this account has nobody above it to
+           restore its access. One line, and the one action that settles it. -->
+      @if (unconfirmedEmail(); as address) {
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3">
+          <p class="text-sm text-ink">
+            @if (sent()) {
+              Confirmation sent to <span class="font-semibold text-navy">{{ address }}</span>. Open the link to finish.
+            } @else {
+              <span class="font-semibold text-navy">{{ address }}</span> is not confirmed, so this account cannot reset
+              its own password.
+            }
+          </p>
+          @if (!sent()) {
+            <button type="button" class="a-btn-ghost !py-2" [disabled]="sending()" (click)="confirmEmail()">
+              {{ sending() ? 'Sending…' : 'Send confirmation' }}
+            </button>
+          }
+        </div>
+        @if (sendError()) {
+          <div class="mb-5 rounded-xl border border-[#e6c4c4] bg-red-bg px-4 py-3 text-sm text-red">{{ sendError() }}</div>
+        }
+      }
+
       <router-outlet></router-outlet>
     </main>
   </div>

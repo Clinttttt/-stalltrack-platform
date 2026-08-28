@@ -129,4 +129,51 @@ describe('PasswordRecoveryService', () => {
       expect(res.error).toContain('could not be set');
     });
   });
+
+  describe('confirming your own address', () => {
+    it('asks the API about the caller, with no id of its own', async () => {
+      const pending = service.myEmailConfirmation();
+
+      const req = http.expectOne(`${API_BASE_URL}/api/adminauth/my-email-confirmation`);
+      expect(req.request.method).toBe('GET');
+      req.flush({ email: 'operator@stalltrack.site', verified: false });
+
+      expect(await pending).toEqual({ email: 'operator@stalltrack.site', verified: false });
+    });
+
+    it('answers with nothing when the check itself fails, so no notice is guessed at', async () => {
+      const pending = service.myEmailConfirmation();
+      http
+        .expectOne(`${API_BASE_URL}/api/adminauth/my-email-confirmation`)
+        .flush(null, { status: 500, statusText: '500' });
+
+      expect(await pending).toBeNull();
+    });
+
+    it('sends the confirmation without naming an account', async () => {
+      const pending = service.sendMyEmailConfirmation();
+
+      const req = http.expectOne(`${API_BASE_URL}/api/adminauth/my-email-confirmation/send`);
+      expect(req.request.method).toBe('POST');
+      // The subject is the token's account. A body carrying an id would be a way to aim this at somebody else.
+      expect(req.request.body).toEqual({});
+      req.flush(true);
+
+      expect((await pending).ok).toBe(true);
+    });
+
+    it("repeats the server's reason when it refuses", async () => {
+      const pending = service.sendMyEmailConfirmation();
+      http
+        .expectOne(`${API_BASE_URL}/api/adminauth/my-email-confirmation/send`)
+        .flush(
+          { isSuccess: false, error: 'Your email address is already confirmed.' },
+          { status: 400, statusText: '400' },
+        );
+
+      const res = await pending;
+      expect(res.ok).toBe(false);
+      expect(res.error).toBe('Your email address is already confirmed.');
+    });
+  });
 });
