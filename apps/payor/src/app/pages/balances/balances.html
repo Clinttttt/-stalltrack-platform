@@ -1,9 +1,8 @@
 <app-payor-layout>
   <div class="pt-5">
-    <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">What you owe</p>
-    <h1 class="mt-1 font-display text-xl text-navy">Balances</h1>
+    <h1 class="font-display text-xl text-navy">Balances</h1>
     <p class="mt-0.5 text-xs text-muted">
-      {{ items().length }} unpaid {{ items().length === 1 ? 'item' : 'items' }}
+      {{ items().length }} {{ items().length === 1 ? 'item outstanding' : 'items outstanding' }}
     </p>
   </div>
 
@@ -12,52 +11,38 @@
   } @else if (error()) {
     <p class="mt-8 rounded-xl bg-red-bg px-4 py-3 text-sm text-red">{{ error() }}</p>
   } @else {
-    <section class="mt-5 rounded-2xl bg-navy p-5 text-white shadow-soft">
-      <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70">Total to pay</p>
-      <p class="mt-1 font-display text-3xl">{{ money(total()) }}</p>
+    <!-- One figure, and it is the office's own: the same total the Accounts screen states, so the two can never
+         disagree in front of the person paying. -->
+    <section class="mt-4 rounded-2xl bg-navy px-5 py-4 text-white">
+      <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60">Total outstanding</p>
+      <p class="mt-0.5 font-display text-3xl">{{ money(total()) }}</p>
     </section>
 
-    @for (item of items(); track key(item)) {
-      <article class="mt-3 rounded-2xl border border-line bg-white p-4 shadow-soft">
-        <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0">
-            <p class="text-sm font-semibold text-navy">{{ item.period }}</p>
-            <p class="mt-0.5 truncate text-xs text-muted">
-              {{ item.facility }}{{ item.stallNo ? ' · Stall ' + item.stallNo : '' }}{{ kindLabel(item.kind) }}
-            </p>
-            @if (item.kind === 'NpmDaily' && item.days && item.dailyRate) {
-              <p class="mt-1 text-xs text-muted">
-                {{ item.days }} {{ item.days === 1 ? 'day' : 'days' }} × {{ money(item.dailyRate) }}
-              </p>
-            }
-            @if (item.kind === 'NpmFish') {
-              <p class="mt-1 text-xs text-muted">
-                Priced from the kilos weighed that day, so it is paid one day at a time.
-              </p>
-            }
-          </div>
-          <div class="shrink-0 text-right">
-            <p class="font-display text-base text-navy">
-              {{ item.kind === 'NpmFish' ? money(item.baseFee ?? 0) : money(item.balanceDue) }}
-            </p>
-            @if (item.kind === 'NpmFish') {
-              <p class="text-[10px] uppercase tracking-wide text-muted">a day</p>
-              <button class="mt-2 rounded-lg bg-gold px-3.5 py-1.5 text-xs font-bold text-navy"
-                      type="button" (click)="openFish(item)">
-                Declare
+    <!-- A statement, not a stack of cards: one sheet, hairline between rows, the amount and its action on the right. -->
+    @if (items().length > 0) {
+      <section class="mt-4 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
+        @for (item of items(); track key(item)) {
+          <article class="flex items-center justify-between gap-4 px-4 py-3.5">
+            <div class="min-w-0">
+              <p class="truncate text-sm font-semibold text-navy">{{ label(item) }}</p>
+              <p class="mt-0.5 truncate text-xs text-muted">{{ where(item) }} · {{ month(item.period) }}</p>
+            </div>
+            <div class="flex shrink-0 items-center gap-3">
+              <div class="text-right">
+                <p class="font-display text-base text-navy">{{ money(shown(item)) }}</p>
+                <p class="text-[10px] text-muted">{{ caption(item) }}</p>
+              </div>
+              <button class="rounded-lg bg-navy px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
+                      type="button" [disabled]="paying() !== null" (click)="act(item)">
+                {{ paying() === key(item) ? 'Opening…' : item.kind === 'NpmFish' ? 'Declare' : 'Pay' }}
               </button>
-            } @else {
-              <button class="mt-2 rounded-lg bg-gold px-3.5 py-1.5 text-xs font-bold text-navy disabled:opacity-50"
-                      type="button" [disabled]="paying() !== null" (click)="pay(item)">
-                {{ paying() === key(item) ? 'Opening…' : 'Pay' }}
-              </button>
-            }
-          </div>
-        </div>
-      </article>
-    } @empty {
-      <p class="mt-3 rounded-2xl border border-line bg-white p-4 text-sm text-muted shadow-soft">
-        Nothing is outstanding. Anything collected today may take a moment to appear.
+            </div>
+          </article>
+        }
+      </section>
+    } @else {
+      <p class="mt-4 rounded-2xl border border-line bg-white px-4 py-3.5 text-sm text-muted">
+        Nothing is outstanding.
       </p>
     }
 
@@ -65,34 +50,45 @@
       <p class="mt-4 rounded-xl bg-red-bg px-4 py-3 text-sm text-red">{{ payError() }}</p>
     }
 
-    <p class="mt-7 rounded-2xl border border-line bg-white p-4 text-xs leading-relaxed text-muted shadow-soft">
-      Paying here opens your office's payment gateway. An Official Receipt is issued by the office once your payment is
-      validated.
+    <p class="mt-6 px-1 text-xs leading-relaxed text-muted">
+      An Official Receipt is issued by the office once your payment is validated.
     </p>
   }
 </app-payor-layout>
 
 <!-- Declaring a fish day: the amount cannot be known until the payor says how many kilos they sold, so this asks, then
-     prices the day the same way the office would. -->
+     prices the day the same way the office would. The days are listed in the sheet rather than put in a dropdown: a
+     native select opens the phone's own dark widget over a government form, which is neither ours nor legible. -->
 @if (fishItem(); as fish) {
-  <div class="fixed inset-0 z-30 flex items-end bg-navy/40" (click)="closeFish()">
+  <div class="fixed inset-0 z-30 flex items-end bg-ink/50" (click)="closeFish()">
     <section class="max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl bg-white p-5" (click)="$event.stopPropagation()">
       <div class="mx-auto mb-4 h-1 w-10 rounded-full bg-line"></div>
 
-      <h2 class="font-display text-xl text-navy">Declare a fish day</h2>
-      <p class="mt-1 text-xs text-muted">
-        {{ fish.facility }}{{ fish.stallNo ? ' · Stall ' + fish.stallNo : '' }} · {{ fish.period }}
-      </p>
+      <h2 class="font-display text-xl text-navy">Fish day</h2>
+      <p class="mt-0.5 text-xs text-muted">{{ where(fish) }} · {{ month(fish.period) }}</p>
 
-      <label class="mt-5 flex flex-col gap-1.5">
-        <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Day</span>
-        <select class="rounded-xl border border-line bg-white px-4 py-3 text-base text-ink outline-none focus:border-navy"
-                [value]="fishDay() ?? ''" (change)="pickDay($event)">
-          @for (day of fish.uncollectedDays ?? []; track day) {
-            <option [value]="day">{{ date(day) }}</option>
-          }
-        </select>
-      </label>
+      <p class="mt-5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Day owed</p>
+      <div class="mt-1.5 divide-y divide-line overflow-hidden rounded-xl border border-line">
+        @for (day of fish.uncollectedDays ?? []; track day) {
+          <button class="flex w-full items-center justify-between px-4 py-3 text-left" type="button"
+                  [attr.aria-pressed]="fishDay() === day" (click)="pickDay(day)">
+            <span class="text-sm" [class.font-semibold]="fishDay() === day"
+                  [class.text-navy]="fishDay() === day" [class.text-ink]="fishDay() !== day">
+              {{ dayLabel(day) }}
+            </span>
+            <span class="flex h-5 w-5 items-center justify-center rounded-full border"
+                  [class.border-navy]="fishDay() === day" [class.bg-navy]="fishDay() === day"
+                  [class.border-line]="fishDay() !== day">
+              @if (fishDay() === day) {
+                <svg class="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              }
+            </span>
+          </button>
+        }
+      </div>
 
       <label class="mt-4 flex flex-col gap-1.5">
         <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
@@ -101,36 +97,24 @@
         <input class="rounded-xl border border-line px-4 py-3 text-base text-ink outline-none focus:border-navy"
                type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"
                [value]="fishKilos() ?? ''" (input)="setKilos($event)" />
-        @if ((fish.fishRatePerKilo ?? 0) > 0) {
-          <span class="text-[11px] text-muted">
-            {{ money(fish.fishRatePerKilo ?? 0) }} per kilo, on top of the day's fee. Leave it blank if you sold none.
-          </span>
-        } @else {
-          <span class="text-[11px] text-muted">
-            Your office has not set a per-kilo weighing fee, so only the day's fee is charged. You may still record the
-            kilos.
-          </span>
-        }
+        <span class="text-[11px] text-muted">{{ kilosHint(fish) }}</span>
       </label>
 
-      <div class="mt-5 rounded-2xl bg-navy p-4 text-white">
-        <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70">Amount to pay</p>
-        <p class="mt-1 font-display text-2xl">{{ money(fishTotal()) }}</p>
-        <p class="mt-1 text-[11px] text-white/70">
-          {{ money(fish.baseFee ?? 0) }} for the day{{ kilosLine(fish) }}
-        </p>
+      <div class="mt-5 rounded-xl bg-navy px-4 py-3.5 text-white">
+        <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60">Amount</p>
+        <p class="mt-0.5 font-display text-2xl">{{ money(fishTotal()) }}</p>
+        <p class="mt-0.5 text-[11px] text-white/60">{{ fishBreakdown(fish) }}</p>
       </div>
 
       @if (payError()) {
         <p class="mt-4 rounded-xl bg-red-bg px-4 py-3 text-sm text-red">{{ payError() }}</p>
       }
 
-      <button class="mt-4 w-full rounded-xl bg-navy px-4 py-3.5 text-base font-semibold text-white disabled:opacity-50"
+      <button class="mt-4 w-full rounded-xl bg-navy px-4 py-3.5 text-base font-semibold text-white disabled:opacity-40"
               type="button" [disabled]="paying() !== null || !fishDay()" (click)="payFish(fish)">
         {{ paying() !== null ? 'Opening…' : 'Continue to payment' }}
       </button>
-      <button class="mt-2 w-full rounded-xl px-4 py-3 text-sm font-semibold text-muted" type="button"
-              (click)="closeFish()">
+      <button class="mt-1 w-full px-4 py-3 text-sm font-semibold text-muted" type="button" (click)="closeFish()">
         Cancel
       </button>
     </section>

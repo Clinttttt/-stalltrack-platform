@@ -1,14 +1,18 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { officeDate, peso } from '../../core/format';
+import { officeDayShort, officeMonth, peso } from '../../core/format';
 import { PayableItem, PortalApi } from '../../core/portal.api';
 import { PayorLayout } from '../../shared/payor-layout';
 
 /**
- * What the payor owes, item by item.
+ * What the payor owes, read as a statement.
  *
  * A market stall can owe three different things in one month, and they are kept apart because they are collected apart:
- * the daily fees, the metered electricity and water, and a fish day whose kilos the payor declares. A daily amount
- * states the days it is made of, so ₱210 reads as seven days at ₱30 rather than a lump nobody can check.
+ * the daily fees, the metered electricity and water, and a fish day whose kilos the payor declares. Each row states what
+ * it is, what it costs and what to do about it, and nothing else: this is a government bill, not an explanation.
+ *
+ * The total is the office's OWN figure, taken from the balances endpoint rather than summed from the rows. A fish month
+ * carries no settled amount in its row (each of its days is priced from that day's kilos), so summing the rows reported
+ * nothing owed while the Accounts screen and the office's stall profile both said otherwise.
  */
 @Component({
   selector: 'app-balances',
@@ -19,6 +23,7 @@ export class Balances {
   private readonly api = inject(PortalApi);
 
   protected readonly items = signal<PayableItem[]>([]);
+  protected readonly total = signal(0);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
 
@@ -26,15 +31,9 @@ export class Balances {
   protected readonly paying = signal<string | null>(null);
   protected readonly payError = signal<string | null>(null);
 
-  /** A fish day carries no settled amount until kilos are declared, so it is left out rather than counted as nothing. */
-  protected readonly total = computed(() =>
-    this.items()
-      .filter((i) => i.kind !== 'NpmFish')
-      .reduce((sum, i) => sum + i.balanceDue, 0),
-  );
-
   protected money = peso;
-  protected date = officeDate;
+  protected month = officeMonth;
+  protected dayLabel = officeDayShort;
 
   /** The fish item being declared for, and what the payor has said about it. */
   protected readonly fishItem = signal<PayableItem | null>(null);
@@ -51,14 +50,59 @@ export class Balances {
     const item = this.fishItem();
     if (!item) return 0;
 
-    const base = item.baseFee ?? 0;
-    const rate = item.fishRatePerKilo ?? 0;
-    const kilos = this.fishKilos() ?? 0;
-    return base + kilos * rate;
+    return (item.baseFee ?? 0) + (this.fishKilos() ?? 0) * (item.fishRatePerKilo ?? 0);
   });
 
   constructor() {
     void this.load();
+  }
+
+  /** What this row is for, in the office's own words. */
+  protected label(item: PayableItem): string {
+    switch (item.kind) {
+      case 'NpmDaily':
+        return 'Daily market fees';
+      case 'NpmUtility':
+        return 'Electricity and water';
+      case 'NpmFish':
+        return 'Fish day fees';
+      default:
+        return 'Monthly rent';
+    }
+  }
+
+  /** The space it belongs to. */
+  protected where(item: PayableItem): string {
+    return item.stallNo ? `${item.facility} · Stall ${item.stallNo}` : item.facility;
+  }
+
+  /** The figure on the row: what is payable, or a day's fee where the days are paid one at a time. */
+  protected shown(item: PayableItem): number {
+    return item.kind === 'NpmFish' ? item.baseFee ?? 0 : item.balanceDue;
+  }
+
+  /** How the figure is made up, in as few words as it takes. */
+  protected caption(item: PayableItem): string {
+    if (item.kind === 'NpmFish') {
+      const days = item.uncollectedDays?.length ?? 0;
+      return days === 1 ? 'a day · 1 day owed' : `a day · ${days} days owed`;
+    }
+
+    if (item.kind === 'NpmDaily' && item.days && item.dailyRate) {
+      return `${item.days} ${item.days === 1 ? 'day' : 'days'} × ${peso(item.dailyRate)}`;
+    }
+
+    return '';
+  }
+
+  /** Pay, or open the declaration sheet where the amount depends on what the payor declares. */
+  protected act(item: PayableItem): void {
+    if (item.kind === 'NpmFish') {
+      this.openFish(item);
+      return;
+    }
+
+    void this.pay(item);
   }
 
   protected openFish(item: PayableItem): void {
@@ -75,8 +119,8 @@ export class Balances {
     this.fishKilos.set(null);
   }
 
-  protected pickDay(event: Event): void {
-    this.fishDay.set((event.target as HTMLSelectElement).value || null);
+  protected pickDay(day: string): void {
+    this.fishDay.set(day);
   }
 
   protected setKilos(event: Event): void {
@@ -91,14 +135,23 @@ export class Balances {
     this.fishKilos.set(Number.isFinite(kilos) && kilos >= 0 ? kilos : null);
   }
 
-  /** The kilos line under the preview, said plainly and omitted when there is nothing to say. */
-  protected kilosLine(item: PayableItem): string {
+  /** Why kilos are asked for, which depends on whether the office prices them. */
+  protected kilosHint(item: PayableItem): string {
+    const rate = item.fishRatePerKilo ?? 0;
+    return rate > 0
+      ? `${peso(rate)} per kilo, on top of the day's fee.`
+      : 'Your office charges no per-kilo fee. Recorded for its own count.';
+  }
+
+  /** The amount said out in its parts, so the payor can check it. */
+  protected fishBreakdown(item: PayableItem): string {
+    const base = peso(item.baseFee ?? 0);
     const kilos = this.fishKilos() ?? 0;
     const rate = item.fishRatePerKilo ?? 0;
 
-    if (kilos <= 0) return '';
-    if (rate <= 0) return `, and ${kilos} kg recorded`;
-    return `, and ${kilos} kg at ${peso(rate)}`;
+    if (kilos <= 0) return `${base} for the day`;
+    if (rate <= 0) return `${base} for the day · ${kilos} kg recorded`;
+    return `${base} for the day · ${kilos} kg at ${peso(rate)}`;
   }
 
   /** Starts the checkout for the chosen day. Kilos left blank are zero, which the office accepts. */
@@ -130,19 +183,6 @@ export class Balances {
     return `${item.stallId}:${item.year}:${item.month}:${item.kind}`;
   }
 
-  protected kindLabel(kind: PayableItem['kind']): string {
-    switch (kind) {
-      case 'NpmDaily':
-        return ' · Daily fees';
-      case 'NpmUtility':
-        return ' · Electricity & Water';
-      case 'NpmFish':
-        return ' · Fish daily fee';
-      default:
-        return '';
-    }
-  }
-
   /**
    * Opens the office's gateway for one item.
    *
@@ -167,7 +207,11 @@ export class Balances {
 
   private async load(): Promise<void> {
     try {
-      this.items.set(await this.api.payableItems());
+      // Both, together: the rows come from the payable items, the total from the office's own balances, and neither is
+      // derived from the other. Read in parallel because a payor on mobile data waits for both.
+      const [items, balances] = await Promise.all([this.api.payableItems(), this.api.balances()]);
+      this.items.set(items);
+      this.total.set(balances.reduce((sum, b) => sum + b.outstandingBalance, 0));
     } catch {
       this.error.set('Your balances could not be read just now. Try again in a moment.');
     } finally {
