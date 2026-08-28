@@ -23,6 +23,16 @@ export const appRoutes: Route[] = [
     path: 'setup',
     loadComponent: () => import('./pages/setup/setup').then((m) => m.ConsoleSetup),
   },
+  // Public by necessity: somebody who cannot sign in is the only person who needs these. The API's own endpoints are
+  // anonymous and rate-limited for the same reason, and answer identically for an address they have never seen.
+  {
+    path: 'forgot-password',
+    loadComponent: () => import('./pages/forgot-password/forgot-password').then((m) => m.ForgotPassword),
+  },
+  {
+    path: 'reset-password/:token',
+    loadComponent: () => import('./pages/reset-password/reset-password').then((m) => m.ResetPassword),
+  },
   {
     path: '',
     canActivate: [authGuard],

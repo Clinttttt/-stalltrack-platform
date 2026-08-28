@@ -72,7 +72,12 @@
         </div>
 
         <div>
-          <label class="a-label" for="password">Password</label>
+          <div class="flex items-baseline justify-between">
+            <label class="a-label" for="password">Password</label>
+            <a routerLink="/forgot-password" class="text-xs font-semibold text-navy hover:underline">
+              Forgot password?
+            </a>
+          </div>
           <div class="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
             <app-icon name="lock" className="h-4 w-4 text-muted" />
             <input

@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { Icon } from '../../shared/icon/icon';
 import { AuthService } from '../../core/auth.service';
@@ -18,7 +18,7 @@ import { PlatformSetupService } from '../../core/platform-setup.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, Icon],
+  imports: [FormsModule, Icon, RouterLink],
   templateUrl: './login.html',
 })
 export class Login {
