@@ -35,22 +35,37 @@ export class Balances {
   protected month = officeMonth;
   protected dayLabel = officeDayShort;
 
-  /** The fish item being declared for, and what the payor has said about it. */
+  /** The fish item being declared for, and how much of it the payor is settling. */
   protected readonly fishItem = signal<PayableItem | null>(null);
-  protected readonly fishDay = signal<string | null>(null);
-  protected readonly fishKilos = signal<number | null>(null);
 
   /**
-   * What the day will cost: the day's own fee, plus kilos at the office's own rate where it has set one.
+   * How many of the owed days are being paid, counted from the earliest.
    *
-   * Computed here only so the payor can see it before committing. The API prices the day again at initiation, and that
-   * figure is the one charged.
+   * A count, not a set: the office settles a daily-billed month oldest first, so paying a later day while an earlier one
+   * stayed open would leave an arrear behind a settled day. Tapping a day therefore takes that day and everything before
+   * it, which is what the office's own collectors do when they settle several days at once.
+   */
+  protected readonly fishDayCount = signal(1);
+  protected readonly fishKilos = signal<number | null>(null);
+
+  /** The days being paid for, earliest first. */
+  protected readonly fishDays = computed(() => (this.fishItem()?.uncollectedDays ?? []).slice(0, this.fishDayCount()));
+
+  /**
+   * What this will cost: one day is its own fee plus the kilos declared for it; several days are their fees.
+   *
+   * Computed here only so the payor can see it before committing. The API prices it again at initiation, and that figure
+   * is the one charged.
    */
   protected readonly fishTotal = computed(() => {
     const item = this.fishItem();
     if (!item) return 0;
 
-    return (item.baseFee ?? 0) + (this.fishKilos() ?? 0) * (item.fishRatePerKilo ?? 0);
+    const base = item.baseFee ?? 0;
+    const count = this.fishDayCount();
+    if (count > 1) return base * count;
+
+    return base + (this.fishKilos() ?? 0) * (item.fishRatePerKilo ?? 0);
   });
 
   constructor() {
@@ -109,18 +124,32 @@ export class Balances {
     this.payError.set(null);
     this.fishItem.set(item);
     // The earliest day still owed, which is the one the office would collect first.
-    this.fishDay.set(item.uncollectedDays?.[0] ?? null);
+    this.fishDayCount.set(1);
     this.fishKilos.set(null);
   }
 
   protected closeFish(): void {
     this.fishItem.set(null);
-    this.fishDay.set(null);
+    this.fishDayCount.set(1);
     this.fishKilos.set(null);
   }
 
-  protected pickDay(day: string): void {
-    this.fishDay.set(day);
+  /** Whether a day is included: it is, once the payor has reached down to it or past it. */
+  protected isPicked(index: number): boolean {
+    return index < this.fishDayCount();
+  }
+
+  /** Tapping a day pays up to and including it. Tapping the last one included leaves only the days before it. */
+  protected pickThrough(index: number): void {
+    this.payError.set(null);
+    const count = index + 1;
+    this.fishDayCount.set(this.fishDayCount() === count && count > 1 ? count - 1 : count);
+  }
+
+  /** All of them, for the payor settling everything owed this month. */
+  protected pickAll(item: PayableItem): void {
+    this.payError.set(null);
+    this.fishDayCount.set(item.uncollectedDays?.length ?? 1);
   }
 
   protected setKilos(event: Event): void {
@@ -146,22 +175,30 @@ export class Balances {
   /** The amount said out in its parts, so the payor can check it. */
   protected fishBreakdown(item: PayableItem): string {
     const base = peso(item.baseFee ?? 0);
+    const count = this.fishDayCount();
+
+    if (count > 1) return `${count} days at ${base}`;
+
     const kilos = this.fishKilos() ?? 0;
     const rate = item.fishRatePerKilo ?? 0;
-
     if (kilos <= 0) return `${base} for the day`;
     if (rate <= 0) return `${base} for the day · ${kilos} kg recorded`;
     return `${base} for the day · ${kilos} kg at ${peso(rate)}`;
   }
 
-  /** Starts the checkout for the chosen day. Kilos left blank are zero, which the office accepts. */
+  /**
+   * Starts the checkout for the days chosen.
+   *
+   * One day is declared with its kilos, because that is what prices it. Several days are paid as the day fees they are,
+   * settled oldest first by the office's own settlement, with no kilos to declare against any one of them.
+   */
   protected async payFish(item: PayableItem): Promise<void> {
-    const day = this.fishDay();
-    if (!day || this.paying() !== null) return;
+    if (this.paying() !== null) return;
 
-    const dayOfMonth = Number(day.slice(-2));
-    if (!Number.isFinite(dayOfMonth) || dayOfMonth < 1) {
-      this.payError.set('That day could not be read. Pick it again.');
+    const count = this.fishDayCount();
+    const days = this.fishDays();
+    if (count < 1 || days.length !== count) {
+      this.payError.set('Those days could not be read. Pick them again.');
       return;
     }
 
@@ -169,12 +206,30 @@ export class Balances {
     this.payError.set(null);
 
     try {
-      const { checkoutUrl } = await this.api.initiate(item, { day: dayOfMonth, kilos: this.fishKilos() ?? 0 });
+      const dayOfMonth = Number(days[0].slice(-2));
+      if (count === 1 && (!Number.isFinite(dayOfMonth) || dayOfMonth < 1)) {
+        this.paying.set(null);
+        this.payError.set('That day could not be read. Pick it again.');
+        return;
+      }
+
+      const { checkoutUrl } =
+        count === 1
+          ? await this.api.initiate(item, { day: dayOfMonth, kilos: this.fishKilos() ?? 0 })
+          : await this.api.initiate(item, { days: count });
+
       if (!checkoutUrl) throw new Error('no checkout address');
       window.location.assign(checkoutUrl);
-    } catch {
+    } catch (error: unknown) {
       this.paying.set(null);
-      this.payError.set('That payment could not be started just now. Try again, or pay the collector at your stall.');
+      // The office's own refusal is preferred where it sent one: a day collected at the stall since the payor looked is
+      // something they need told, not something to hide behind a general apology.
+      const message = (error as { error?: { error?: string; message?: string } } | null)?.error;
+      this.payError.set(
+        message?.error ??
+          message?.message ??
+          'That payment could not be started just now. Try again, or pay the collector at your stall.',
+      );
     }
   }
 

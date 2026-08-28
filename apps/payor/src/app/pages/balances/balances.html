@@ -12,10 +12,11 @@
     <p class="mt-8 rounded-xl bg-red-bg px-4 py-3 text-sm text-red">{{ error() }}</p>
   } @else {
     <!-- One figure, and it is the office's own: the same total the Accounts screen states, so the two can never
-         disagree in front of the person paying. -->
-    <section class="mt-4 rounded-2xl bg-navy px-5 py-4 text-white">
-      <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60">Total outstanding</p>
-      <p class="mt-0.5 font-display text-3xl">{{ money(total()) }}</p>
+         disagree in front of the person paying. Stated on the sheet with a rule under it, as a statement of account
+         states a total, rather than set in a coloured panel. -->
+    <section class="mt-4 flex items-baseline justify-between border-b border-line pb-3">
+      <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Total outstanding</p>
+      <p class="font-display text-2xl text-navy">{{ money(total()) }}</p>
     </section>
 
     <!-- A statement, not a stack of cards: one sheet, hairline between rows, the amount and its action on the right. -->
@@ -64,22 +65,27 @@
     <section class="max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl bg-white p-5" (click)="$event.stopPropagation()">
       <div class="mx-auto mb-4 h-1 w-10 rounded-full bg-line"></div>
 
-      <h2 class="font-display text-xl text-navy">Fish day</h2>
+      <h2 class="font-display text-xl text-navy">Fish days</h2>
       <p class="mt-0.5 text-xs text-muted">{{ where(fish) }} · {{ month(fish.period) }}</p>
 
-      <p class="mt-5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Day owed</p>
+      <div class="mt-5 flex items-baseline justify-between">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Days owed</p>
+        @if ((fish.uncollectedDays ?? []).length > 1) {
+          <button class="text-xs font-semibold text-navy" type="button" (click)="pickAll(fish)">Select all</button>
+        }
+      </div>
       <div class="mt-1.5 divide-y divide-line overflow-hidden rounded-xl border border-line">
-        @for (day of fish.uncollectedDays ?? []; track day) {
+        @for (day of fish.uncollectedDays ?? []; track day; let i = $index) {
           <button class="flex w-full items-center justify-between px-4 py-3 text-left" type="button"
-                  [attr.aria-pressed]="fishDay() === day" (click)="pickDay(day)">
-            <span class="text-sm" [class.font-semibold]="fishDay() === day"
-                  [class.text-navy]="fishDay() === day" [class.text-ink]="fishDay() !== day">
+                  [attr.aria-pressed]="isPicked(i)" (click)="pickThrough(i)">
+            <span class="text-sm" [class.font-semibold]="isPicked(i)"
+                  [class.text-navy]="isPicked(i)" [class.text-ink]="!isPicked(i)">
               {{ dayLabel(day) }}
             </span>
-            <span class="flex h-5 w-5 items-center justify-center rounded-full border"
-                  [class.border-navy]="fishDay() === day" [class.bg-navy]="fishDay() === day"
-                  [class.border-line]="fishDay() !== day">
-              @if (fishDay() === day) {
+            <span class="flex h-5 w-5 items-center justify-center rounded-md border"
+                  [class.border-navy]="isPicked(i)" [class.bg-navy]="isPicked(i)"
+                  [class.border-line]="!isPicked(i)">
+              @if (isPicked(i)) {
                 <svg class="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                      stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20 6 9 17 4 12" />
@@ -89,21 +95,32 @@
           </button>
         }
       </div>
+      @if ((fish.uncollectedDays ?? []).length > 1) {
+        <p class="mt-1.5 text-[11px] text-muted">Days are settled oldest first, so a day includes the ones before it.</p>
+      }
 
-      <label class="mt-4 flex flex-col gap-1.5">
-        <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
-          Kilos sold <span class="font-normal normal-case tracking-normal">(optional)</span>
-        </span>
-        <input class="rounded-xl border border-line px-4 py-3 text-base text-ink outline-none focus:border-navy"
-               type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"
-               [value]="fishKilos() ?? ''" (input)="setKilos($event)" />
-        <span class="text-[11px] text-muted">{{ kilosHint(fish) }}</span>
-      </label>
+      @if (fishDayCount() === 1) {
+        <label class="mt-4 flex flex-col gap-1.5">
+          <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
+            Kilos sold <span class="font-normal normal-case tracking-normal">(optional)</span>
+          </span>
+          <input class="rounded-xl border border-line px-4 py-3 text-base text-ink outline-none focus:border-navy"
+                 type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"
+                 [value]="fishKilos() ?? ''" (input)="setKilos($event)" />
+          <span class="text-[11px] text-muted">{{ kilosHint(fish) }}</span>
+        </label>
+      } @else {
+        <p class="mt-4 text-[11px] text-muted">
+          Kilos are declared one day at a time. Pay a single day to declare them.
+        </p>
+      }
 
-      <div class="mt-5 rounded-xl bg-navy px-4 py-3.5 text-white">
-        <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60">Amount</p>
-        <p class="mt-0.5 font-display text-2xl">{{ money(fishTotal()) }}</p>
-        <p class="mt-0.5 text-[11px] text-white/60">{{ fishBreakdown(fish) }}</p>
+      <div class="mt-5 flex items-baseline justify-between gap-4 border-t border-line pt-3.5">
+        <div class="min-w-0">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Amount</p>
+          <p class="mt-0.5 text-[11px] text-muted">{{ fishBreakdown(fish) }}</p>
+        </div>
+        <p class="shrink-0 font-display text-2xl text-navy">{{ money(fishTotal()) }}</p>
       </div>
 
       @if (payError()) {
@@ -111,7 +128,7 @@
       }
 
       <button class="mt-4 w-full rounded-xl bg-navy px-4 py-3.5 text-base font-semibold text-white disabled:opacity-40"
-              type="button" [disabled]="paying() !== null || !fishDay()" (click)="payFish(fish)">
+              type="button" [disabled]="paying() !== null || fishDays().length === 0" (click)="payFish(fish)">
         {{ paying() !== null ? 'Opening…' : 'Continue to payment' }}
       </button>
       <button class="mt-1 w-full px-4 py-3 text-sm font-semibold text-muted" type="button" (click)="closeFish()">
