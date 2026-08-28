@@ -46,26 +46,39 @@ export class Balances {
    * it, which is what the office's own collectors do when they settle several days at once.
    */
   protected readonly fishDayCount = signal(1);
-  protected readonly fishKilos = signal<number | null>(null);
+
+  /**
+   * The kilos declared against each day, by that day's own date.
+   *
+   * Per day, because a fish day costs the stall's daily fee plus THAT day's weighing fee. Kept by date rather than by
+   * position so a day keeps what was typed for it when the selection grows or shrinks.
+   */
+  protected readonly fishKilosByDay = signal<Record<string, number | null>>({});
 
   /** The days being paid for, earliest first. */
   protected readonly fishDays = computed(() => (this.fishItem()?.uncollectedDays ?? []).slice(0, this.fishDayCount()));
 
+  /** The kilos declared across the selected days, for the line under the amount. */
+  protected readonly fishKilosTotal = computed(() => {
+    const kilos = this.fishKilosByDay();
+    return this.fishDays().reduce((sum, day) => sum + (kilos[day] ?? 0), 0);
+  });
+
   /**
-   * What this will cost: one day is its own fee plus the kilos declared for it; several days are their fees.
+   * What this will cost: each day's own fee, plus that day's kilos at the office's rate where it has set one.
    *
-   * Computed here only so the payor can see it before committing. The API prices it again at initiation, and that figure
-   * is the one charged.
+   * Computed here only so the payor can see it before committing. The API prices every day again at initiation, and those
+   * figures are the ones charged.
    */
   protected readonly fishTotal = computed(() => {
     const item = this.fishItem();
     if (!item) return 0;
 
     const base = item.baseFee ?? 0;
-    const count = this.fishDayCount();
-    if (count > 1) return base * count;
+    const rate = item.fishRatePerKilo ?? 0;
+    const kilos = this.fishKilosByDay();
 
-    return base + (this.fishKilos() ?? 0) * (item.fishRatePerKilo ?? 0);
+    return this.fishDays().reduce((sum, day) => sum + base + (kilos[day] ?? 0) * rate, 0);
   });
 
   constructor() {
@@ -125,13 +138,13 @@ export class Balances {
     this.fishItem.set(item);
     // The earliest day still owed, which is the one the office would collect first.
     this.fishDayCount.set(1);
-    this.fishKilos.set(null);
+    this.fishKilosByDay.set({});
   }
 
   protected closeFish(): void {
     this.fishItem.set(null);
     this.fishDayCount.set(1);
-    this.fishKilos.set(null);
+    this.fishKilosByDay.set({});
   }
 
   /** Whether a day is included: it is, once the payor has reached down to it or past it. */
@@ -152,23 +165,27 @@ export class Balances {
     this.fishDayCount.set(item.uncollectedDays?.length ?? 1);
   }
 
-  protected setKilos(event: Event): void {
-    const raw = (event.target as HTMLInputElement).value.trim();
-    if (raw === '') {
-      this.fishKilos.set(null);
-      return;
-    }
+  /** What has been declared for one day, for its own input. */
+  protected kilosFor(day: string): number | null {
+    return this.fishKilosByDay()[day] ?? null;
+  }
 
-    const kilos = Number(raw);
-    // A negative weight is refused by the office, so it is not offered here either.
-    this.fishKilos.set(Number.isFinite(kilos) && kilos >= 0 ? kilos : null);
+  protected setKilosFor(day: string, event: Event): void {
+    const raw = (event.target as HTMLInputElement).value.trim();
+    const kilos = raw === '' ? null : Number(raw);
+
+    this.fishKilosByDay.update((all) => ({
+      ...all,
+      // A negative weight is refused by the office, so it is not offered here either.
+      [day]: kilos !== null && Number.isFinite(kilos) && kilos >= 0 ? kilos : null,
+    }));
   }
 
   /** Why kilos are asked for, which depends on whether the office prices them. */
   protected kilosHint(item: PayableItem): string {
     const rate = item.fishRatePerKilo ?? 0;
     return rate > 0
-      ? `${peso(rate)} per kilo, on top of the day's fee.`
+      ? `${peso(rate)} per kilo, on top of each day's fee.`
       : 'Your office charges no per-kilo fee. Recorded for its own count.';
   }
 
@@ -176,28 +193,31 @@ export class Balances {
   protected fishBreakdown(item: PayableItem): string {
     const base = peso(item.baseFee ?? 0);
     const count = this.fishDayCount();
-
-    if (count > 1) return `${count} days at ${base}`;
-
-    const kilos = this.fishKilos() ?? 0;
+    const kilos = this.fishKilosTotal();
     const rate = item.fishRatePerKilo ?? 0;
-    if (kilos <= 0) return `${base} for the day`;
-    if (rate <= 0) return `${base} for the day · ${kilos} kg recorded`;
-    return `${base} for the day · ${kilos} kg at ${peso(rate)}`;
+
+    const days = count === 1 ? `${base} for the day` : `${count} days at ${base}`;
+    if (kilos <= 0) return days;
+    if (rate <= 0) return `${days} · ${kilos} kg recorded`;
+    return `${days} · ${kilos} kg at ${peso(rate)}`;
   }
 
   /**
-   * Starts the checkout for the days chosen.
+   * Starts the checkout for the days chosen, each with the kilos declared for it.
    *
-   * One day is declared with its kilos, because that is what prices it. Several days are paid as the day fees they are,
-   * settled oldest first by the office's own settlement, with no kilos to declare against any one of them.
+   * One shape for one day and for several: the API recognises a single day from the single entry and takes the
+   * day-at-a-time path, so nothing here has to know which is which.
    */
   protected async payFish(item: PayableItem): Promise<void> {
     if (this.paying() !== null) return;
 
-    const count = this.fishDayCount();
     const days = this.fishDays();
-    if (count < 1 || days.length !== count) {
+    if (days.length === 0) return;
+
+    const kilos = this.fishKilosByDay();
+    const fishDays = days.map((day) => ({ day: Number(day.slice(-2)), kilos: kilos[day] ?? 0 }));
+
+    if (fishDays.some((d) => !Number.isFinite(d.day) || d.day < 1)) {
       this.payError.set('Those days could not be read. Pick them again.');
       return;
     }
@@ -206,18 +226,7 @@ export class Balances {
     this.payError.set(null);
 
     try {
-      const dayOfMonth = Number(days[0].slice(-2));
-      if (count === 1 && (!Number.isFinite(dayOfMonth) || dayOfMonth < 1)) {
-        this.paying.set(null);
-        this.payError.set('That day could not be read. Pick it again.');
-        return;
-      }
-
-      const { checkoutUrl } =
-        count === 1
-          ? await this.api.initiate(item, { day: dayOfMonth, kilos: this.fishKilos() ?? 0 })
-          : await this.api.initiate(item, { days: count });
-
+      const { checkoutUrl } = await this.api.initiate(item, { fishDays });
       if (!checkoutUrl) throw new Error('no checkout address');
       window.location.assign(checkoutUrl);
     } catch (error: unknown) {
