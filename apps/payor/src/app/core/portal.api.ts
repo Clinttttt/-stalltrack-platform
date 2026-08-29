@@ -83,6 +83,23 @@ export class PortalApi {
     );
   }
 
+  /**
+   * The payor's own name and registered number.
+   *
+   * Asked of the API because this app holds no token it can read: the session is HttpOnly cookies, so nothing about the
+   * payor is available to script. Both figures are the office's record.
+   */
+  async me(): Promise<{ fullName: string; contactNumber: string } | null> {
+    try {
+      const dto = await firstValueFrom(
+        this.http.get<{ fullName: string; contactNumber: string }>(`${API_BASE_URL}/api/payor/me`),
+      );
+      return dto ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   async payableItems(): Promise<PayableItem[]> {
     return (
       (await firstValueFrom(this.http.get<PayableItem[]>(`${API_BASE_URL}/api/payor/payable-items`))) ?? []

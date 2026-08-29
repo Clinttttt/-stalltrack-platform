@@ -1,0 +1,50 @@
+<app-payor-layout>
+  <div class="pt-5">
+    <h1 class="font-display text-xl text-navy">Profile</h1>
+    <p class="mt-0.5 text-xs text-muted">As your office records it</p>
+  </div>
+
+  @if (loading()) {
+    <p class="mt-10 text-center text-sm text-muted">Reading your details…</p>
+  } @else {
+    <!-- Stated on the sheet with a rule under each, as the rest of the portal states a figure. -->
+    <section class="mt-4 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
+      <div class="flex items-baseline justify-between gap-4 px-4 py-3.5">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Name</p>
+        <p class="min-w-0 truncate text-sm font-semibold text-navy">{{ fullName() || '—' }}</p>
+      </div>
+      <div class="flex items-baseline justify-between gap-4 px-4 py-3.5">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Mobile</p>
+        <p class="text-sm font-semibold text-navy">{{ contactNumber() || '—' }}</p>
+      </div>
+    </section>
+
+    <p class="mt-6 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+      {{ accounts().length === 1 ? 'Linked space' : 'Linked spaces' }}
+    </p>
+
+    @if (accounts().length > 0) {
+      <section class="mt-1.5 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
+        @for (account of accounts(); track account.stallId) {
+          <div class="px-4 py-3.5">
+            <p class="truncate text-sm font-semibold text-navy">{{ where(account) }}</p>
+            <p class="mt-0.5 truncate text-xs text-muted">{{ account.occupant }}</p>
+          </div>
+        }
+      </section>
+    } @else {
+      <p class="mt-1.5 rounded-2xl border border-line bg-white px-4 py-3.5 text-sm text-muted">
+        No space is linked to your account yet. The office that collects your fees can link it.
+      </p>
+    }
+
+    <button class="mt-6 w-full rounded-xl border border-line px-4 py-3 text-sm font-semibold text-navy disabled:opacity-40"
+            type="button" [disabled]="signingOut()" (click)="signOut()">
+      {{ signingOut() ? 'Signing out…' : 'Sign out' }}
+    </button>
+
+    <p class="mt-6 px-1 text-xs leading-relaxed text-muted">
+      Ask your office to correct anything here. It is their record, not this app's.
+    </p>
+  }
+</app-payor-layout>
