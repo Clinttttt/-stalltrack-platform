@@ -1,8 +1,9 @@
 name: CI
 
-# Mirrors the EEMO repository's CI: every push and pull request to main must build cleanly before it can be
-# deployed. Kept deliberately simple - this repo has no test suite yet, so the production build IS the gate
-# (Angular's strict template checking catches a surprising amount).
+# Mirrors the EEMO repository's CI: every push and pull request to main must build cleanly and pass its specs before it
+# can be deployed. The production build is the first gate - Angular's strict template checking catches a surprising
+# amount - and the unit specs are the second, because the two Angular apps now hold a session, a shared token refresh
+# and the arithmetic behind a fish day, and none of those can be judged by a build succeeding.
 
 on:
   pull_request:
@@ -46,6 +47,11 @@ jobs:
       # Built on every push like the console, so the portal cannot rot while its screens are being written.
       - name: Build payor portal
         run: npx nx build payor
+
+      # Run for BOTH apps by name rather than by what changed, so a spec cannot go unrun because the commit touching it
+      # looked unrelated to the graph. A spec nobody runs is documentation, and the payor portal handles money.
+      - name: Run unit specs
+        run: npx nx run-many -t test --projects=admin,payor --parallel=1
 
       # The landing site pulls the municipality registry first (the same script Vercel runs), so a broken
       # sync script is caught here rather than at deploy time.
