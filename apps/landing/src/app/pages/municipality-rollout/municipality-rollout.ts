@@ -46,11 +46,11 @@ export class MunicipalityRollout {
   readonly requirements: ReadonlyArray<Requirement> = [
     { icon: 'handshake', title: 'Official LGU coordination', body: 'Responsible office confirmed, focal person identified, and the intended scope of rollout agreed.' },
     { icon: 'building', title: 'Facility inventory', body: 'Public markets, commercial rentals, terminals, slaughterhouse, weekly markets, and other revenue facilities listed.' },
-    { icon: 'scale', title: 'Rate & ordinance review', body: 'Fee schedules, legal or policy basis, and effective dates confirmed per facility.' },
+    { icon: 'scale', title: 'Rate & ordinance review', body: 'Fee schedules, legal or policy basis, and effective dates confirmed per facility, including any area or section priced apart.' },
     { icon: 'calendar', title: 'Collection cycle mapping', body: 'Each facility mapped to a billing model — daily, weekly, monthly, per trip, per head, or per kilo.' },
-    { icon: 'db', title: 'Payor & stallholder data', body: 'Vendor names, stall or space numbers, contract dates, and fee amounts prepared for import.' },
-    { icon: 'users', title: 'Authorized users', body: 'LGU administrator, head office, collectors, and any view-only auditors, scoped to the municipality.' },
-    { icon: 'receipt', title: 'Report & receipt setup', body: 'Official report header, seal, office label, OR series policy, and payment account configuration.' },
+    { icon: 'db', title: 'Payor & stallholder data', body: 'Vendor names, stall or space numbers, contract dates, fee amounts, and mobile numbers prepared for import.' },
+    { icon: 'users', title: 'Authorized users', body: 'Head, office administrators, and collectors, each with a working email address. Collectors also need an Android phone.' },
+    { icon: 'receipt', title: 'Report & receipt setup', body: 'Official report header, seal, office label, and OR series policy confirmed.' },
     { icon: 'shield', title: 'Validation & dry run', body: 'Sample dashboards, totals, obligations, and mobile views verified before activation is approved.' },
   ];
 
