@@ -3,6 +3,7 @@ import {
   ActivateMunicipalityCommand,
   ActivationCustomAnimal,
   ActivationFacility,
+  NpmMonthBasisStr,
   ActivationOrSeries,
   ActivationRate,
   BillingArchetypeStr,
@@ -46,8 +47,17 @@ function usernameSlug(municipality: string): string {
   return municipality.trim().toLowerCase().replace(/[^a-z0-9]/g, '') || 'lgu';
 }
 
-function archetypeOf(type: string): BillingArchetypeStr {
-  switch (type) {
+/**
+ * How the office measures what a market month owes, read from its own draft.
+ *
+ * Anything other than an explicit `PureDays` is the rent goal: that is what every office onboarded before this existed is
+ * on, and reading an unknown value as the days basis would re-price a market on the strength of a typo.
+ */
+function monthBasisOf(f: { monthBasis?: string | null }): NpmMonthBasisStr {
+  return f.monthBasis === 'PureDays' ? 'PureDays' : 'RentGoal';
+}
+
+function archetypeOf(type: string): BillingArchetypeStr {  switch (type) {
     case 'Daily stall':
       return 'DailyStall';
     case 'Monthly rental':
@@ -212,6 +222,9 @@ export function mapRequestToCommand(
       archetype,
       stallGroups: undefined,
       customSections: customAreas.length ? customAreas : undefined,
+      // How the office measures a market month. Sent only for a daily-collected market, because nothing else has one, and
+      // omitted where the office said nothing so the API applies the rent goal every existing office is on.
+      monthBasis: archetype === 'DailyStall' ? monthBasisOf(f) : undefined,
       sectionLabels:
         archetype === 'DailyStall'
           ? {
@@ -260,7 +273,10 @@ export function mapRequestToCommand(
       // then thirty daily rates — which is the reference municipality's own ordinance. Sending it silently dropped
       // was how an LGU could be billed a month it never passed.
       const monthlyRent = num(f.monthlyRent);
-      if (monthlyRent && monthlyRent > 0) {
+      // Not sent where the office measures a month by the DAYS it has: a monthly amount is a figure no month owes on that
+      // basis, and the API refuses the pair rather than filing a rate nothing reads. Anything the office typed before it
+      // chose that basis is simply left out of the activation instead of contradicting it.
+      if (monthlyRent && monthlyRent > 0 && monthBasisOf(f) !== 'PureDays') {
         rates.push({ facilityCode: code, key: 'NpmMonthlyStall', amount: monthlyRent });
       }
       // The per-kilo weighing fee belongs to whichever area the LGU declared as its fish section, whatever it

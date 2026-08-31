@@ -68,7 +68,22 @@ export interface ActivationFacility {
    * registered in the facility's section registry so the office's stalls can be filed under it from the first day.
    */
   customSections?: string[];
+  /**
+   * Daily-stall markets only: how the office measures what a MONTH owes.
+   *
+   * `RentGoal` is a month let for a rent and collected in daily installments — February owes the same as August, and a short
+   * month is topped up at month end. `PureDays` is a month that owes the days it has, so a 31-day month owes thirty-one fees
+   * and February twenty-eight, with nothing to adjust.
+   *
+   * Omitted means the rent goal, which is what every office activated before this existed is on. An office on `PureDays`
+   * must NOT also send an `NpmMonthlyStall` rate: the API refuses the pair, because a monthly amount is a figure no month
+   * owes on that basis.
+   */
+  monthBasis?: NpmMonthBasisStr;
 }
+
+/** How an office measures what a daily-collected market month owes. */
+export type NpmMonthBasisStr = 'RentGoal' | 'PureDays';
 
 export interface ActivationRate {
   facilityCode: FacilityCodeStr;

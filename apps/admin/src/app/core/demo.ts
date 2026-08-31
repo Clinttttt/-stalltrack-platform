@@ -75,6 +75,16 @@ export interface Facility {
   rateAmount: string;
   /** A daily-stall market only: the monthly rent a space is let for, when the ordinance states one. */
   monthlyRent?: string;
+  /**
+   * A daily-stall market only: how the office measures what a MONTH owes.
+   *
+   * `RentGoal` — the month is let for a rent and collected in daily installments, so February owes the same as August.
+   * `PureDays` — the month owes the days it has, so a 31-day month owes thirty-one fees and February twenty-eight.
+   *
+   * Absent means the rent goal, which is what every office onboarded before this existed is on. An office on `PureDays` has
+   * no monthly rent to state, and `monthlyRent` is ignored for it.
+   */
+  monthBasis?: 'RentGoal' | 'PureDays';
   rateUnit: string;
   unitLabel: string;
   units: string;

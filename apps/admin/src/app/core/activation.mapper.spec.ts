@@ -1,4 +1,4 @@
-﻿import { headUsernameFor, mapRequestToCommand } from './activation.mapper';
+import { headUsernameFor, mapRequestToCommand } from './activation.mapper';
 import { Config, Facility, RequestRecord, Section, STATUS } from './demo';
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -353,5 +353,83 @@ describe('activation mapper: market collection areas', () => {
     );
 
     expect(command.facilities.find((f) => f.code === 'SLH')?.sectionLabels).toBeUndefined();
+  });
+
+  // ----------------------------------------------------------------------------------------------------------------
+  // How the office measures what a market MONTH owes.
+  //
+  // Two ordinary ordinances. A month let for a rent and collected in daily installments, so February owes the same as
+  // August. Or a month that owes the days it has, so a 31-day month owes thirty-one fees and February twenty-eight.
+  // The office declares which; nothing here infers it, and an office that says nothing gets the rent goal, because that
+  // is what every LGU activated before this existed is on.
+  // ----------------------------------------------------------------------------------------------------------------
+  describe('the market month rule', () => {
+    it('sends the rent goal when the office said nothing', () => {
+      const m = market([section('Gulayan', 'VegetableArea', '30')]);
+
+      const { command } = mapRequestToCommand(request({ facilities: [m], orSeries: '', users: [] }));
+
+      expect(command.facilities[0].monthBasis).toBe('RentGoal');
+    });
+
+    it('sends the days basis when the office declared it', () => {
+      const m: Facility = { ...market([section('Gulayan', 'VegetableArea', '30')]), monthBasis: 'PureDays' };
+
+      const { command } = mapRequestToCommand(request({ facilities: [m], orSeries: '', users: [] }));
+
+      expect(command.facilities[0].monthBasis).toBe('PureDays');
+    });
+
+    it('reads anything it does not recognise as the rent goal', () => {
+      // A typo must not re-price a market. Only an explicit PureDays moves an office off the rule it had.
+      const m = {
+        ...market([section('Gulayan', 'VegetableArea', '30')]),
+        monthBasis: 'puredays',
+      } as unknown as Facility;
+
+      const { command } = mapRequestToCommand(request({ facilities: [m], orSeries: '', users: [] }));
+
+      expect(command.facilities[0].monthBasis).toBe('RentGoal');
+    });
+
+    it('does not send a monthly rent on the days basis', () => {
+      // A monthly amount is a figure no month owes on that basis, and the API refuses the pair. Anything the office typed
+      // before it chose the basis is left out of the activation rather than contradicting it.
+      const m: Facility = {
+        ...market([section('Gulayan', 'VegetableArea', '30')]),
+        monthlyRent: '900',
+        monthBasis: 'PureDays',
+      };
+
+      const { command } = mapRequestToCommand(request({ facilities: [m], orSeries: '', users: [] }));
+
+      expect(command.rates.find((r) => r.key === 'NpmMonthlyStall')).toBeUndefined();
+    });
+
+    it('still sends a monthly rent on the monthly goal', () => {
+      const m: Facility = { ...market([section('Gulayan', 'VegetableArea', '30')]), monthlyRent: '900' };
+
+      const { command } = mapRequestToCommand(request({ facilities: [m], orSeries: '', users: [] }));
+
+      expect(command.rates.find((r) => r.key === 'NpmMonthlyStall')?.amount).toBe(900);
+    });
+
+    it('sends no basis for a facility that has no market month', () => {
+      const iceplant: Facility = {
+        name: 'Iceplant',
+        type: 'Monthly rental',
+        rateAmount: '1000',
+        rateUnit: 'per month',
+        unitLabel: 'units',
+        units: '',
+        sections: [],
+        addOns: [],
+        rateItems: [],
+      };
+
+      const { command } = mapRequestToCommand(request({ facilities: [iceplant], orSeries: '', users: [] }));
+
+      expect(command.facilities[0].monthBasis).toBeUndefined();
+    });
   });
 });
