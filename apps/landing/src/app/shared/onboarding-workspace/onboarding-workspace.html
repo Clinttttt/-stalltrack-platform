@@ -157,7 +157,7 @@
                         </div>
                         <p class="mt-1 text-xs text-muted">Your ordinance decides this.</p>
 
-                        <div class="mt-3 space-y-2">
+                        <div class="mt-3 grid gap-2 sm:grid-cols-2">
                           <label class="flex cursor-pointer items-start gap-3 rounded-lg border bg-white p-3"
                                  [class.border-gold]="f.monthBasis !== 'PureDays'"
                                  [class.border-line]="f.monthBasis === 'PureDays'">
@@ -165,8 +165,8 @@
                                    [checked]="f.monthBasis !== 'PureDays'"
                                    (change)="setFacility(f.id, 'monthBasis', 'RentGoal')" />
                             <span>
-                              <span class="block text-sm font-semibold text-navy">A monthly rent, collected daily</span>
-                              <span class="block text-xs text-muted">Every month owes the same amount.</span>
+                              <span class="block text-sm font-semibold text-navy">Fixed monthly rent</span>
+                              <span class="block text-xs text-muted">The monthly obligation remains the same regardless of the number of days in the month.</span>
                             </span>
                           </label>
 
@@ -177,8 +177,8 @@
                                    [checked]="f.monthBasis === 'PureDays'"
                                    (change)="setFacility(f.id, 'monthBasis', 'PureDays')" />
                             <span>
-                              <span class="block text-sm font-semibold text-navy">The days the month has</span>
-                              <span class="block text-xs text-muted">A 31-day month owes 31 daily rates; February owes 28.</span>
+                              <span class="block text-sm font-semibold text-navy">Calendar-day billing</span>
+                              <span class="block text-xs text-muted">The monthly obligation is based on the actual number of days in the month.</span>
                             </span>
                           </label>
                         </div>
