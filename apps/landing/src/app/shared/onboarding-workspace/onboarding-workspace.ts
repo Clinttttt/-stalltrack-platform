@@ -60,6 +60,16 @@ interface Facility {
    * above is the installment it is collected in. Left empty, a month is taken as thirty daily rates.
    */
   monthlyRent: string;
+  /**
+   * A daily-stall market only: how the office measures what a MONTH owes.
+   *
+   * `RentGoal` — the month is let for a rent and collected in daily installments, so February owes the same as August and a
+   * short month is topped up at month end. `PureDays` — the month owes the days it has, so a 31-day month owes thirty-one
+   * daily rates and February twenty-eight, and there is nothing to top up.
+   *
+   * Empty means the rent goal, which is what every ordinance this platform was built against states.
+   */
+  monthBasis: string;
   rateUnit: string;
   unitLabel: string;
   units: string;
@@ -82,7 +92,8 @@ const uid = (): string => Math.random().toString(36).slice(2, 9);
 const shortName = (label: string): string => label.split(' — ')[0].split(' / ')[0].trim();
 
 const FEE_UNITS = ['per month', 'per day', 'per kilo', 'per use', 'one-time'];
-const FEE_MODES = ['Applies to all', 'Optional (per stall)'];
+// Display only: nothing downstream matches on these strings (checked), so they read as an office would write them.
+const FEE_MODES = ['All stalls', 'Selected stalls'];
 
 // The three collection areas a public-market daily sheet is organised into, plus the market's own. An LGU declares
 // which area each of its sections is and names it itself; the platform never reads meaning out of the name.
@@ -90,7 +101,7 @@ const SECTION_KINDS: ReadonlyArray<{ value: MarketSectionKind; label: string }> 
   { value: 'VegetableArea', label: 'Vegetable area' },
   { value: 'FishSection', label: 'Fish section (weighed)' },
   { value: 'MeatSection', label: 'Meat section' },
-  { value: 'CustomArea', label: 'Another area of your market' },
+  { value: 'CustomArea', label: 'Other area' },
 ];
 // The three canonical areas may each be defined once. A market's own areas are as many as it has, capped so the form
 // stays a form; five is more than any market in the cluster keeps beyond the three.
@@ -192,6 +203,7 @@ function facilityFrom(c: CatalogItem): Facility {
     type: c.type,
     rateAmount: '',
     monthlyRent: '',
+    monthBasis: 'RentGoal',
     rateUnit: RATE_UNIT_FOR[c.type] || 'per month',
     unitLabel: c.unitLabel,
     units: '',
@@ -466,7 +478,7 @@ export class OnboardingWorkspace {
       const label = FEE_NAMES.find((n) => !used.has(n)) ?? FEE_NAMES[0];
       return {
         ...x,
-        addOns: [...x.addOns, { id: uid(), label, basis: 'Per consumption', amount: '', unit: 'per month', mode: 'Optional (per stall)' }],
+        addOns: [...x.addOns, { id: uid(), label, basis: 'Per consumption', amount: '', unit: 'per month', mode: 'Selected stalls' }],
       };
     });
   }
