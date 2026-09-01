@@ -95,17 +95,21 @@ export class Console {
   readonly fields = computed<Array<[string, string]>>(() => {
     const r = this.selected();
     if (!r) return [];
+    // "Not stated" rather than a blank for the two the assessment form stopped asking. An empty cell reads as missing data or
+    // a broken screen; the truth is that the LGU was not asked, and the facilities are established at onboarding where each
+    // is named, priced and given a collection model. A request recorded before that change still shows what it carried.
+    const notStated = 'Not stated at assessment';
     return [
       ['Municipality', r.municipality],
       ['Province', r.province],
-      ['Facilities managed', r.facilitiesManaged],
+      ['Facilities managed', r.facilitiesManaged?.trim() ? r.facilitiesManaged : notStated],
       ['Requesting office', r.requestingOffice],
       ['Focal person', r.focalPerson],
       ['Position', r.position],
       ['Official email', r.officialEmail],
       ['Contact number', r.contactNumber],
       ['Approx. vendors', r.approxVendors],
-      ['Authorization status', r.authorizationStatus],
+      ['Authorization status', r.authorizationStatus?.trim() ? r.authorizationStatus : notStated],
       ['Acknowledged', r.acknowledged ? 'Confirmed' : ''],
       ['Notes', r.notes || ''],
     ];

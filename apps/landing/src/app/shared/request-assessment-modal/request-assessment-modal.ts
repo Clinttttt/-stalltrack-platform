@@ -11,7 +11,6 @@ import {
 import { Router } from '@angular/router';
 import { Municipality } from '../../core/municipality.model';
 import { AssessmentService } from '../../core/assessment.service';
-import { AssessmentSelect } from './assessment-select';
 
 /**
  * Faithful Angular port of the React <RequestAssessmentModal>.
@@ -27,7 +26,8 @@ import { AssessmentSelect } from './assessment-select';
 @Component({
   selector: 'app-request-assessment-modal',
   standalone: true,
-  imports: [AssessmentSelect],
+  // No AssessmentSelect any more: the office is stated rather than chosen, and the facilities are stated rather than ticked,
+  // so nothing on this form is a custom select.
   templateUrl: './request-assessment-modal.html',
 })
 export class RequestAssessmentModal {
@@ -39,16 +39,13 @@ export class RequestAssessmentModal {
   /** Mirrors the React `onClose` prop. */
   readonly close = output<void>();
 
-  readonly requestingOffices: ReadonlyArray<string> = [
-    'Economic Enterprise & Management Office (EEMO)',
-    'Local Economic Enterprise Office (LEEO)',
-    'Office of the Municipal Treasurer',
-    'Public Market Office / Market Administrator',
-    'Office of the Municipal Mayor',
-    'Municipal Planning & Development Office (MPDO)',
-    'Other',
-  ];
-
+  /**
+   * What an assessment covers. Stated to the LGU rather than asked of it.
+   *
+   * The office judged the old checklist unnecessary and slow, and it was: each facility is named, priced and given a
+   * collection model properly at onboarding, where the answer is used. Listing them keeps the useful half — the LGU sees
+   * what the platform collects for — without asking for information twice.
+   */
   readonly facilities: ReadonlyArray<string> = [
     'Public Market — daily stalls',
     'Commercial Center / monthly rental',
@@ -57,36 +54,38 @@ export class RequestAssessmentModal {
     'Slaughterhouse — per head',
     'Transport / Bus Terminal — per trip',
     'Weekly / Tabo market — market day',
-    'Other',
-  ];
-
-  readonly authStatusOptions: ReadonlyArray<string> = [
-    'Endorsement / authorization already available',
-    'In process',
-    'Not yet initiated',
   ];
 
   readonly fieldClass =
     'mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20';
 
   readonly confirmationUrl = signal('');
-  readonly office = signal('');
-  readonly otherOffice = signal('');
-  readonly authStatus = signal('');
-  readonly selectedFacilities = signal<string[]>([]);
   readonly errors = signal<Record<string, string | undefined>>({});
   readonly submitting = signal(false);
   readonly submitError = signal('');
 
   readonly municipalityName = computed(() => this.municipality()?.name ?? '');
-  readonly resolvedOffice = computed(() =>
-    this.office() === 'Other' ? this.otherOffice().trim() : this.office(),
-  );
+
+  /**
+   * The requesting office, stated as the municipality's own address.
+   *
+   * The requesting office IS the LGU, so a list of office names it may not use was asking it to classify itself. Set out in
+   * the order a government letterhead does: municipality, province, region, island group, country.
+   *
+   * NO POSTAL CODE, deliberately. It is per-municipality data this registry does not hold, and a wrong code on an official
+   * request is worse than an absent one. Add it to the registry per municipality and it can be included here.
+   */
+  readonly requestingOfficeAddress = computed(() => {
+    const name = this.municipalityName().trim();
+    if (!name) return 'Municipality, Province of Surigao del Sur, Caraga Region (Region XIII), Mindanao, Philippines';
+
+    return `Municipality of ${name}, Province of Surigao del Sur, Caraga Region (Region XIII), Mindanao, Philippines`;
+  });
+
   readonly subject = computed(() => `StallTrack — ${this.municipality()?.name ?? 'LGU'} Assessment Request`);
   readonly heading = computed(() =>
     this.municipality()?.name ? `Request assessment — ${this.municipality()?.name}` : 'Request LGU Assessment',
   );
-  readonly facilitiesManaged = computed(() => this.selectedFacilities().join(', '));
 
   constructor() {
     afterNextRender(() => {
@@ -108,45 +107,11 @@ export class RequestAssessmentModal {
     });
   }
 
-  toggleFacility(value: string): void {
-    this.selectedFacilities.update((current) =>
-      current.includes(value) ? current.filter((v) => v !== value) : [...current, value],
-    );
-  }
-
-  setOffice(value: string): void {
-    this.office.set(value);
-    this.errors.update((prev) => ({ ...prev, office: undefined }));
-  }
-
-  setOtherOffice(value: string): void {
-    this.otherOffice.set(value);
-    this.errors.update((prev) => ({ ...prev, otherOffice: undefined }));
-  }
-
-  setAuthStatus(value: string): void {
-    this.authStatus.set(value);
-    this.errors.update((prev) => ({ ...prev, authStatus: undefined }));
-  }
-
-  // The polished selects aren't native inputs, so validate the required ones on submit.
-  // Native required inputs (focal person, email, contact, consent checkboxes) are validated by the
-  // browser first, so when this handler runs those are already present/valid.
+  // Every remaining field is a native input — focal person, position, email, contact, the consent checkbox — so the browser
+  // has already validated them by the time this runs. The office is stated rather than chosen, and the facilities are stated
+  // rather than ticked, so there is nothing left here to check by hand.
   async handleSubmit(event: Event): Promise<void> {
     event.preventDefault();
-
-    const nextErrors: Record<string, string | undefined> = {};
-    if (!this.office()) nextErrors['office'] = 'Please select the responsible office.';
-    if (this.office() === 'Other' && !this.otherOffice().trim())
-      nextErrors['otherOffice'] = 'Please specify the office name.';
-    if (!this.authStatus()) nextErrors['authStatus'] = 'Please select the current authorization status.';
-    if (this.selectedFacilities().length === 0)
-      nextErrors['facilities'] = 'Please select at least one facility.';
-
-    if (Object.keys(nextErrors).length > 0) {
-      this.errors.set(nextErrors);
-      return;
-    }
 
     if (this.submitting()) return;
     this.submitError.set('');
@@ -159,14 +124,16 @@ export class RequestAssessmentModal {
     const result = await this.assessments.submit({
       municipality: this.municipalityName().trim(),
       province: 'Surigao del Sur',
-      requestingOffice: this.resolvedOffice(),
+      requestingOffice: this.requestingOfficeAddress(),
       focalPerson: value('Focal person'),
       position: value('Position'),
       officialEmail: value('Official email'),
       contactNumber: value('Contact number'),
-      facilitiesManaged: this.facilitiesManaged(),
+      // Not asked at assessment any more, and empty means exactly that rather than "none": the facilities are named,
+      // priced and given a collection model at onboarding, where the answer is actually used.
+      facilitiesManaged: '',
       approxVendors: null,
-      authorizationStatus: this.authStatus() || null,
+      authorizationStatus: null,
       acknowledged: fd.get('Authorization acknowledgement') === 'Confirmed',
       notes: value('Notes') || null,
     });

@@ -38,40 +38,22 @@
       <!-- Requesting office & focal person -->
       <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-gold">Requesting office &amp; focal person</p>
       <div class="mt-3 grid gap-5 sm:grid-cols-2">
+        <!-- The requesting office IS the municipality, so it is STATED rather than chosen from a list of office names an
+             LGU may not use. Its own address, in the order a government letterhead sets it out. No postal code: that is
+             per-municipality data this registry does not hold, and a wrong one on an official request is worse than none. -->
         <div class="sm:col-span-2">
-          <app-assessment-select
-            label="Requesting office / department"
-            [required]="true"
-            placeholder="Select the responsible office"
-            [options]="requestingOffices"
-            [value]="office()"
-            (valueChange)="setOffice($event)"
-            [error]="errors()['office']"
-          />
+          <p class="text-sm font-semibold text-navy">Requesting office</p>
+          <div class="mt-2 rounded-xl border border-line bg-mist/40 px-3.5 py-3">
+            <p class="text-sm font-medium leading-relaxed text-navy">{{ requestingOfficeAddress() }}</p>
+          </div>
         </div>
 
-        @if (office() === 'Other') {
-          <label class="block text-sm font-semibold text-navy sm:col-span-2">
-            Office name (please specify) *
-            <input
-              [value]="otherOffice()"
-              (input)="setOtherOffice($any($event.target).value)"
-              placeholder="Name of the responsible LGU office"
-              class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20"
-              [class.border-red-400]="errors()['otherOffice']"
-            />
-            @if (errors()['otherOffice']) {
-              <span class="mt-1.5 block text-xs font-medium text-red-600">{{ errors()['otherOffice'] }}</span>
-            }
-          </label>
-        }
-
         <label class="block text-sm font-semibold text-navy">
-          Focal person (full name) *
+          Focal person *
           <input required name="Focal person" autocomplete="name" placeholder="e.g. Juan D. Dela Cruz" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
         </label>
         <label class="block text-sm font-semibold text-navy">
-          Position / designation *
+          Position *
           <input required name="Position" autocomplete="organization-title" placeholder="e.g. Market Administrator / EEMO Head" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
         </label>
         <label class="block text-sm font-semibold text-navy">
@@ -84,50 +66,23 @@
         </label>
       </div>
 
-      <!-- Facilities / revenue activities -->
-      <p class="mt-7 text-[11px] font-bold uppercase tracking-[0.16em] text-gold">Facilities &amp; revenue activities managed</p>
-      <p class="mt-1 text-xs text-muted">Select all that apply. This helps map each facility to the right collection model.</p>
-      <div class="mt-3 grid gap-2.5 sm:grid-cols-2">
+      <!-- What an assessment covers. STATED, not asked: the office judged a checklist unnecessary and slow, and each
+           facility is named, priced and given a collection model properly at onboarding. Listing them here tells the LGU
+           what the platform collects for, which is the useful half of the old question. -->
+      <p class="mt-7 text-[11px] font-bold uppercase tracking-[0.16em] text-gold">What an assessment covers</p>
+      <p class="mt-1 text-xs text-muted">Your facilities are named and priced during onboarding.</p>
+      <div class="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2">
         @for (facility of facilities; track facility) {
-          <button
-            type="button"
-            (click)="toggleFacility(facility)"
-            [attr.aria-pressed]="selectedFacilities().includes(facility)"
-            class="flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left text-sm font-medium transition"
-            [class]="selectedFacilities().includes(facility) ? 'border-gold bg-gold/10 text-navy' : 'border-line bg-white text-navy/80 hover:border-gold/50'"
-          >
-            <span
-              class="grid h-5 w-5 shrink-0 place-items-center rounded-md border transition"
-              [class]="selectedFacilities().includes(facility) ? 'border-navy bg-navy text-white' : 'border-line bg-white'"
-            >
-              @if (selectedFacilities().includes(facility)) {
-                <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m20 6-11 11-5-5" />
-                </svg>
-              }
-            </span>
+          <div class="flex items-start gap-2.5 text-sm text-navy/90">
+            <svg viewBox="0 0 24 24" class="mt-0.5 h-4 w-4 shrink-0 text-gold" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m20 6-11 11-5-5" />
+            </svg>
             {{ facility }}
-          </button>
+          </div>
         }
       </div>
-      @if (errors()['facilities']) {
-        <p class="mt-2 text-xs font-medium text-red-600">{{ errors()['facilities'] }}</p>
-      }
 
-      <!-- Authorization -->
       <p class="mt-7 text-[11px] font-bold uppercase tracking-[0.16em] text-gold">Authorization &amp; readiness</p>
-      <div class="mt-3">
-        <app-assessment-select
-          label="LGU authorization status"
-          [required]="true"
-          name="Authorization status"
-          placeholder="Select current status"
-          [options]="authStatusOptions"
-          [value]="authStatus()"
-          (valueChange)="setAuthStatus($event)"
-          [error]="errors()['authStatus']"
-        />
-      </div>
 
       <label class="mt-5 block text-sm font-semibold text-navy">
         Additional notes
