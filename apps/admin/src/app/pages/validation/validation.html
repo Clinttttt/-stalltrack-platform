@@ -44,7 +44,9 @@
                 <span class="font-display text-base font-bold text-navy">{{ r.municipality }}</span>
                 <span class="rounded-full bg-amber-bg px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber">Validation</span>
               </div>
-              <div class="mt-0.5 text-xs text-muted">{{ r.requestingOffice }}</div>
+              <!-- The focal person, not the requesting office. That office is now the municipality's full address, which wrapped
+                   to three lines in this column and repeated the name already above it. -->
+              <div class="mt-0.5 truncate text-xs text-muted">{{ r.focalPerson }}</div>
               @if (r.lguSubmittedForValidation) {
                 <div class="mt-1 text-[11px] text-muted/80">Submitted {{ fmtLog(r.lguSubmittedForValidation) }}</div>
               }
@@ -180,7 +182,12 @@
               <div class="rounded-xl border border-line p-4">
                 <div class="a-label mb-2">Branding &amp; receipts</div>
                 <div class="space-y-1.5 text-sm">
-                  <div class="flex justify-between gap-3"><span class="text-muted">Office</span><span class="text-right font-medium text-navy">{{ r.requestingOffice }}</span></div>
+                  <!-- The requesting office is now the municipality's own address, so it is set out on its own line rather than
+                       squeezed right-aligned into a two-column row where it wrapped raggedly against its label. -->
+                  <div>
+                    <span class="text-muted">Office</span>
+                    <div class="mt-0.5 leading-relaxed font-medium text-navy">{{ r.requestingOffice }}</div>
+                  </div>
                   <!-- Only when the LGU actually set one. An OR series is optional, and the label was printed
                        regardless, so an office that had not chosen one showed "OR series" with nothing beside it -
                        a heading for a value that does not exist, on the screen where the operator approves the LGU. -->

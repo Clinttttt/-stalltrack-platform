@@ -14,6 +14,37 @@ import {
 } from '../../core/demo';
 
 const TABS = ['Pending', 'Onboarding', 'Declined', 'All'];
+
+/**
+ * The rows of the "Submitted assessment" list: only what the record actually carries.
+ *
+ * The requesting office is now the municipality's own address, stated in the heading above this list, and it contains the
+ * province, so rows for either repeated the same fact a third time. Approx. vendors was never asked by any form, so it was a
+ * guaranteed dash on every request.
+ *
+ * Facilities managed and authorization status are no longer asked either, but a request recorded before that change still
+ * carries them: they appear when answered and are absent when not, rather than printing "not stated" on every record for ever.
+ *
+ * Acknowledged is always present, because "not confirmed" is itself the answer the operator needs.
+ */
+export function assessmentFields(r: RequestRecord): Array<[string, string]> {
+  const rows: Array<[string, string]> = [
+    ['Focal person', r.focalPerson],
+    ['Position', r.position],
+    ['Official email', r.officialEmail],
+    ['Contact number', r.contactNumber],
+  ];
+
+  if (r.facilitiesManaged?.trim()) rows.push(['Facilities managed', r.facilitiesManaged]);
+  if (r.approxVendors?.trim()) rows.push(['Approx. vendors', r.approxVendors]);
+  if (r.authorizationStatus?.trim()) rows.push(['Authorization status', r.authorizationStatus]);
+
+  rows.push(['Acknowledged', r.acknowledged ? 'Confirmed' : '']);
+  if (r.notes?.trim()) rows.push(['Notes', r.notes]);
+
+  return rows;
+}
+
 // Status tones. Amber and red still carry meaning (needs attention / refused), but "green" is rendered as the
 // same navy-on-white pill the Activation page uses for Live: a government console should not celebrate a
 // normal state with colour, and gold remains the only accent.
@@ -94,25 +125,7 @@ export class Console {
 
   readonly fields = computed<Array<[string, string]>>(() => {
     const r = this.selected();
-    if (!r) return [];
-    // "Not stated" rather than a blank for the two the assessment form stopped asking. An empty cell reads as missing data or
-    // a broken screen; the truth is that the LGU was not asked, and the facilities are established at onboarding where each
-    // is named, priced and given a collection model. A request recorded before that change still shows what it carried.
-    const notStated = 'Not stated at assessment';
-    return [
-      ['Municipality', r.municipality],
-      ['Province', r.province],
-      ['Facilities managed', r.facilitiesManaged?.trim() ? r.facilitiesManaged : notStated],
-      ['Requesting office', r.requestingOffice],
-      ['Focal person', r.focalPerson],
-      ['Position', r.position],
-      ['Official email', r.officialEmail],
-      ['Contact number', r.contactNumber],
-      ['Approx. vendors', r.approxVendors],
-      ['Authorization status', r.authorizationStatus?.trim() ? r.authorizationStatus : notStated],
-      ['Acknowledged', r.acknowledged ? 'Confirmed' : ''],
-      ['Notes', r.notes || ''],
-    ];
+    return r ? assessmentFields(r) : [];
   });
 
   readonly stageIndex = computed(() => {

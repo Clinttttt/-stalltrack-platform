@@ -59,7 +59,10 @@
                   {{ statusLabel(r.status) }}
                 </span>
               </div>
-              <div class="mt-0.5 text-xs text-muted">{{ r.requestingOffice }}</div>
+              <!-- The focal person, not the requesting office. That office is now the municipality's full address, which wrapped
+                   to three lines in this column and repeated the name already in the heading. Who signed the request is what
+                   tells one entry from another. -->
+              <div class="mt-0.5 truncate text-xs text-muted">{{ r.focalPerson }}</div>
               <div class="mt-1 text-[11px] text-muted/80">{{ fmtLog(r.submittedAt) }}</div>
             </button>
           }
@@ -79,7 +82,9 @@
           <div class="flex items-start justify-between gap-4 border-b border-line pb-4">
             <div>
               <div class="font-display text-2xl font-bold text-navy">{{ r.municipality }}</div>
-              <div class="text-sm text-muted">{{ r.province }}</div>
+              <!-- The requesting office, stated once. It IS the municipality's address and carries the province, so the rows
+                   below no longer repeat either. Older requests hold an office name here instead; both read correctly. -->
+              <div class="mt-0.5 max-w-xl text-sm leading-relaxed text-muted">{{ r.requestingOffice || r.province }}</div>
             </div>
             <span [class]="'rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + TONE[statusTone(r.status)]">
               {{ statusLabel(r.status) }}

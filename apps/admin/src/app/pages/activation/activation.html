@@ -46,7 +46,9 @@
                   {{ r.activated ? 'Live' : 'Ready' }}
                 </span>
               </div>
-              <div class="mt-0.5 text-xs text-muted">{{ r.requestingOffice }}</div>
+              <!-- The focal person, not the requesting office. That office is now the municipality's full address, which wrapped
+                   to three lines in this column and repeated the name already above it. -->
+              <div class="mt-0.5 truncate text-xs text-muted">{{ r.focalPerson }}</div>
             </button>
           }
         }
