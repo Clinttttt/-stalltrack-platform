@@ -123,6 +123,22 @@ function parseOffice(requestingOffice: string): { name: string; acronym: string 
   return { name, acronym };
 }
 
+/**
+ * True when the request's "requesting office" is one of the ADDRESSES the assessment form now generates, rather than the name of
+ * an office.
+ *
+ * That field changed meaning: an LGU used to pick its office from a list, and now the form states the municipality's own address
+ * instead. Feeding an address to parseOffice does real damage rather than merely reading oddly - it takes the first parenthetical
+ * as the office acronym, so "Caraga Region (Region XIII)" made "Region XIII" the acronym printed on that LGU's receipts, and
+ * because an acronym WAS found the "no acronym" warning never fired to tell the operator.
+ *
+ * Requests recorded before the change still hold a genuine office name and must keep working, so this recognises the shape this
+ * platform generates rather than guessing at addresses in general: every generated line ends with the country.
+ */
+function looksLikeMunicipalAddress(value: string): boolean {
+  return /,\s*Philippines\s*$/i.test((value || '').trim());
+}
+
 /** Derives a facility's short acronym from its name (e.g. "Madrid Commercial Center" → MCC,
  *  "Carmen Public Market" → CPM). Single-word names take their first 3 letters; empty falls back to code. */
 function facilityShortName(name: string, code: FacilityCodeStr): string {
@@ -347,8 +363,11 @@ export function mapRequestToCommand(
 
   // Both the office name label and the acronym derive from the same workspace
   // "Office name (report header)" input (its parenthetical → acronym); fall back to
-  // the requesting office from the original request when the workspace value is absent.
-  const office = parseOffice(overrides?.officeName || r.requestingOffice);
+  // the requesting office from the original request ONLY when that field still holds an office
+  // NAME. Since the assessment form began stating the municipality's address there instead, using
+  // it would brand the LGU's receipts with an address and take "Region XIII" as its acronym.
+  const requestedOffice = looksLikeMunicipalAddress(r.requestingOffice) ? '' : r.requestingOffice;
+  const office = parseOffice(overrides?.officeName || requestedOffice);
   if (!office.acronym) {
     warnings.push('No office acronym found in the office name — the portal will fall back to a default.');
   }

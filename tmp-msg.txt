@@ -1,0 +1,28 @@
+Audit fixes: an LGU's receipts were about to be branded "Region XIII"
+
+An independent review of today's commits found a real bug in my own work, and it is the kind that reaches paper.
+
+I repurposed the assessment form's "requesting office" from an office NAME to the municipality's address. The activation mapper
+still read that field as an office name, and parseOffice takes the first parenthetical as the acronym - so
+"Caraga Region (Region XIII)" made "Region XIII" the office acronym written into the LGU's branding, with the whole address as its
+office name. Worse, because an acronym WAS found, the "no office acronym" warning that would have shown the operator never fired.
+
+The mapper now falls back to that field only when it still holds an office name. Requests recorded before the change do, and must
+keep working, so the test recognises the shape this platform itself generates - every generated address ends with the country -
+rather than guessing at addresses in general. Where it is an address, the field is ignored and the operator gets the warning.
+
+Three specs, and restoring the old fallback fails one of them. The gap existed because nothing asserted this output at all.
+
+Also from the audit, smaller and all verified by reading:
+  - A STRAY "spaces" was rendering in the modal header, right after "LGU Assessment Request". Pre-existing, not mine, and visible
+    on the page.
+  - The errors signal was dead - every writer went when the two selects did, and the template never read it.
+  - assessment-select.ts had no importer left. Deleted, because an unused select invites someone to "fix" this form by putting a
+    dropdown back.
+  - The class comment still said the form collects authorization STATUS and validates non-native selects on submit. It does
+    neither; it now describes what the form actually does.
+
+One audit finding I am NOT acting on, with the reason: the "Authorization & readiness" heading was called orphaned, but it still
+labels the consent checkbox that confirms authorization will be provided. It is doing its job.
+
+54 admin, 11 landing and 60 payor specs green.

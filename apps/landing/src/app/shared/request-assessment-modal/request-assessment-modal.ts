@@ -15,13 +15,14 @@ import { AssessmentService } from '../../core/assessment.service';
 /**
  * Faithful Angular port of the React <RequestAssessmentModal>.
  *
- * Public-stage assessment request. Collects intent, contact, scope, and authorization STATUS only.
- * Official documents and the Mayor's endorsement / signatures are collected later in the secure
- * onboarding workspace — never on this public page (data-privacy + authenticity).
+ * Public-stage assessment request. Collects who is asking and how to reach them, and nothing else: the requesting office is
+ * stated as the municipality's own address, the facilities it covers are stated rather than ticked, and the LGU's authorization
+ * status is not asked at all - an office's own endorsement is its credentials, not this platform's business.
  *
- * Posts natively to formsubmit.co; the polished selects aren't native inputs, so the required ones
- * are validated on submit (native required inputs are validated by the browser first). The React
- * `municipality` / `onClose` props become the `municipality` input and `close` output.
+ * Official documents and the Mayor's endorsement / signatures are collected later in the secure onboarding workspace, never on
+ * this public page (data-privacy + authenticity).
+ *
+ * Posts to the API. Every field left on the form is a native input, so the browser validates them before submit runs.
  */
 @Component({
   selector: 'app-request-assessment-modal',
@@ -43,7 +44,6 @@ export class RequestAssessmentModal {
     'mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20';
 
   readonly confirmationUrl = signal('');
-  readonly errors = signal<Record<string, string | undefined>>({});
   readonly submitting = signal(false);
   readonly submitError = signal('');
 

@@ -433,3 +433,45 @@ describe('activation mapper: market collection areas', () => {
     });
   });
 });
+
+/**
+ * The office name an LGU's portal is branded with.
+ *
+ * The assessment form used to ask an LGU to pick its office from a list, and now it states the municipality's own ADDRESS in that
+ * same field. The mapper still read it as an office name, and parseOffice takes the first parenthetical as the acronym - so
+ * "Caraga Region (Region XIII)" became the acronym printed on that LGU's receipts, and because an acronym WAS found, the warning
+ * that would have told the operator never fired.
+ */
+describe('activation mapper: the office name and its acronym', () => {
+  const ADDRESS =
+    'Municipality of Carmen, Province of Surigao del Sur, Caraga Region (Region XIII), Mindanao, Philippines';
+
+  function withOffice(requestingOffice: string): RequestRecord {
+    return { ...request(configOf([section('Vegetable', 'VegetableArea', '30')])), requestingOffice };
+  }
+
+  it('never takes an acronym out of the municipality address', () => {
+    const { command, warnings } = mapRequestToCommand(withOffice(ADDRESS));
+
+    expect(command.branding.officeAcronym).not.toBe('Region XIII');
+    expect(command.branding.officeName).not.toContain('Philippines');
+    // And the operator is told, rather than the platform quietly inventing one.
+    expect(warnings.join(' ')).toContain('No office acronym');
+  });
+
+  it('still uses a genuine office name from a request recorded before the change', () => {
+    const { command } = mapRequestToCommand(withOffice('Madrid Economic Enterprise Office (MEEO)'));
+
+    expect(command.branding.officeName).toBe('Madrid Economic Enterprise Office');
+    expect(command.branding.officeAcronym).toBe('MEEO');
+  });
+
+  it('prefers what the office typed in the workspace over either', () => {
+    const { command } = mapRequestToCommand(withOffice(ADDRESS), {
+      officeName: 'Carmen Economic Enterprise Office (CEEO)',
+    });
+
+    expect(command.branding.officeName).toBe('Carmen Economic Enterprise Office');
+    expect(command.branding.officeAcronym).toBe('CEEO');
+  });
+});
