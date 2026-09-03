@@ -39,23 +39,6 @@ export class RequestAssessmentModal {
   /** Mirrors the React `onClose` prop. */
   readonly close = output<void>();
 
-  /**
-   * What an assessment covers. Stated to the LGU rather than asked of it.
-   *
-   * The office judged the old checklist unnecessary and slow, and it was: each facility is named, priced and given a
-   * collection model properly at onboarding, where the answer is used. Listing them keeps the useful half — the LGU sees
-   * what the platform collects for — without asking for information twice.
-   */
-  readonly facilities: ReadonlyArray<string> = [
-    'Public Market — daily stalls',
-    'Commercial Center / monthly rental',
-    'Barbecue / food stalls',
-    'Iceplant / cold storage',
-    'Slaughterhouse — per head',
-    'Transport / Bus Terminal — per trip',
-    'Weekly / Tabo market — market day',
-  ];
-
   readonly fieldClass =
     'mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20';
 
