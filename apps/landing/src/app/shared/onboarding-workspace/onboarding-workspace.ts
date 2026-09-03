@@ -148,16 +148,8 @@ const RATE_PLACEHOLDER: Record<string, string> = {
   Custom: '100',
 };
 
-// Fixed billing model + unit per facility type — shown as a read-only context line
-// instead of asking operators to pick a billing type / unit label.
-const CONTEXT_LINE: Record<string, string> = {
-  'Daily stall': 'Daily stall · per stall',
-  'Monthly rental': 'Monthly rental · per space',
-  'Per head': 'Per head · per transaction',
-  'Per trip': 'Per trip',
-  'Weekly market': 'Weekly market · per vendor',
-  Custom: 'Custom facility',
-};
+// The card header already states each facility's billing model beside its name, so a second "Daily stall · per stall" chip inside
+// the open card repeated it two inches lower and crowded the field it sat next to. The billing model is still stated - once.
 // Base-rate help text per facility type (only for types that keep a facility-level rate).
 const RATE_HELP: Record<string, string> = {
   'Monthly rental': 'per month',
@@ -326,10 +318,6 @@ export class OnboardingWorkspace {
     return Boolean(f.rateAmount);
   };
 
-  /** Read-only "billing model · unit" line shown under the facility name. */
-  contextLine(f: Facility): string {
-    return CONTEXT_LINE[f.type] || f.type;
-  }
   /** Help text for the facility-level base rate (Monthly rental / Per trip / Weekly market / Custom). */
   rateHelpFor(type: string): string {
     return RATE_HELP[type] || 'per unit';
