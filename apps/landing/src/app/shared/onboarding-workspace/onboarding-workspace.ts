@@ -380,10 +380,32 @@ export class OnboardingWorkspace {
     // A non-custom facility type can be configured only once; block re-adding a type already present.
     // 'other' (custom facility) may be added many times.
     if (this.isCatalogUsed(c)) return;
+
+    // And nothing is added while a facility already on the page is unfinished. Refused here as well as disabled on the
+    // button, because a disabled control is not a guard - the picker can be open when the last field is cleared.
+    if (this.unfinishedFacility()) return;
+
     const nf = facilityFrom(c);
     this.facilities.update((f) => [...f, nf]);
     this.expandedId.set(nf.id);
     this.picking.set(false);
+  }
+
+  /**
+   * The first facility on the page that is not configured yet, or null when every one is done.
+   *
+   * An office could add facility after facility while every card sat empty, ending with a list of names it then had to work
+   * backwards through - and an empty facility carries no rate, so it would have reached the platform as a space nobody can be
+   * billed for. One at a time, finished before the next is offered.
+   */
+  readonly unfinishedFacility = computed(() => this.facilities().find((f) => !this.isFacilityDone(f)) ?? null);
+
+  /** What is missing on the unfinished facility, for the message beside the disabled Add button. */
+  unfinishedFacilityLabel(): string {
+    const f = this.unfinishedFacility();
+    if (!f) return '';
+
+    return f.name.trim() ? f.name.trim() : 'the facility above';
   }
 
   /** True when this catalog type is already configured (so it can't be added again). Custom is exempt. */
