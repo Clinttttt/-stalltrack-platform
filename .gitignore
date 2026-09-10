@@ -50,3 +50,7 @@ __screenshots__/
 
 .vercel
 .env*
+
+# Scratch file used to hand a multi-line commit message to `git commit -F`. The eemo repo has ignored it from the start;
+# this one did not, so one was committed by a `git add -A` in dfaae6f6.
+tmp-msg.txt
