@@ -111,36 +111,91 @@
                     </div>
 
                     @if (isPerHead(f)) {
-                      <!-- Per-head: animal types -->
+                      <!-- Per-head: explicit canonical billing identities + flexible office wording. -->
                       <div class="mt-5 border-t border-line pt-4">
                         <div class="flex items-center gap-2">
                           <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82" /></svg>
-                          <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Animal types &amp; per-head rates</span>
+                          <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Animal labels &amp; per-head rates</span>
                         </div>
-                        <p class="mt-1 text-xs text-muted">Add each animal type and its slaughter fee per head (e.g. Hog ₱250, Cattle/Carabao ₱365). Add custom types as needed.</p>
-                        <div class="mt-3 space-y-2">
-                          @for (r of f.rateItems; track r.id) {
-                            <div class="grid gap-3 rounded-lg border border-line bg-white p-3 sm:grid-cols-[1.6fr,1fr,auto] sm:items-end">
+                        <p class="mt-1 text-xs text-muted">Choose the wording your office uses. StallTrack keeps Hog, Carabao, and Cow as stable animal types for billing.</p>
+
+                        @if (f.slaughterhouse?.legacyReviewRequired) {
+                          <div class="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+                            <div class="font-bold">This older draft needs review before it can be submitted.</div>
+                            @for (message of f.slaughterhouse?.legacyReviewMessages || []; track message) {
+                              <div class="mt-1">{{ message }}</div>
+                            }
+                            <button type="button" (click)="confirmLegacySlaughterhouseReview(f.id)" class="mt-3 rounded-lg border border-amber-400 bg-white px-3 py-1.5 font-semibold">I reviewed and corrected the fields below</button>
+                          </div>
+                        }
+
+                        <div class="mt-3 grid gap-3 lg:grid-cols-2">
+                          <div class="rounded-xl border border-line bg-white p-4">
+                            <div class="text-xs font-bold uppercase tracking-wide text-navy">Hog rate</div>
+                            <div class="mt-3 grid gap-3 sm:grid-cols-2">
                               <div>
-                                <label [class]="LABEL">Animal type</label>
-                                <input [class]="INPUT" [value]="r.label" (input)="setRateItem(f.id, r.id, 'label', $any($event.target).value)" placeholder="e.g. Hog" />
+                                <label [class]="LABEL">Office label</label>
+                                <input [class]="INPUT" [value]="f.slaughterhouse?.hogLabel || ''" (input)="setSlaughterhouse(f.id, 'hogLabel', $any($event.target).value)" placeholder="Hog" />
                               </div>
                               <div>
                                 <label [class]="LABEL">Rate (per head)</label>
                                 <div class="relative">
                                   <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
-                                  <input type="number" min="0" [value]="r.amount" (input)="setRateItem(f.id, r.id, 'amount', $any($event.target).value)" placeholder="250" [class]="MONEY_INPUT" />
+                                  <input type="number" min="0" [value]="f.slaughterhouse?.hogAmount || ''" (input)="setSlaughterhouse(f.id, 'hogAmount', $any($event.target).value)" placeholder="250" [class]="MONEY_INPUT" />
                                 </div>
                               </div>
-                              <button type="button" (click)="removeRateItem(f.id, r.id)" class="mb-0.5 inline-flex items-center justify-center rounded-lg border border-line px-2.5 py-2.5 text-muted transition hover:border-red/40 hover:text-red">
+                            </div>
+                          </div>
+
+                          <div class="rounded-xl border border-line bg-white p-4">
+                            <div class="text-xs font-bold uppercase tracking-wide text-navy">Shared large-animal rate</div>
+                            <p class="mt-1 text-xs text-muted">Carabao and Cow remain separate animal types, but use one ordinance rate.</p>
+                            <div class="mt-3">
+                              <label [class]="LABEL">Rate (per head)</label>
+                              <div class="relative">
+                                <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
+                                <input type="number" min="0" [value]="f.slaughterhouse?.largeAnimalAmount || ''" (input)="setSlaughterhouse(f.id, 'largeAnimalAmount', $any($event.target).value)" placeholder="365" [class]="MONEY_INPUT" />
+                              </div>
+                            </div>
+                            <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                              <div>
+                                <label [class]="LABEL">Carabao office label</label>
+                                <input [class]="INPUT" [value]="f.slaughterhouse?.carabaoLabel || ''" (input)="setSlaughterhouse(f.id, 'carabaoLabel', $any($event.target).value)" placeholder="Carabao" />
+                              </div>
+                              <div>
+                                <label [class]="LABEL">Cow office label</label>
+                                <input [class]="INPUT" [value]="f.slaughterhouse?.cowLabel || ''" (input)="setSlaughterhouse(f.id, 'cowLabel', $any($event.target).value)" placeholder="Cow" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="mt-4">
+                          <div class="text-[11px] font-bold uppercase tracking-wide text-muted">Additional animal types</div>
+                          <div class="mt-2 space-y-2">
+                          @for (r of f.slaughterhouse?.customAnimals || []; track r.id) {
+                            <div class="grid gap-3 rounded-lg border border-line bg-white p-3 sm:grid-cols-[1.6fr,1fr,auto] sm:items-end">
+                              <div>
+                                <label [class]="LABEL">Custom animal name</label>
+                                <input [class]="INPUT" [value]="r.label" (input)="setCustomAnimal(f.id, r.id, 'label', $any($event.target).value)" placeholder="e.g. Goat" />
+                              </div>
+                              <div>
+                                <label [class]="LABEL">Rate (per head)</label>
+                                <div class="relative">
+                                  <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
+                                  <input type="number" min="0" [value]="r.amount" (input)="setCustomAnimal(f.id, r.id, 'amount', $any($event.target).value)" placeholder="50" [class]="MONEY_INPUT" />
+                                </div>
+                              </div>
+                              <button type="button" (click)="removeCustomAnimal(f.id, r.id)" class="mb-0.5 inline-flex items-center justify-center rounded-lg border border-line px-2.5 py-2.5 text-muted transition hover:border-red/40 hover:text-red">
                                 <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
                               </button>
                             </div>
                           }
+                          </div>
+                          <button type="button" (click)="addCustomAnimal(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
+                            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add animal
+                          </button>
                         </div>
-                        <button type="button" (click)="addRateItem(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
-                          <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add animal type
-                        </button>
                       </div>
                     } @else if (f.type === 'Daily stall') {
                       <!-- How a MONTH is measured, which decides whether a monthly amount exists at all. A market is

@@ -96,6 +96,13 @@ export interface ActivationCustomAnimal {
   ratePerHead: number;
 }
 
+/** Tenant wording for stable built-in slaughterhouse identities. Rates remain in ActivationRate. */
+export interface ActivationSlaughterLabels {
+  hog: string;
+  carabao: string;
+  cow: string;
+}
+
 export interface ActivationOrSeries {
   prefix: string | null;
   startNumber: number;
@@ -123,6 +130,7 @@ export interface ActivateMunicipalityCommand {
   facilities: ActivationFacility[];
   rates: ActivationRate[];
   customAnimals?: ActivationCustomAnimal[];
+  slaughterLabels?: ActivationSlaughterLabels;
   orSeries?: ActivationOrSeries;
   tpmMarketDay?: string | null;
 }
@@ -140,21 +148,35 @@ export interface ActivationResultDto {
 }
 
 export type ActivateResult = { ok: true; result: ActivationResultDto } | { ok: false; error: string };
+export type PreflightResult = { ok: true } | { ok: false; error: string };
 
 function extractMessage(body: unknown): string | undefined {
   if (!body) return undefined;
   if (typeof body === 'string') return body;
-  const b = body as { detail?: unknown; message?: unknown; title?: unknown; errors?: Record<string, unknown> };
+  const b = body as {
+    detail?: unknown;
+    message?: unknown;
+    title?: unknown;
+    error?: unknown;
+    errors?: Record<string, unknown>;
+  };
   if (typeof b.detail === 'string') return b.detail;
-  if (typeof b.message === 'string') return b.message;
-  if (b.errors && typeof b.errors === 'object') {
+  const validation =
+    b.errors && typeof b.errors === 'object'
+      ? b.errors
+      : b.error && typeof b.error === 'object'
+        ? (b.error as Record<string, unknown>)
+        : undefined;
+  if (validation) {
     const parts: string[] = [];
-    for (const v of Object.values(b.errors)) {
+    for (const v of Object.values(validation)) {
       if (Array.isArray(v)) parts.push(...v.map((x) => String(x)));
       else if (typeof v === 'string') parts.push(v);
     }
     if (parts.length) return parts.join(' ');
   }
+  if (typeof b.error === 'string') return b.error;
+  if (typeof b.message === 'string') return b.message;
   if (typeof b.title === 'string') return b.title;
   return undefined;
 }
@@ -183,6 +205,17 @@ export class ActivationApi {
         this.http.post<ActivationResultDto>(`${API_BASE_URL}/api/activation/municipality`, command),
       );
       return { ok: true, result };
+    } catch (e: unknown) {
+      return { ok: false, error: describeError(e) };
+    }
+  }
+
+  async preflight(command: ActivateMunicipalityCommand): Promise<PreflightResult> {
+    try {
+      await firstValueFrom(
+        this.http.post(`${API_BASE_URL}/api/activation/municipality/preflight`, command),
+      );
+      return { ok: true };
     } catch (e: unknown) {
       return { ok: false, error: describeError(e) };
     }

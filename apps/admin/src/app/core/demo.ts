@@ -69,6 +69,22 @@ export interface RateItem {
   amount: string;
 }
 
+/**
+ * Explicit slaughterhouse intent captured by onboarding. Display wording belongs to the LGU; the named fields carry
+ * the stable StallTrack identity, so activation never has to discover billing meaning from that wording.
+ */
+export interface SlaughterhouseConfig {
+  hogLabel: string;
+  hogAmount: string;
+  carabaoLabel: string;
+  cowLabel: string;
+  largeAnimalAmount: string;
+  customAnimals: RateItem[];
+  /** Set only while an old free-text draft needs an operator/LGU decision before it can be re-saved explicitly. */
+  legacyReviewRequired?: boolean;
+  legacyReviewMessages?: string[];
+}
+
 export interface Facility {
   name: string;
   type: string;
@@ -91,7 +107,10 @@ export interface Facility {
   marketDay?: string;
   sections: Section[];
   addOns: AddOn[];
-  rateItems: RateItem[];
+  /** New drafts use this explicit model. */
+  slaughterhouse?: SlaughterhouseConfig;
+  /** Legacy drafts only. Kept so already-submitted configurations remain activatable through the compatibility path. */
+  rateItems?: RateItem[];
 }
 
 export interface ConfigUser {

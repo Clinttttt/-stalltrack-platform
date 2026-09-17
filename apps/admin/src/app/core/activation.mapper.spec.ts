@@ -244,6 +244,60 @@ describe('activation mapper: one amount per rate', () => {
     return request({ facilities: [slaughterhouse(items)], orSeries: '', users: [] } as Config);
   }
 
+  it('maps explicit Carmen labels without reading financial meaning from their wording', () => {
+    const explicit = {
+      ...slaughterhouse([]),
+      rateItems: undefined,
+      slaughterhouse: {
+        hogLabel: 'Carmen Hog',
+        hogAmount: '352',
+        carabaoLabel: 'Carmen Carabao',
+        cowLabel: 'Carmen Cow',
+        largeAnimalAmount: '351',
+        customAnimals: [{ label: 'Carmen Goat', amount: '252' }],
+      },
+    } as Facility;
+
+    const { command, warnings, blockingErrors } = mapRequestToCommand(
+      request({ facilities: [explicit], orSeries: '', users: [] }),
+    );
+
+    expect(command.rates.filter((r) => r.key === 'SlhHogPerHead')).toEqual([
+      { facilityCode: 'SLH', key: 'SlhHogPerHead', amount: 352 },
+    ]);
+    expect(command.rates.filter((r) => r.key === 'SlhLargePerHead')).toEqual([
+      { facilityCode: 'SLH', key: 'SlhLargePerHead', amount: 351 },
+    ]);
+    expect(command.customAnimals).toEqual([{ animalName: 'Carmen Goat', ratePerHead: 252 }]);
+    expect(command.slaughterLabels).toEqual({
+      hog: 'Carmen Hog',
+      carabao: 'Carmen Carabao',
+      cow: 'Carmen Cow',
+    });
+    expect(warnings.join(' ')).not.toContain('two different amounts');
+    expect(blockingErrors).toEqual([]);
+  });
+
+  it('keeps Goat custom in the legacy compatibility path', () => {
+    const { command } = mapRequestToCommand(
+      slhRequest([
+        { label: 'Carmen Hog', amount: '352' },
+        { label: 'Carmen Carabao', amount: '351' },
+        { label: 'Carmen Goat', amount: '252' },
+      ]),
+    );
+
+    expect(command.rates.filter((r) => r.key === 'SlhLargePerHead')).toHaveLength(1);
+    expect(command.customAnimals).toEqual([{ animalName: 'Carmen Goat', ratePerHead: 252 }]);
+  });
+
+  it('blocks an ambiguous legacy animal instead of guessing', () => {
+    const { command, blockingErrors } = mapRequestToCommand(slhRequest([{ label: 'Large cattle', amount: '351' }]));
+
+    expect(command.rates.filter((r) => r.key === 'SlhLargePerHead')).toHaveLength(0);
+    expect(blockingErrors.join(' ')).toContain('ambiguous');
+  });
+
   it('files one row when carabao and cow state the same large-animal amount, and says so', () => {
     const { command, warnings } = mapRequestToCommand(
       slhRequest([

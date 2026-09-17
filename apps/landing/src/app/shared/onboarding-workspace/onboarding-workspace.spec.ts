@@ -14,9 +14,10 @@ import { OnboardingWorkspace } from './onboarding-workspace';
  * guard.
  */
 describe('OnboardingWorkspace — a facility must be finished before another is added', () => {
-  function workspace() {
+  function workspace(configJson?: string) {
     TestBed.configureTestingModule({ imports: [OnboardingWorkspace] });
     const fixture = TestBed.createComponent(OnboardingWorkspace);
+    if (configJson) fixture.componentRef.setInput('configJson', configJson);
     fixture.detectChanges();
     return fixture.componentInstance;
   }
@@ -105,5 +106,89 @@ describe('OnboardingWorkspace — a facility must be finished before another is 
 
     // The older rule, unchanged: a non-custom type is configured once.
     expect(ws.facilities().length).toBe(1);
+  });
+
+  it('does not consider a custom animal with an amount but no name complete', () => {
+    const ws = workspace();
+    const slaughterhouse = ws.catalog.find((c) => c.key === 'slaughterhouse')!;
+    ws.addFromCatalog(slaughterhouse);
+    const facility = ws.facilities()[0];
+    ws.setSlaughterhouse(facility.id, 'hogAmount', '352');
+    ws.setSlaughterhouse(facility.id, 'largeAnimalAmount', '351');
+    ws.addCustomAnimal(facility.id);
+    const custom = ws.facilities()[0].slaughterhouse!.customAnimals[0];
+    ws.setCustomAnimal(facility.id, custom.id, 'amount', '252');
+
+    expect(ws.isFacilityDone(ws.facilities()[0])).toBe(false);
+  });
+
+  it('hydrates a Carmen-style legacy draft into explicit semantics and re-saves without free-text rateItems', () => {
+    const legacy = JSON.stringify({
+      facilities: [
+        {
+          id: 'slh-1',
+          catalogKey: 'slaughterhouse',
+          archetype: 'PerHead',
+          name: 'Carmen Slaughterhouse',
+          type: 'Per head',
+          rateAmount: '',
+          monthlyRent: '',
+          monthBasis: 'RentGoal',
+          rateUnit: 'per head',
+          unitLabel: 'heads',
+          units: '',
+          ordinance: '',
+          notes: '',
+          marketDay: '',
+          sections: [],
+          addOns: [],
+          rateItems: [
+            { id: 'h', label: 'Carmen Hog', amount: '352' },
+            { id: 'c', label: 'Carmen Carabao', amount: '351' },
+            { id: 'g', label: 'Carmen Goat', amount: '252' },
+          ],
+        },
+      ],
+      administrator: {},
+      branding: {},
+    });
+    const ws = workspace(legacy);
+    const slh = ws.facilities()[0].slaughterhouse!;
+
+    expect(slh.hogLabel).toBe('Carmen Hog');
+    expect(slh.hogAmount).toBe('352');
+    expect(slh.carabaoLabel).toBe('Carmen Carabao');
+    expect(slh.largeAnimalAmount).toBe('351');
+    expect(slh.customAnimals.map((a) => [a.label, a.amount])).toEqual([['Carmen Goat', '252']]);
+    expect(slh.legacyReviewRequired).not.toBe(true);
+
+    let saved = '';
+    ws.saveDraft.subscribe((json) => (saved = json));
+    ws.saveProgress();
+    const parsed = JSON.parse(saved);
+    expect(parsed.facilities[0].rateItems).toBeUndefined();
+    expect(parsed.facilities[0].slaughterhouse.hogLabel).toBe('Carmen Hog');
+  });
+
+  it('holds a conflicting legacy Carabao/Cow draft for review', () => {
+    const legacy = JSON.stringify({
+      facilities: [
+        {
+          id: 'slh-1',
+          name: 'Legacy Slaughterhouse',
+          type: 'Per head',
+          sections: [],
+          addOns: [],
+          rateItems: [
+            { id: 'c1', label: 'Carabao', amount: '351' },
+            { id: 'c2', label: 'Cow', amount: '400' },
+          ],
+        },
+      ],
+    });
+    const ws = workspace(legacy);
+
+    expect(ws.facilities()[0].slaughterhouse?.legacyReviewRequired).toBe(true);
+    expect(ws.isFacilityDone(ws.facilities()[0])).toBe(false);
   });
 });

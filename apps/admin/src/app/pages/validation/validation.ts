@@ -4,6 +4,8 @@ import { AssessmentApi } from '../../core/assessment.api';
 import { fmtLog } from '../../core/format';
 import { Config, Facility, Fee, RequestRecord, STATUS, Section } from '../../core/demo';
 import { marketSectionLabelOf, withDeclaredAreas } from '../../core/market-sections';
+import { ActivationApi } from '../../core/activation.api';
+import { mapRequestToCommand } from '../../core/activation.mapper';
 
 const inScope = (r: RequestRecord): boolean =>
   r.status === STATUS.APPROVED && r.stage === 'Validation' && !r.activated;
@@ -45,6 +47,7 @@ function parseConfig(json: string | null): Config {
 })
 export class Validation {
   private readonly api = inject(AssessmentApi);
+  private readonly activationApi = inject(ActivationApi);
   readonly fmtLog = fmtLog;
 
   readonly requests = signal<RequestRecord[]>([]);
@@ -81,7 +84,10 @@ export class Validation {
     const rateFeeCount = facilities.reduce((s, f) => {
       const base = f.type !== 'Per head' && f.rateAmount ? 1 : 0;
       const secFees = (f.sections || []).reduce((n, x) => n + (x.fees?.length || 0), 0);
-      return s + base + secFees + (f.addOns?.length || 0) + (f.rateItems?.length || 0);
+      const animalRates = f.slaughterhouse
+        ? 2 + (f.slaughterhouse.customAnimals?.length || 0)
+        : (f.rateItems?.length || 0);
+      return s + base + secFees + (f.addOns?.length || 0) + animalRates;
     }, 0);
     const collectionModels = new Set(facilities.map((f) => f.type)).size;
     return [
@@ -147,6 +153,18 @@ export class Validation {
     if (this.busy()) return;
     this.busy.set(true);
     this.actionError.set('');
+    const mapped = mapRequestToCommand(r);
+    if (mapped.blockingErrors.length) {
+      this.actionError.set(mapped.blockingErrors.join(' '));
+      this.busy.set(false);
+      return;
+    }
+    const preflight = await this.activationApi.preflight(mapped.command);
+    if (!preflight.ok) {
+      this.actionError.set(preflight.error);
+      this.busy.set(false);
+      return;
+    }
     const res = await this.api.approveValidation(r.id);
     this.busy.set(false);
     if (res.ok) {

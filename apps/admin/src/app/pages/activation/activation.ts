@@ -83,6 +83,7 @@ export class Activation {
   readonly activating = signal(false);
   readonly activateError = signal('');
   readonly warnings = signal<string[]>([]);
+  readonly mappingErrors = signal<string[]>([]);
 
   readonly scoped = computed(() => this.requests().filter(inScope));
   readonly selected = computed<RequestRecord | null>(() => {
@@ -161,8 +162,9 @@ export class Activation {
     if (!r) return;
     this.activateError.set('');
     const wc = this.configById()[r.id];
-    const { warnings } = mapRequestToCommand(r, { officeName: wc?.branding?.officeName });
+    const { warnings, blockingErrors } = mapRequestToCommand(r, { officeName: wc?.branding?.officeName });
     this.warnings.set(warnings);
+    this.mappingErrors.set(blockingErrors);
     this.link.set('');
     this.draft.set(activationTemplate(r.municipality));
     this.composing.set(true);
@@ -184,10 +186,15 @@ export class Activation {
     this.activateError.set('');
     try {
       const wc = this.configById()[r.id];
-      const { command } = mapRequestToCommand(r, {
+      const { command, blockingErrors } = mapRequestToCommand(r, {
         officeName: wc?.branding?.officeName,
         sealPath: wc?.branding?.logoDataUri,
       });
+      if (blockingErrors.length) {
+        this.mappingErrors.set(blockingErrors);
+        this.activateError.set('This legacy slaughterhouse configuration needs review before activation.');
+        return;
+      }
       const res = await this.activationApi.activate(command);
       if (!res.ok) {
         this.activateError.set(res.error);

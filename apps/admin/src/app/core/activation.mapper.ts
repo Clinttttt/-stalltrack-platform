@@ -24,6 +24,7 @@ import { hasUndeclaredAreas, isCustomArea, MarketSectionKind, marketSectionLabel
 export interface MappedActivation {
   command: ActivateMunicipalityCommand;
   warnings: string[];
+  blockingErrors: string[];
 }
 
 const ALL_CODES: FacilityCodeStr[] = ['NPM', 'TCC', 'NCC', 'BBQ', 'ICE', 'SLH', 'TRM', 'TPM'];
@@ -41,6 +42,23 @@ function num(s: string | undefined | null): number | undefined {
   if (s == null) return undefined;
   const n = parseFloat(String(s).replace(/[^0-9.\-]/g, ''));
   return Number.isFinite(n) ? n : undefined;
+}
+
+type LegacyAnimalKind = 'Hog' | 'Carabao' | 'Cow' | 'Custom' | 'Review';
+
+/** Compatibility only for drafts saved before slaughterhouse identity was explicit. */
+function classifyLegacyAnimal(label: string): LegacyAnimalKind {
+  const words = new Set(label.toLowerCase().match(/[a-z]+/g) ?? []);
+  const hog = ['hog', 'pig', 'swine'].some((x) => words.has(x));
+  const carabao = ['carabao', 'buffalo'].some((x) => words.has(x));
+  const cow = words.has('cow');
+  const ambiguousLarge = ['large', 'cattle', 'bull'].some((x) => words.has(x));
+  const matches = Number(hog) + Number(carabao) + Number(cow);
+  if (!label.trim() || matches > 1 || ambiguousLarge) return 'Review';
+  if (hog) return 'Hog';
+  if (carabao) return 'Carabao';
+  if (cow) return 'Cow';
+  return 'Custom';
 }
 
 function usernameSlug(municipality: string): string {
@@ -169,6 +187,7 @@ export function mapRequestToCommand(
   overrides?: { officeName?: string | null; sealPath?: string | null },
 ): MappedActivation {
   const warnings: string[] = [];
+  const blockingErrors: string[] = [];
   const facilities: ActivationFacility[] = [];
   const rates: ActivationRate[] = [];
   const customAnimals: ActivationCustomAnimal[] = [];
@@ -315,12 +334,27 @@ export function mapRequestToCommand(
     } else if (archetype === 'PerTrip') {
       rates.push({ facilityCode: code, key: 'TrmPerTrip', amount: num(f.rateAmount) ?? 0 });
     } else if (archetype === 'PerHead') {
-      for (const item of f.rateItems || []) {
-        const l = item.label.toLowerCase();
-        const amount = num(item.amount) ?? 0;
-        if (/hog|pig|swine/.test(l)) rates.push({ facilityCode: code, key: 'SlhHogPerHead', amount });
-        else if (/cattle|carabao|cow|large|bull|buffalo|goat/.test(l)) rates.push({ facilityCode: code, key: 'SlhLargePerHead', amount });
-        else customAnimals.push({ animalName: item.label.trim(), ratePerHead: amount });
+      if (f.slaughterhouse) {
+        rates.push({ facilityCode: code, key: 'SlhHogPerHead', amount: num(f.slaughterhouse.hogAmount) ?? 0 });
+        rates.push({ facilityCode: code, key: 'SlhLargePerHead', amount: num(f.slaughterhouse.largeAnimalAmount) ?? 0 });
+        for (const item of f.slaughterhouse.customAnimals || []) {
+          customAnimals.push({ animalName: item.label.trim(), ratePerHead: num(item.amount) ?? 0 });
+        }
+      } else {
+        // Old submitted drafts may reach Activation without ever being reopened in the new workspace. Interpret only
+        // documented whole-word aliases; mixed or generic large-animal wording is sent back for review, never guessed.
+        for (const item of f.rateItems || []) {
+          const amount = num(item.amount) ?? 0;
+          const kind = classifyLegacyAnimal(item.label);
+          if (kind === 'Hog') rates.push({ facilityCode: code, key: 'SlhHogPerHead', amount });
+          else if (kind === 'Carabao' || kind === 'Cow')
+            rates.push({ facilityCode: code, key: 'SlhLargePerHead', amount });
+          else if (kind === 'Custom') customAnimals.push({ animalName: item.label.trim(), ratePerHead: amount });
+          else
+            blockingErrors.push(
+              `Legacy animal “${item.label || '(blank animal name)'}” is ambiguous. Return the draft for LGU review.`,
+            );
+        }
       }
     }
   }
@@ -395,9 +429,19 @@ export function mapRequestToCommand(
     facilities,
     rates: deduped,
     customAnimals: customAnimals.length ? customAnimals : undefined,
+    slaughterLabels: (() => {
+      const slh = demoFacilities.find((f) => f.type === 'Per head')?.slaughterhouse;
+      return slh
+        ? {
+            hog: slh.hogLabel.trim() || 'Hog',
+            carabao: slh.carabaoLabel.trim() || 'Carabao',
+            cow: slh.cowLabel.trim() || 'Cow',
+          }
+        : undefined;
+    })(),
     orSeries: parseOrSeries(r.config?.orSeries),
     tpmMarketDay,
   };
 
-  return { command, warnings };
+  return { command, warnings, blockingErrors };
 }

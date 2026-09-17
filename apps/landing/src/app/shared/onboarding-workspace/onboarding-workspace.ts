@@ -48,6 +48,16 @@ interface RateItem {
   label: string;
   amount: string;
 }
+interface SlaughterhouseConfig {
+  hogLabel: string;
+  hogAmount: string;
+  carabaoLabel: string;
+  cowLabel: string;
+  largeAnimalAmount: string;
+  customAnimals: RateItem[];
+  legacyReviewRequired?: boolean;
+  legacyReviewMessages?: string[];
+}
 interface Facility {
   id: string;
   catalogKey: string;
@@ -78,7 +88,9 @@ interface Facility {
   marketDay: string;
   sections: FacilitySection[];
   addOns: AddOn[];
-  rateItems: RateItem[];
+  slaughterhouse?: SlaughterhouseConfig;
+  /** Rows saved before slaughterhouse semantics became explicit. Never emitted by a newly saved draft. */
+  rateItems?: RateItem[];
 }
 interface CatalogItem {
   key: string;
@@ -204,8 +216,76 @@ function facilityFrom(c: CatalogItem): Facility {
     marketDay: c.type === 'Weekly market' ? 'Friday' : '',
     sections: [],
     addOns: [],
-    rateItems: [],
+    slaughterhouse: c.key === 'slaughterhouse' ? emptySlaughterhouseConfig() : undefined,
   };
+}
+
+function emptySlaughterhouseConfig(): SlaughterhouseConfig {
+  return {
+    hogLabel: 'Hog',
+    hogAmount: '',
+    carabaoLabel: 'Carabao',
+    cowLabel: 'Cow',
+    largeAnimalAmount: '',
+    customAnimals: [],
+  };
+}
+
+type LegacyAnimalKind = 'Hog' | 'Carabao' | 'Cow' | 'Custom' | 'Review';
+
+/** Compatibility only: new drafts state semantics directly and never call this classifier. */
+function classifyLegacyAnimal(label: string): LegacyAnimalKind {
+  const words = new Set(label.toLowerCase().match(/[a-z]+/g) ?? []);
+  const hog = ['hog', 'pig', 'swine'].some((x) => words.has(x));
+  const carabao = ['carabao', 'buffalo'].some((x) => words.has(x));
+  const cow = words.has('cow');
+  const ambiguousLarge = ['large', 'cattle', 'bull'].some((x) => words.has(x));
+  const matches = Number(hog) + Number(carabao) + Number(cow);
+
+  if (!label.trim() || matches > 1 || ambiguousLarge) return 'Review';
+  if (hog) return 'Hog';
+  if (carabao) return 'Carabao';
+  if (cow) return 'Cow';
+  return 'Custom';
+}
+
+/** Converts an old free-text SLH document into the explicit editor without guessing through contradictions. */
+function migrateLegacySlaughterhouse(items: RateItem[]): SlaughterhouseConfig {
+  const config = emptySlaughterhouseConfig();
+  const messages: string[] = [];
+  const hogRows: RateItem[] = [];
+  const largeRows: Array<{ row: RateItem; kind: 'Carabao' | 'Cow' }> = [];
+
+  for (const row of items) {
+    const kind = classifyLegacyAnimal(row.label ?? '');
+    if (kind === 'Hog') hogRows.push(row);
+    else if (kind === 'Carabao' || kind === 'Cow') largeRows.push({ row, kind });
+    else if (kind === 'Custom') config.customAnimals.push({ ...row, id: row.id || uid() });
+    else messages.push(`“${row.label || '(blank animal name)'}” needs review because its canonical meaning is ambiguous.`);
+  }
+
+  const hogAmounts = [...new Set(hogRows.map((x) => x.amount).filter((x) => String(x).trim()))];
+  if (hogAmounts.length > 1) messages.push(`Legacy Hog rows state different rates: ${hogAmounts.join(' and ')}.`);
+  else if (hogRows.length) {
+    config.hogLabel = hogRows[0].label.trim() || 'Hog';
+    config.hogAmount = hogAmounts[0] ?? '';
+  }
+
+  const largeAmounts = [...new Set(largeRows.map((x) => x.row.amount).filter((x) => String(x).trim()))];
+  if (largeAmounts.length > 1)
+    messages.push(`Legacy Carabao/Cow rows state different shared large-animal rates: ${largeAmounts.join(' and ')}.`);
+  else config.largeAnimalAmount = largeAmounts[0] ?? '';
+
+  const carabao = largeRows.find((x) => x.kind === 'Carabao')?.row.label.trim();
+  const cow = largeRows.find((x) => x.kind === 'Cow')?.row.label.trim();
+  if (carabao) config.carabaoLabel = carabao;
+  if (cow) config.cowLabel = cow;
+
+  if (messages.length) {
+    config.legacyReviewRequired = true;
+    config.legacyReviewMessages = messages;
+  }
+  return config;
 }
 
 @Component({
@@ -308,7 +388,13 @@ export class OnboardingWorkspace {
   showBaseRate = (f: Facility): boolean => f.type !== 'Daily stall' && f.type !== 'Per head';
   isFacilityDone = (f: Facility): boolean => {
     if (!f.name.trim()) return false;
-    if (f.type === 'Per head') return f.rateItems.some((r) => r.amount);
+    if (f.type === 'Per head') {
+      const s = f.slaughterhouse;
+      if (!s || s.legacyReviewRequired) return false;
+      if (!s.hogLabel.trim() || !s.carabaoLabel.trim() || !s.cowLabel.trim()) return false;
+      if (!s.hogAmount.trim() || !s.largeAnimalAmount.trim()) return false;
+      return s.customAnimals.every((a) => a.label.trim() && a.amount.trim());
+    }
     if (f.type === 'Daily stall') {
       // An area of the market's own is filed under its name, so an unnamed one holds the facility open rather than
       // being quietly dropped on the way to the platform.
@@ -325,7 +411,9 @@ export class OnboardingWorkspace {
 
   summaryFor(f: Facility): string {
     if (this.isPerHead(f)) {
-      const n = f.rateItems.filter((r) => r.amount).length;
+      const s = f.slaughterhouse;
+      if (!s) return '';
+      const n = Number(Boolean(s.hogAmount)) + 2 * Number(Boolean(s.largeAnimalAmount)) + s.customAnimals.filter((r) => r.amount).length;
       return n ? `${n} animal type(s)` : '';
     }
     if (f.type === 'Daily stall') {
@@ -465,17 +553,44 @@ export class OnboardingWorkspace {
     }));
   }
 
-  // rate items (per-head animal types)
-  addRateItem(fid: string): void {
-    this.mapFacility(fid, (x) => ({ ...x, rateItems: [...x.rateItems, { id: uid(), label: '', amount: '' }] }));
-  }
-  removeRateItem(fid: string, rid: string): void {
-    this.mapFacility(fid, (x) => ({ ...x, rateItems: x.rateItems.filter((r) => r.id !== rid) }));
-  }
-  setRateItem(fid: string, rid: string, key: keyof RateItem, val: string): void {
+  // Explicit slaughterhouse semantics. Canonical identity never comes from an office label.
+  setSlaughterhouse(fid: string, key: keyof Omit<SlaughterhouseConfig, 'customAnimals' | 'legacyReviewMessages'>, val: string | boolean): void {
     this.mapFacility(fid, (x) => ({
       ...x,
-      rateItems: x.rateItems.map((r) => (r.id === rid ? { ...r, [key]: val } : r)),
+      slaughterhouse: { ...(x.slaughterhouse ?? emptySlaughterhouseConfig()), [key]: val },
+    }));
+  }
+  confirmLegacySlaughterhouseReview(fid: string): void {
+    this.mapFacility(fid, (x) => ({
+      ...x,
+      slaughterhouse: {
+        ...(x.slaughterhouse ?? emptySlaughterhouseConfig()),
+        legacyReviewRequired: false,
+        legacyReviewMessages: [],
+      },
+    }));
+  }
+  addCustomAnimal(fid: string): void {
+    this.mapFacility(fid, (x) => {
+      const s = x.slaughterhouse ?? emptySlaughterhouseConfig();
+      return { ...x, slaughterhouse: { ...s, customAnimals: [...s.customAnimals, { id: uid(), label: '', amount: '' }] } };
+    });
+  }
+  removeCustomAnimal(fid: string, rid: string): void {
+    this.mapFacility(fid, (x) => {
+      const s = x.slaughterhouse ?? emptySlaughterhouseConfig();
+      return { ...x, slaughterhouse: { ...s, customAnimals: s.customAnimals.filter((r) => r.id !== rid) } };
+    });
+  }
+  setCustomAnimal(fid: string, rid: string, key: keyof RateItem, val: string): void {
+    this.mapFacility(fid, (x) => ({
+      ...x,
+      slaughterhouse: {
+        ...(x.slaughterhouse ?? emptySlaughterhouseConfig()),
+        customAnimals: (x.slaughterhouse ?? emptySlaughterhouseConfig()).customAnimals.map((r) =>
+          r.id === rid ? { ...r, [key]: val } : r,
+        ),
+      },
     }));
   }
 
@@ -539,7 +654,8 @@ export class OnboardingWorkspace {
   }
 
   private serialize(): string {
-    return JSON.stringify({ facilities: this.facilities(), administrator: this.admin(), branding: this.branding() });
+    const facilities = this.facilities().map(({ rateItems: _legacy, ...f }) => f);
+    return JSON.stringify({ facilities, administrator: this.admin(), branding: this.branding() });
   }
 
   private hydrate(json: string): void {
@@ -551,7 +667,17 @@ export class OnboardingWorkspace {
       };
       if (Array.isArray(cfg.facilities))
         this.facilities.set(
-          cfg.facilities.map((f) => ({ ...f, sections: normalizeSections(Array.isArray(f?.sections) ? f.sections : []) })),
+          cfg.facilities.map((f) => {
+            const legacy = Array.isArray(f?.rateItems) ? f.rateItems : [];
+            return {
+              ...f,
+              sections: normalizeSections(Array.isArray(f?.sections) ? f.sections : []),
+              slaughterhouse:
+                f.type === 'Per head'
+                  ? f.slaughterhouse ?? migrateLegacySlaughterhouse(legacy)
+                  : f.slaughterhouse,
+            };
+          }),
         );
       if (cfg.administrator)
         this.admin.set({
