@@ -212,10 +212,12 @@
               <div class="rounded-xl border border-line p-4">
                 <div class="a-label mb-2">Branding &amp; receipts</div>
                 <div class="space-y-1.5 text-sm">
-                  <!-- The requesting office is now the municipality's own address, so it is set out on its own line rather than
-                       squeezed right-aligned into a two-column row where it wrapped raggedly against its label. -->
                   <div>
-                    <span class="text-muted">Office</span>
+                    <span class="text-muted">Office name</span>
+                    <div class="mt-0.5 leading-relaxed font-medium text-navy">{{ r.config.officeName || 'Not provided' }}</div>
+                  </div>
+                  <div>
+                    <span class="text-muted">Municipal address</span>
                     <div class="mt-0.5 leading-relaxed font-medium text-navy">{{ r.requestingOffice }}</div>
                   </div>
                   <!-- Only when the LGU actually set one. An OR series is optional, and the label was printed

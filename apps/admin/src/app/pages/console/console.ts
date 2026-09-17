@@ -1,7 +1,8 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon/icon';
 import { AssessmentApi } from '../../core/assessment.api';
 import { fmtLog } from '../../core/format';
+import { installStageFreshness } from '../../core/stage-freshness';
 import {
   CHAT_TEMPLATES,
   RequestRecord,
@@ -89,6 +90,7 @@ interface Compose {
 })
 export class Console {
   private readonly api = inject(AssessmentApi);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Expose helpers/constants to the template.
   readonly TABS = TABS;
@@ -135,13 +137,14 @@ export class Console {
 
   constructor() {
     void this.refresh();
+    installStageFreshness(this.destroyRef, () => this.refresh(false));
   }
 
-  async refresh(): Promise<void> {
-    this.loading.set(true);
+  async refresh(showLoading = true): Promise<void> {
+    if (showLoading) this.loading.set(true);
     this.loadError.set('');
     const result = await this.api.list();
-    this.loading.set(false);
+    if (showLoading) this.loading.set(false);
     if (result.ok) this.requests.set(result.requests);
     else this.loadError.set(result.error);
   }

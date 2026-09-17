@@ -414,10 +414,11 @@ export function mapRequestToCommand(
   const tpmMarketDay = VALID_MARKET_DAYS.includes(rawMarketDay) ? rawMarketDay : undefined;
 
   const command: ActivateMunicipalityCommand = {
+    assessmentRequestId: r.id,
     municipalityCode: r.municipality.trim(),
     branding: {
       officeName: office.name,
-      address: null,
+      address: looksLikeMunicipalAddress(r.requestingOffice) ? r.requestingOffice.trim() : null,
       sealPath: overrides?.sealPath?.trim() || null,
       officeAcronym: office.acronym,
     },

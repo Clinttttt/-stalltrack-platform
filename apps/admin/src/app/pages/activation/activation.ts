@@ -1,39 +1,13 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon/icon';
-import { Config, Facility, RequestRecord, STATUS } from '../../core/demo';
+import { Facility, RequestRecord, STATUS } from '../../core/demo';
 import { AssessmentApi } from '../../core/assessment.api';
 import { ActivationApi } from '../../core/activation.api';
 import { headUsernameFor, mapRequestToCommand } from '../../core/activation.mapper';
+import { parseWorkspaceConfig, toReviewConfig, WorkspaceConfig } from '../../core/onboarding-config';
+import { installStageFreshness } from '../../core/stage-freshness';
 
 const inScope = (r: RequestRecord): boolean => r.status === STATUS.APPROVED && r.stage === 'Activation';
-
-interface WorkspaceConfig {
-  facilities?: Facility[];
-  administrator?: { name?: string; position?: string; email?: string };
-  branding?: { officeName?: string; orPrefix?: string; orStart?: string; logoName?: string; logoDataUri?: string };
-}
-
-function parseWorkspaceConfig(json: string | null): WorkspaceConfig | null {
-  if (!json) return null;
-  try {
-    return JSON.parse(json) as WorkspaceConfig;
-  } catch {
-    return null;
-  }
-}
-
-/** Project the workspace config into the console's Config shape for the summary + mapper. */
-function toConfig(wc: WorkspaceConfig | null): Config {
-  return {
-    facilities: wc?.facilities ?? [],
-    orSeries: `${wc?.branding?.orPrefix ?? ''}${wc?.branding?.orStart ?? ''}`,
-    users: wc?.administrator
-      // "Head" is the term used throughout the platform and by the LGUs themselves; the internal
-      // SuperAdmin role name is an implementation detail that should not surface in the console.
-      ? [{ name: wc.administrator.name ?? '', role: 'Head', email: wc.administrator.email ?? '' }]
-      : [],
-  };
-}
 
 function activationTemplate(m: string): string {
   return (
@@ -59,6 +33,7 @@ function activationTemplate(m: string): string {
 export class Activation {
   private readonly api = inject(AssessmentApi);
   private readonly activationApi = inject(ActivationApi);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly requests = signal<RequestRecord[]>([]);
   readonly loading = signal(true);
@@ -115,24 +90,30 @@ export class Activation {
 
   constructor() {
     void this.refresh();
+    installStageFreshness(this.destroyRef, () => this.refresh(false));
   }
 
-  async refresh(): Promise<void> {
-    this.loading.set(true);
+  async refresh(showLoading = true): Promise<void> {
+    if (showLoading) this.loading.set(true);
     this.loadError.set('');
     const munis = await this.api.listMunicipalities();
     const active = new Set((munis.ok ? munis.municipalities : []).filter((m) => m.isActive).map((m) => m.name.toLowerCase()));
     this.activeMunis.set(active);
 
     const res = await this.api.list();
-    this.loading.set(false);
+    if (showLoading) this.loading.set(false);
     if (!res.ok) {
       this.loadError.set(res.error);
       return;
     }
-    this.requests.set(res.requests.map((r) => ({ ...r, activated: active.has(r.municipality.toLowerCase()) })));
-    const first = this.scoped()[0];
-    if (first) void this.loadConfig(first.id);
+    const loaded = new Map(this.requests().filter((r) => r.config).map((r) => [r.id, r.config]));
+    this.requests.set(res.requests.map((r) => ({
+      ...r,
+      activated: active.has(r.municipality.toLowerCase()),
+      config: loaded.get(r.id),
+    })));
+    const target = this.selected();
+    if (target) void this.loadConfig(target.id);
   }
 
   private upsert(record: RequestRecord): void {
@@ -146,7 +127,7 @@ export class Activation {
     if (res.ok) {
       const wc = parseWorkspaceConfig(res.draft.configJson);
       this.configById.update((m) => ({ ...m, [id]: wc }));
-      this.upsert({ ...r, config: toConfig(wc) });
+      this.upsert({ ...r, config: toReviewConfig(wc) });
     }
   }
 

@@ -1,39 +1,16 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon/icon';
 import { AssessmentApi } from '../../core/assessment.api';
 import { fmtLog } from '../../core/format';
-import { Config, Facility, Fee, RequestRecord, STATUS, Section } from '../../core/demo';
-import { marketSectionLabelOf, withDeclaredAreas } from '../../core/market-sections';
+import { Facility, Fee, RequestRecord, STATUS, Section } from '../../core/demo';
+import { marketSectionLabelOf } from '../../core/market-sections';
 import { ActivationApi } from '../../core/activation.api';
 import { mapRequestToCommand } from '../../core/activation.mapper';
+import { parseWorkspaceConfig, toReviewConfig } from '../../core/onboarding-config';
+import { installStageFreshness } from '../../core/stage-freshness';
 
 const inScope = (r: RequestRecord): boolean =>
   r.status === STATUS.APPROVED && r.stage === 'Validation' && !r.activated;
-
-/** Parse the workspace's opaque config document into the console's Config shape. */
-function parseConfig(json: string | null): Config {
-  if (!json) return { facilities: [], orSeries: '', users: [] };
-  try {
-    const c = JSON.parse(json) as {
-      facilities?: Facility[];
-      administrator?: { name?: string; email?: string };
-      branding?: { orPrefix?: string };
-    };
-    return {
-      facilities: Array.isArray(c.facilities)
-        ? // Areas an LGU declared are kept; a draft that predates the question has them filled in the order it
-          // entered them, so the operator reviews the areas that will actually be committed.
-          c.facilities.map((f) => ({ ...f, sections: withDeclaredAreas(Array.isArray(f?.sections) ? f.sections : []) }))
-        : [],
-      orSeries: c.branding?.orPrefix ?? '',
-      users: c.administrator
-        ? [{ name: c.administrator.name ?? '', role: 'Administrator (Super Admin)', email: c.administrator.email ?? '' }]
-        : [],
-    };
-  } catch {
-    return { facilities: [], orSeries: '', users: [] };
-  }
-}
 
 /**
  * Validation dry-run, backed by the live API. Lists requests in the Validation stage, loads each one's
@@ -48,6 +25,7 @@ function parseConfig(json: string | null): Config {
 export class Validation {
   private readonly api = inject(AssessmentApi);
   private readonly activationApi = inject(ActivationApi);
+  private readonly destroyRef = inject(DestroyRef);
   readonly fmtLog = fmtLog;
 
   readonly requests = signal<RequestRecord[]>([]);
@@ -100,17 +78,19 @@ export class Validation {
 
   constructor() {
     void this.refresh();
+    installStageFreshness(this.destroyRef, () => this.refresh(false));
   }
 
-  async refresh(): Promise<void> {
-    this.loading.set(true);
+  async refresh(showLoading = true): Promise<void> {
+    if (showLoading) this.loading.set(true);
     this.loadError.set('');
     const res = await this.api.list();
-    this.loading.set(false);
+    if (showLoading) this.loading.set(false);
     if (res.ok) {
-      this.requests.set(res.requests);
-      const first = this.scoped()[0];
-      if (first) void this.loadConfig(first.id);
+      const loaded = new Map(this.requests().filter((r) => r.config).map((r) => [r.id, r.config]));
+      this.requests.set(res.requests.map((r) => ({ ...r, config: loaded.get(r.id) })));
+      const target = this.selected();
+      if (target) void this.loadConfig(target.id);
     } else {
       this.loadError.set(res.error);
     }
@@ -124,7 +104,7 @@ export class Validation {
     const r = this.requests().find((x) => x.id === id);
     if (!r || r.config) return;
     const res = await this.api.getDraftByRequest(id);
-    if (res.ok) this.upsert({ ...r, config: parseConfig(res.draft.configJson) });
+    if (res.ok) this.upsert({ ...r, config: toReviewConfig(parseWorkspaceConfig(res.draft.configJson)) });
   }
 
   facUnits(f: Facility): number {
@@ -153,7 +133,7 @@ export class Validation {
     if (this.busy()) return;
     this.busy.set(true);
     this.actionError.set('');
-    const mapped = mapRequestToCommand(r);
+    const mapped = mapRequestToCommand(r, { officeName: r.config?.officeName });
     if (mapped.blockingErrors.length) {
       this.actionError.set(mapped.blockingErrors.join(' '));
       this.busy.set(false);

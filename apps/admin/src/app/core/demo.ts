@@ -33,6 +33,8 @@ export const STATUS = {
   PENDING: 'PendingReview',
   APPROVED: 'Approved',
   DECLINED: 'Declined',
+  COMPLETED: 'Completed',
+  SUPERSEDED: 'Superseded',
 } as const;
 
 export type RequestStatus = (typeof STATUS)[keyof typeof STATUS];
@@ -123,6 +125,8 @@ export interface Config {
   facilities: Facility[];
   orSeries: string;
   users: ConfigUser[];
+  /** Authoritative office wording saved by the LGU in the onboarding workspace. */
+  officeName?: string;
 }
 
 export interface ChecklistItem {
@@ -168,12 +172,14 @@ export interface RequestRecord {
 export function statusLabel(s: RequestStatus): string {
   if (s === STATUS.PENDING) return 'Pending review';
   if (s === STATUS.APPROVED) return 'Onboarding';
+  if (s === STATUS.COMPLETED) return 'Completed';
+  if (s === STATUS.SUPERSEDED) return 'Superseded';
   return 'Declined';
 }
 
 export function statusTone(s: RequestStatus): 'amber' | 'green' | 'red' {
   if (s === STATUS.PENDING) return 'amber';
-  if (s === STATUS.APPROVED) return 'green';
+  if (s === STATUS.APPROVED || s === STATUS.COMPLETED) return 'green';
   return 'red';
 }
 

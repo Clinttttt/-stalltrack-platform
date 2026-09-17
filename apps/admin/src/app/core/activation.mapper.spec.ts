@@ -509,6 +509,7 @@ describe('activation mapper: the office name and its acronym', () => {
 
     expect(command.branding.officeAcronym).not.toBe('Region XIII');
     expect(command.branding.officeName).not.toContain('Philippines');
+    expect(command.branding.address).toBe(ADDRESS);
     // And the operator is told, rather than the platform quietly inventing one.
     expect(warnings.join(' ')).toContain('No office acronym');
   });

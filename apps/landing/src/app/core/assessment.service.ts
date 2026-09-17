@@ -26,9 +26,10 @@ function describeError(e: unknown): string {
   const s = err?.status;
   if (s === 0) return 'Cannot reach the server. Please check your connection and try again.';
   if (s === 429) return 'Too many requests. Please wait a moment and try again.';
-  const body = err?.error as { detail?: string; message?: string; title?: string; errors?: Record<string, unknown> } | string | undefined;
+  const body = err?.error as { detail?: string; message?: string; title?: string; error?: unknown; errors?: Record<string, unknown> } | string | undefined;
   if (typeof body === 'string' && body.trim()) return body;
   if (body && typeof body === 'object') {
+    if (typeof body.error === 'string' && body.error.trim()) return body.error;
     if (typeof body.detail === 'string') return body.detail;
     if (typeof body.message === 'string') return body.message;
     if (body.errors && typeof body.errors === 'object') {

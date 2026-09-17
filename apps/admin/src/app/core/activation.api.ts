@@ -124,6 +124,7 @@ export interface ActivationAdministrator {
 }
 
 export interface ActivateMunicipalityCommand {
+  assessmentRequestId?: string;
   municipalityCode: string;
   branding: ActivationBranding;
   administrator: ActivationAdministrator;

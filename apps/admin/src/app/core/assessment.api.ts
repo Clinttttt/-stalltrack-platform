@@ -90,9 +90,10 @@ function describeError(e: unknown): string {
   if (s === 401) return 'Your session has expired — please sign in again.';
   if (s === 403) return 'This account is not a platform operator.';
   if (s === 0) return 'Cannot reach the server. Please check your connection.';
-  const body = err?.error as { detail?: string; message?: string; title?: string } | string | undefined;
+  const body = err?.error as { detail?: string; message?: string; title?: string; error?: unknown } | string | undefined;
   if (typeof body === 'string' && body.trim()) return body;
   if (body && typeof body === 'object') {
+    if (typeof body.error === 'string' && body.error.trim()) return body.error;
     if (typeof body.detail === 'string') return body.detail;
     if (typeof body.message === 'string') return body.message;
     if (typeof body.title === 'string') return body.title;
