@@ -39,6 +39,7 @@ export class Activation {
   readonly loading = signal(true);
   readonly loadError = signal('');
   private readonly activeMunis = signal<Set<string>>(new Set());
+  private readonly municipalityRegistryAvailable = signal(false);
   private readonly configById = signal<Record<string, WorkspaceConfig | null>>({});
 
   readonly selectedId = signal<string | null>(null);
@@ -61,6 +62,9 @@ export class Activation {
   readonly mappingErrors = signal<string[]>([]);
 
   readonly scoped = computed(() => this.requests().filter(inScope));
+  readonly completedHistory = computed(() =>
+    this.requests().filter((r) => r.status === STATUS.COMPLETED && r.stage === 'Completed'),
+  );
   readonly selected = computed<RequestRecord | null>(() => {
     const s = this.scoped();
     return s.find((r) => r.id === this.selectedId()) || s[0] || null;
@@ -69,11 +73,10 @@ export class Activation {
   readonly stats = computed(() => {
     const reqs = this.requests();
     const validation = reqs.filter((r) => r.status === STATUS.APPROVED && r.stage === 'Validation' && !r.activated).length;
-    const activated = this.scoped().filter((r) => r.activated).length;
     return [
       { label: 'In validation', value: validation },
       { label: 'Ready to activate', value: this.scoped().filter((r) => !r.activated).length },
-      { label: 'Activated', value: activated },
+      { label: 'Activated', value: this.municipalityRegistryAvailable() ? this.activeMunis().size : '—' },
       { label: 'Total requests', value: reqs.length },
     ];
   });
@@ -99,6 +102,7 @@ export class Activation {
     const munis = await this.api.listMunicipalities();
     const active = new Set((munis.ok ? munis.municipalities : []).filter((m) => m.isActive).map((m) => m.name.toLowerCase()));
     this.activeMunis.set(active);
+    this.municipalityRegistryAvailable.set(munis.ok);
 
     const res = await this.api.list();
     if (showLoading) this.loading.set(false);
