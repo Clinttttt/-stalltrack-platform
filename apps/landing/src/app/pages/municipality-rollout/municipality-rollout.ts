@@ -1,4 +1,4 @@
-import { Component, afterNextRender, computed, inject, signal } from '@angular/core';
+import { Component, afterNextRender, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { Footer } from '../../shared/footer/footer';
@@ -58,6 +58,7 @@ export class MunicipalityRollout {
     this.municipalityService.getByCode(this.route.snapshot.paramMap.get('code')) ?? null,
   );
 
+  readonly statusResolving = this.municipalityService.resolving;
   readonly isActive = computed(() => this.municipality()?.status === 'Active');
   readonly stageIndex = computed(() => {
     const m = this.municipality();
@@ -73,8 +74,10 @@ export class MunicipalityRollout {
   private static readonly HEADER_OFFSET = 96;
 
   constructor() {
-    const m = this.municipality();
-    this.title.setTitle(m ? `${m.name} — StallTrack Rollout` : 'Municipality not found — StallTrack');
+    effect(() => {
+      const m = this.municipality();
+      this.title.setTitle(m ? `${m.name} — StallTrack Rollout` : 'Municipality not found — StallTrack');
+    });
 
     // A fragment present on first load cannot be handled by the router here: the requirements
     // section lives inside an @if block, so it is not in the DOM at the moment the router looks
@@ -131,6 +134,7 @@ export class MunicipalityRollout {
   }
 
   openAssessment(): void {
+    if (this.statusResolving() || this.isActive()) return;
     this.assessmentOpen.set(true);
   }
 

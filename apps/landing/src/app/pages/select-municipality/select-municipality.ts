@@ -40,12 +40,12 @@ export class SelectMunicipality {
     { title: 'Consistent service experience', body: 'Gives participating municipalities a familiar and orderly way to present collection access, facility information, and official notices.' },
     { title: 'Support for local differences', body: 'Recognizes that each LGU may have different facilities, collection schedules, rate structures, and office procedures.' },
     { title: 'Facility-aware operations', body: 'Designed around real LGU enterprise activities such as markets, commercial spaces, terminals, slaughterhouses, and other local facilities.' },
-    { title: 'Responsible expansion', body: 'Keeps Cantilan as the active implementation while presenting other municipalities as future-ready areas for review and extension.' },
+    { title: 'Responsible expansion', body: 'Supports each participating municipality through the same reviewed path from assessment to its own active, isolated implementation.' },
   ];
 
   readonly aboutFacts: ReadonlyArray<{ label: string; value: string }> = [
-    ['Primary focus', 'Cantilan EEMO revenue collection operations'],
-    ['Cluster view', 'CARCANMADCARLAN municipalities for future municipal readiness'],
+    ['Reference implementation', 'Cantilan EEMO revenue collection operations'],
+    ['Cluster view', 'CARCANMADCARLAN municipalities at their current rollout status'],
     ['Project purpose', 'Organized collection records, reports, and monitoring'],
   ].map(([label, value]) => ({ label, value }));
 

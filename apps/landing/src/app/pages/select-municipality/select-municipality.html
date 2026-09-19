@@ -102,7 +102,7 @@
       </div>
 
       <div id="municipalities" class="mt-4 grid flex-1 content-end gap-4 pb-5 sm:grid-cols-2 lg:grid-cols-5 lg:pb-6">
-        @for (m of municipalities; track m.code) {
+        @for (m of municipalities(); track m.code) {
           @if (m.href) {
             <a [href]="m.href" class="block" [attr.aria-label]="'Open ' + m.name + ' portal'">
               <ng-container [ngTemplateOutlet]="card" [ngTemplateOutletContext]="{ $implicit: m }"></ng-container>
@@ -124,7 +124,7 @@
         <span class="text-[11px] font-bold uppercase tracking-[0.22em] text-gold">Overview</span>
         <h2 class="mt-3 font-display text-3xl font-bold leading-tight text-navy sm:text-4xl lg:text-5xl">Modernizing LGU revenue collection across CARCANMADCARLAN.</h2>
         <p class="mt-4 text-base leading-relaxed text-muted sm:text-lg">
-          StallTrack presents a formal digital approach for managing local revenue collection activities across public markets and LGU-managed facilities. Cantilan serves as the primary implementation, while the wider CARCANMADCARLAN view demonstrates how the same service model can support neighboring municipalities in the future.
+          StallTrack presents a formal digital approach for managing local revenue collection activities across public markets and LGU-managed facilities. The CARCANMADCARLAN view shows each municipality's current rollout status and provides access to every implementation that is already active.
         </p>
       </div>
       <div class="grid w-full gap-4">

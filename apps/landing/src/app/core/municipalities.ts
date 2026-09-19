@@ -1,10 +1,10 @@
-import { Municipality, MunicipalityStatus } from './municipality.model';
+import type { Municipality, MunicipalityStatus } from './municipality.model';
 import registryJson from './municipalities.registry.json';
 
-// Live status/name comes from the build-time registry snapshot (refreshed by
-// tools/sync-municipalities.mjs from GET /api/municipalities); this file remains the fallback and the
-// source of the presentation assets (image, portal href, demo rolloutStage). Mirrors the React wiring.
-type RegistryEntry = { name?: string; status?: MunicipalityStatus; isActive?: boolean };
+// The build-time registry snapshot is refreshed by tools/sync-municipalities.mjs from GET /api/municipalities.
+// It is the initial/fallback state; MunicipalityService overlays the same endpoint at runtime. This file remains
+// the source of presentation assets (image and rolloutStage), which the operational registry does not own.
+export type RegistryEntry = { code?: string; name?: string; status?: MunicipalityStatus | string; isActive?: boolean };
 const registry = registryJson as Record<string, RegistryEntry>;
 
 // Presentation layer — display assets + portal href + demo rolloutStage (hand-maintained).
@@ -35,14 +35,13 @@ const presentation: Municipality[] = [
 // Where an active municipality's card sends the user — the portal login, scoped to that LGU via ?lgu=.
 const PORTAL_LOGIN_URL = 'https://console.stalltrack.site/login';
 
-function applyRegistry(entry: Municipality): Municipality {
-  const reg = registry[entry.code];
-  if (!reg?.status) return entry;
-  const isActive = reg.status === 'Active';
+function applyRegistry(entry: Municipality, reg: RegistryEntry | undefined): Municipality {
+  if (!reg) return entry;
+  const isActive = reg.isActive ?? reg.status === 'Active';
   return {
     ...entry,
     name: reg.name || entry.name,
-    status: reg.status,
+    status: isActive ? 'Active' : 'Upcoming',
     active: isActive,
     // Active LGUs go straight to their scoped portal login. The ?lgu={code} drives the login page's
     // branding AND the API's per-municipality sign-in boundary (only that LGU's users can sign in there).
@@ -51,11 +50,32 @@ function applyRegistry(entry: Municipality): Municipality {
   };
 }
 
-export const municipalities: Municipality[] = presentation.map(applyRegistry);
+/** Build-time snapshot, used immediately and retained when the live registry cannot be reached. */
+export const municipalities: Municipality[] = presentation.map((entry) => applyRegistry(entry, registry[entry.code]));
+
+/**
+ * Overlay the public API's current rollout state without discarding presentation-only assets. Missing live rows keep
+ * their snapshot state, so a partial or older backend response never blanks the CARCANMADCARLAN selector.
+ */
+export function mergeLiveMunicipalities(
+  fallback: readonly Municipality[],
+  liveEntries: readonly RegistryEntry[],
+): Municipality[] {
+  const liveByCode = new Map<string, RegistryEntry>();
+  for (const entry of liveEntries) {
+    const code = entry.code?.trim().toLowerCase();
+    if (code) liveByCode.set(code, entry);
+  }
+
+  return fallback.map((entry) => applyRegistry(entry, liveByCode.get(entry.code)));
+}
 
 /** Resolve a municipality by its URL slug (case-insensitive). */
-export function getMunicipality(code: string | null | undefined): Municipality | undefined {
+export function getMunicipality(
+  source: readonly Municipality[],
+  code: string | null | undefined,
+): Municipality | undefined {
   if (!code) return undefined;
   const normalized = String(code).trim().toLowerCase();
-  return municipalities.find((m) => m.code === normalized);
+  return source.find((m) => m.code === normalized);
 }

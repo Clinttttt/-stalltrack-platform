@@ -1,5 +1,9 @@
+import { signal } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import type { Municipality } from '../../core/municipality.model';
+import { MunicipalityService } from '../../core/municipality.service';
 import { MunicipalityRollout } from './municipality-rollout';
 
 /**
@@ -11,8 +15,9 @@ import { MunicipalityRollout } from './municipality-rollout';
 describe('MunicipalityRollout — activation requirements link', () => {
   let scrollTo: ReturnType<typeof vi.fn>;
   let reduceMotion: boolean;
+  let all: WritableSignal<readonly Municipality[]>;
+  let resolving: WritableSignal<boolean>;
 
-  /** Carmen is Upcoming in the registry, so the requirements section is rendered. */
   function render(code = 'carmen') {
     TestBed.configureTestingModule({
       imports: [MunicipalityRollout],
@@ -21,6 +26,15 @@ describe('MunicipalityRollout — activation requirements link', () => {
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: convertToParamMap({ code }) } },
+        },
+        {
+          provide: MunicipalityService,
+          useValue: {
+            all,
+            resolving,
+            getByCode: (requested: string | null | undefined) =>
+              all().find((m) => m.code === requested?.trim().toLowerCase()),
+          },
         },
       ],
     });
@@ -33,6 +47,15 @@ describe('MunicipalityRollout — activation requirements link', () => {
   beforeEach(() => {
     reduceMotion = false;
     scrollTo = vi.fn();
+    all = signal<readonly Municipality[]>([
+      {
+        code: 'carmen',
+        name: 'Carmen',
+        status: 'Upcoming',
+        image: '/carcanmadcarlan/backgrounds/carmen-reference.png',
+      },
+    ]);
+    resolving = signal(false);
 
     vi.stubGlobal('scrollTo', scrollTo);
     vi.stubGlobal(
@@ -99,5 +122,43 @@ describe('MunicipalityRollout — activation requirements link', () => {
     fixture.componentInstance.scrollToRequirements(event);
 
     expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('shows an active implementation and portal action without an assessment action', () => {
+    all.set([
+      {
+        code: 'carmen',
+        name: 'Carmen',
+        status: 'Active',
+        active: true,
+        href: 'https://console.stalltrack.site/login?lgu=carmen',
+        image: '/carcanmadcarlan/backgrounds/carmen-reference.png',
+      },
+    ]);
+    const fixture = render();
+    const text = fixture.nativeElement.textContent;
+    const portal: HTMLAnchorElement | null = fixture.nativeElement.querySelector('a.btn-gold');
+
+    expect(text).toContain('Active Implementation');
+    expect(text).toContain('Enter Portal');
+    expect(text).not.toContain('Request LGU Assessment');
+    expect(portal?.href).toBe('https://console.stalltrack.site/login?lgu=carmen');
+  });
+
+  it('keeps the assessment flow available for an upcoming municipality after resolution', () => {
+    const fixture = render();
+
+    expect(fixture.nativeElement.textContent).toContain('Pending LGU Assessment');
+    expect(fixture.nativeElement.textContent).toContain('Request LGU Assessment');
+    expect(fixture.nativeElement.querySelector('#requirements')).toBeTruthy();
+  });
+
+  it('does not flash the assessment action while live rollout state is resolving', () => {
+    resolving.set(true);
+    const fixture = render();
+
+    expect(fixture.nativeElement.textContent).toContain('Checking rollout status');
+    expect(fixture.nativeElement.textContent).not.toContain('Request LGU Assessment');
+    expect(fixture.nativeElement.querySelector('#requirements')).toBeFalsy();
   });
 });

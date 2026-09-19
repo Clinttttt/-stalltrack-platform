@@ -42,7 +42,7 @@ export class Onboarding {
   readonly presentation = computed(() => {
     const d = this.draft();
     if (!d) return null;
-    const match = this.municipalityService.all.find((x) => x.name.toLowerCase() === d.municipality.toLowerCase());
+    const match = this.municipalityService.all().find((x) => x.name.toLowerCase() === d.municipality.toLowerCase());
     return { name: d.municipality, image: match?.image ?? '/carcanmadcarlan/backgrounds/cantilan-reference.png' };
   });
 
