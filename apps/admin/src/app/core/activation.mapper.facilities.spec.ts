@@ -108,7 +108,9 @@ describe('activation mapper: facility identity', () => {
     const { command, blockingErrors } = mapRequestToCommand(request({ facilities: six }));
     expect(command.facilities.map((f) => f.code)).toEqual(['Custom1', 'Custom2', 'Custom3', 'Custom4', 'Custom5']);
     expect(blockingErrors).toHaveLength(1);
-    expect(blockingErrors[0]).toMatch(/up to 5 facilities of its own/);
+    expect(blockingErrors[0]).toMatch(/5 reserved slots/);
+    // Honest: Add Facility shares the slots, so the message must not promise a later route.
+    expect(blockingErrors[0]).toMatch(/cannot be added there later/);
   });
 
   it('refuses two facilities of one standard type rather than re-coding the second', () => {

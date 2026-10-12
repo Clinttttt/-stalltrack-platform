@@ -31,8 +31,8 @@ export const OPERATION_CATALOG: readonly OperationCatalogEntry[] = [
   { code: 'KANMANGGAY_SPACE_RENTAL', label: 'Municipal Space Rental', group: 'space', hint: 'Rental of a municipal space held by a registered occupant.' },
   { code: 'FIESTA_ARAW_LOT_RENTAL', label: 'Event / Temporary Lot Rental', group: 'space', hint: 'Lots rented for a fiesta, anniversary or similar event.' },
   { code: 'VEGETABLE_FRUIT_SPACE_RENTAL', label: 'Vegetable / Fruit Space Rental', group: 'space', hint: 'Space rented to vegetable and fruit sellers.' },
-  { code: 'ECF', label: 'Electricity Consumption Fees', group: 'utility', hint: 'Electricity billed to occupants from meter readings.' },
-  { code: 'WCF', label: 'Water Consumption Fees', group: 'utility', hint: 'Water billed to occupants from meter readings.' },
+  { code: 'ECF', label: 'Electricity Consumption Fees', group: 'utility', hint: 'Electricity charged to spaces with a verified electricity service, collected directly or from an office-prepared bill.' },
+  { code: 'WCF', label: 'Water Consumption Fees', group: 'utility', hint: 'Water charged to spaces with a verified water service, collected directly or from an office-prepared bill.' },
   { code: 'LANDING_BERTHING', label: 'Landing / Berthing', group: 'other', hint: 'Landing and berthing fees.' },
   { code: 'TRANSPORTATION', label: 'Transportation / Parking', group: 'other', hint: 'Parking and vehicle fees by vehicle class.' },
   { code: 'TRANSFER_LARGE_CATTLE', label: 'Transfer Large Cattle', group: 'other', hint: 'Fees for transferring large cattle.' },
@@ -64,34 +64,51 @@ export interface OperationItem {
 const KNOWN = new Set(OPERATION_CATALOG.map((o) => o.code));
 
 /**
- * Reads a saved `operations` block. A draft saved before declarations existed has none and yields no selections. A code this
- * workspace does not know is dropped and reported (the server refuses unknown codes on save, so carrying one would make the
- * whole draft unsaveable); everything readable is kept.
+ * Reads a saved `operations` block. A draft saved before declarations existed has none and yields no selections.
+ *
+ * Nothing the office saved is thrown away. An entry this workspace can read becomes editable state; any other entry - a code
+ * this version does not know (an older workspace opening a newer draft), a repeated code, or an item whose `selected` is not a
+ * boolean - is returned untouched in `preserved` and written back on the next save, never translated into a different
+ * operation. The office must discard such entries explicitly. The server decides whether it accepts them.
  */
-export function readOperations(raw: unknown): { states: Record<string, OperationState>; dropped: string[] } {
+export function readOperations(raw: unknown): {
+  states: Record<string, OperationState>;
+  preserved: unknown[];
+} {
   const states: Record<string, OperationState> = {};
-  const dropped: string[] = [];
+  const preserved: unknown[] = [];
   const items = (raw as { items?: unknown } | null | undefined)?.items;
-  if (!Array.isArray(items)) return { states, dropped };
+  if (!Array.isArray(items)) return { states, preserved };
 
   for (const entry of items) {
     const e = (entry ?? {}) as { operationCode?: unknown; selected?: unknown; localDisplayName?: unknown };
     const code = typeof e.operationCode === 'string' ? e.operationCode : '';
-    if (!KNOWN.has(code)) {
-      dropped.push(code || '(unnamed)');
+    const readable = KNOWN.has(code) && !(code in states) && typeof e.selected === 'boolean'
+      && (e.localDisplayName == null || typeof e.localDisplayName === 'string');
+    if (!readable) {
+      preserved.push(entry);
       continue;
     }
-    states[code] = {
-      selected: e.selected === true,
-      localDisplayName: typeof e.localDisplayName === 'string' ? e.localDisplayName.slice(0, MAX_LOCAL_NAME_LENGTH) : '',
-    };
+    states[code] = { selected: e.selected === true, localDisplayName: typeof e.localDisplayName === 'string' ? e.localDisplayName : '' };
   }
-  return { states, dropped };
+  return { states, preserved };
 }
 
-/** The saved form: only operations the office selected or named, in catalog order, stable code first. */
-export function writeOperations(states: OperationStates): { version: number; items: OperationItem[] } {
-  const items: OperationItem[] = [];
+/** A short description of a preserved entry for the notice shown to the office. */
+export function describePreserved(entry: unknown): string {
+  const code = (entry as { operationCode?: unknown } | null)?.operationCode;
+  return typeof code === 'string' && code ? code : '(unreadable entry)';
+}
+
+/**
+ * The saved form: operations the office selected or named, in catalog order, followed by any preserved entries exactly as they
+ * were read. Stable code first; the local name never replaces it.
+ */
+export function writeOperations(
+  states: OperationStates,
+  preserved: readonly unknown[] = [],
+): { version: number; items: Array<OperationItem | unknown> } {
+  const items: Array<OperationItem | unknown> = [];
   for (const o of OPERATION_CATALOG) {
     const s = states[o.code];
     if (!s) continue;
@@ -99,7 +116,7 @@ export function writeOperations(states: OperationStates): { version: number; ite
     if (!s.selected && !name) continue;
     items.push({ operationCode: o.code, selected: s.selected, ...(name ? { localDisplayName: name } : {}) });
   }
-  return { version: OPERATIONS_VERSION, items };
+  return { version: OPERATIONS_VERSION, items: [...items, ...preserved] };
 }
 
 /**

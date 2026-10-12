@@ -115,21 +115,60 @@ describe('OnboardingWorkspace — declared revenue operations', () => {
     expect(out.futureField).toEqual([1, 2]);
   });
 
-  it('drops a code it does not recognise, and says so, rather than making the draft unsaveable', () => {
-    const doc = {
-      ...JSON.parse(versionless),
-      operations: {
-        version: 1,
-        items: [
-          { operationCode: 'Kanmanggay Space Rental', selected: true },
-          { operationCode: 'WCF', selected: true },
-        ],
-      },
-    };
+  it('keeps an operation it does not recognise untouched when another part of the form is saved', () => {
+    const future = { operationCode: 'FUTURE_FEE', selected: true, localDisplayName: 'Kinabukasan', extra: { n: 1 } };
+    const doc = { ...JSON.parse(versionless), operations: { version: 1, items: [future, { operationCode: 'WCF', selected: true }] } };
     const ws = workspace(JSON.stringify(doc));
 
-    expect(ws.droppedOperations()).toEqual(['Kanmanggay Space Rental']);
-    expect(codes(saved(ws))).toEqual(['WCF']);
+    expect(ws.preservedOperationNames()).toEqual(['FUTURE_FEE']);
+    ws.setAdmin('name', 'Someone Else');
+    const out = saved(ws);
+    expect(out.administrator.name).toBe('Someone Else');
+    expect(out.operations.items).toContainEqual(future); // byte-for-byte, not translated into anything else
+    expect(codes(out)).toEqual(['WCF', 'FUTURE_FEE']);
+  });
+
+  it('preserves a repeated code and an item with no boolean selected flag, rather than guessing', () => {
+    const repeat = { operationCode: 'WCF', selected: false };
+    const unflagged = { operationCode: 'ECF' };
+    const doc = { ...JSON.parse(versionless), operations: { version: 1, items: [{ operationCode: 'WCF', selected: true }, repeat, unflagged] } };
+    const ws = workspace(JSON.stringify(doc));
+
+    expect(ws.isOperationSelected('WCF')).toBe(true);
+    expect(ws.isOperationSelected('ECF')).toBe(false);
+    const out = saved(ws);
+    expect(out.operations.items).toContainEqual(repeat);
+    expect(out.operations.items).toContainEqual(unflagged);
+  });
+
+  it('removes preserved entries only when the office explicitly discards them', () => {
+    const doc = { ...JSON.parse(versionless), operations: { version: 1, items: [{ operationCode: 'FUTURE_FEE', selected: true }] } };
+    const ws = workspace(JSON.stringify(doc));
+
+    ws.discardPreservedOperations();
+    expect(codes(saved(ws))).toEqual([]);
+  });
+
+  it('matches the shared catalog contract of codes and standard labels', () => {
+    const contract = [
+      'FISH_MEAT_VENDOR_FEE|Fish / Meat Vendor Fee', 'WEIGHT_AND_MEASURE|Weight & Measure', 'MARKET_FEES|Market Fees',
+      'KANMANGGAY_SPACE_RENTAL|Municipal Space Rental', 'FIESTA_ARAW_LOT_RENTAL|Event / Temporary Lot Rental',
+      'VEGETABLE_FRUIT_SPACE_RENTAL|Vegetable / Fruit Space Rental', 'ECF|Electricity Consumption Fees',
+      'WCF|Water Consumption Fees', 'LANDING_BERTHING|Landing / Berthing', 'TRANSPORTATION|Transportation / Parking',
+      'TRANSFER_LARGE_CATTLE|Transfer Large Cattle',
+    ];
+    const ws = workspace();
+    expect(ws.operationCatalog.map((o) => `${o.code}|${o.label}`)).toEqual(contract);
+  });
+
+  it('does not describe ECF/WCF as reading-only: they follow verified service and direct or office-prepared collection', () => {
+    const ws = workspace();
+    for (const code of ['ECF', 'WCF']) {
+      const hint = ws.operationCatalog.find((o) => o.code === code)!.hint;
+      expect(hint).toMatch(/verified/);
+      expect(hint).toMatch(/directly or from an office-prepared bill/);
+      expect(hint).not.toMatch(/meter reading/i);
+    }
   });
 
   it('refuses a local name that reads as another operation, or repeats one, and blocks submission', () => {

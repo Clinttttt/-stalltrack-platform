@@ -6,6 +6,7 @@ import {
   OPERATION_GROUPS,
   OperationState,
   localNameProblem,
+  describePreserved,
   readOperations,
   writeOperations,
 } from './onboarding-operations';
@@ -619,7 +620,11 @@ export class OnboardingWorkspace {
   readonly operationCatalog = OPERATION_CATALOG;
   readonly operations = signal<Record<string, OperationState>>({});
   /** Codes in a saved draft that this workspace does not recognise; shown once so nothing vanishes silently. */
-  readonly droppedOperations = signal<string[]>([]);
+  readonly preservedOperations = signal<unknown[]>([]);
+  readonly preservedOperationNames = computed(() => this.preservedOperations().map(describePreserved));
+  discardPreservedOperations(): void {
+    this.preservedOperations.set([]);
+  }
 
   isOperationSelected(code: string): boolean {
     return this.operations()[code]?.selected === true;
@@ -710,7 +715,8 @@ export class OnboardingWorkspace {
       facilities,
       administrator: this.admin(),
       branding: this.branding(),
-      operations: writeOperations(this.operations()),
+      // Entries this version cannot edit go back exactly as they were read: saving another field never erases them.
+      operations: writeOperations(this.operations(), this.preservedOperations()),
     });
   }
 
@@ -726,7 +732,7 @@ export class OnboardingWorkspace {
       this.extras = rest;
       const ops = readOperations(cfg.operations);
       this.operations.set(ops.states);
-      this.droppedOperations.set(ops.dropped);
+      this.preservedOperations.set(ops.preserved);
       if (Array.isArray(cfg.facilities))
         this.facilities.set(
           cfg.facilities.map((f) => {

@@ -108,9 +108,39 @@ export function parseOperations(raw: unknown): ParsedOperations {
       problems.push(`${code}: the local display name is longer than ${MAX_LOCAL_NAME_LENGTH} characters.`);
       continue;
     }
+    // eslint-disable-next-line no-control-regex
+    if (/[\u0000-\u001f\u007f]/.test(name)) {
+      problems.push(`${code}: the local display name contains control characters.`);
+      continue;
+    }
     items.push({ operationCode: code, selected: e.selected, ...(name ? { localDisplayName: name } : {}) });
   }
-  return { items, problems };
+
+  // The same rules the server and the workspace apply to a SELECTED operation's local name, so the operator never reviews a
+  // name the server would have refused: it may not be another operation's standard name or another selected operation's name.
+  const used = new Map<string, string>();
+  const accepted: OperationDeclaration[] = [];
+  for (const item of items) {
+    const name = item.localDisplayName;
+    if (!item.selected || !name) {
+      accepted.push(item);
+      continue;
+    }
+    const key = name.toLowerCase();
+    const impersonated = OPERATION_CATALOG.find((o) => o.code !== item.operationCode && o.label.toLowerCase() === key);
+    if (impersonated) {
+      problems.push(`${item.operationCode}: the local display name “${name}” is the standard name of another operation (${impersonated.label}).`);
+      continue;
+    }
+    const other = used.get(key);
+    if (other) {
+      problems.push(`${item.operationCode}: the local display name “${name}” is already used by ${other}.`);
+      continue;
+    }
+    used.set(key, item.operationCode);
+    accepted.push(item);
+  }
+  return { items: accepted, problems };
 }
 
 /** The operations the office selected, in catalog order, ready to show the operator. */

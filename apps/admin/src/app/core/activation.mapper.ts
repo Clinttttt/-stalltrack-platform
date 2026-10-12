@@ -45,7 +45,7 @@ const VALID_MARKET_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday
 
 function num(s: string | undefined | null): number | undefined {
   if (s == null) return undefined;
-  const n = parseFloat(String(s).replace(/[^0-9.\-]/g, ''));
+  const n = parseFloat(String(s).replace(/[^0-9.-]/g, ''));
   return Number.isFinite(n) ? n : undefined;
 }
 
@@ -292,8 +292,9 @@ export function mapRequestToCommand(
       const free = CUSTOM_CODES.find((c) => !used.has(c));
       if (!free) {
         blockingErrors.push(
-          `"${f.name}" cannot be added: a municipality can register up to ${CUSTOM_CODES.length} facilities of its own. ` +
-            `Remove one, or add this facility from the Head Portal after activation.`,
+          `"${f.name}" cannot be filed: a municipality has ${CUSTOM_CODES.length} reserved slots for facilities of its own in total, ` +
+            `and the Head Portal's Add Facility uses the same slots, so it cannot be added there later either. ` +
+            `Return the draft so the LGU keeps at most ${CUSTOM_CODES.length}.`,
         );
         continue;
       }
