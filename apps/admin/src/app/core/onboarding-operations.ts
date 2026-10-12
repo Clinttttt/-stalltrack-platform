@@ -51,6 +51,10 @@ export interface OperationDeclaration {
 }
 
 export interface ParsedOperations {
+  /** A block was saved at all. False for every draft saved before declarations existed: nothing was ever asked. */
+  present: boolean;
+  /** A block was saved but cannot be read here (a newer version or another shape). Activation must not guess its meaning. */
+  unreadable: boolean;
   items: OperationDeclaration[];
   /** Plain-language reasons a saved block could not be read; empty when it is absent or sound. */
   problems: string[];
@@ -69,19 +73,19 @@ export interface DeclaredOperationRow {
  * simply "nothing declared". Anything unreadable is reported, never guessed at and never turned into a selection.
  */
 export function parseOperations(raw: unknown): ParsedOperations {
-  if (raw == null) return { items: [], problems: [] };
+  if (raw == null) return { present: false, unreadable: false, items: [], problems: [] };
   if (typeof raw !== 'object' || Array.isArray(raw)) {
-    return { items: [], problems: ['The declared revenue operations are not in a readable form.'] };
+    return { present: true, unreadable: true, items: [], problems: ['The declared revenue operations are not in a readable form.'] };
   }
   const block = raw as { version?: unknown; items?: unknown };
   const problems: string[] = [];
   if (block.version != null && (typeof block.version !== 'number' || block.version < 1 || block.version > OPERATIONS_VERSION)) {
     problems.push(`The declared revenue operations use an unsupported version (${String(block.version)}).`);
-    return { items: [], problems };
+    return { present: true, unreadable: true, items: [], problems };
   }
-  if (block.items == null) return { items: [], problems };
+  if (block.items == null) return { present: true, unreadable: false, items: [], problems };
   if (!Array.isArray(block.items)) {
-    return { items: [], problems: ['The declared revenue operations list is not in a readable form.'] };
+    return { present: true, unreadable: true, items: [], problems: ['The declared revenue operations list is not in a readable form.'] };
   }
 
   const known = new Set(OPERATION_CATALOG.map((o) => o.code));
@@ -140,7 +144,7 @@ export function parseOperations(raw: unknown): ParsedOperations {
     used.set(key, item.operationCode);
     accepted.push(item);
   }
-  return { items: accepted, problems };
+  return { present: true, unreadable: false, items: accepted, problems };
 }
 
 /** The operations the office selected, in catalog order, ready to show the operator. */

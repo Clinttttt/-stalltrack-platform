@@ -144,6 +144,13 @@
                             </div>
                           }
                         </div>
+                      } @else if (f.type === 'Monthly rental' || f.type === 'Custom') {
+                        <!-- A monthly rental has no facility-wide rate: the billing engine reads none, and rent is set for each
+                             space after activation. Showing "Base rate ₱ per month" with no figure implied one was missing. -->
+                        <div class="flex items-center justify-between gap-3">
+                          <span class="text-muted">Rate</span>
+                          <span class="text-right text-navy">Set for each space after activation</span>
+                        </div>
                       } @else if (f.type !== 'Daily stall') {
                         <div class="flex items-center justify-between gap-3">
                           <span class="text-muted">Base rate</span>
@@ -210,7 +217,7 @@
             <!-- Declared revenue operations: the office's initial intent, shown exactly as saved. -->
             <div class="mt-6 rounded-xl border border-line p-4">
               <div class="a-label mb-1">Declared revenue operations</div>
-              <p class="mb-2 text-xs text-muted">Initial intent only. A local name is an onboarding declaration for this review; it is not yet shown in the activated portal. None is activated, assigned to a Collector or given a rate at activation; the Head sets each up in the portal.</p>
+              <p class="mb-2 text-xs text-muted">At activation these become the municipality's operation list: only the operations below are listed in its Head Portal, under the names shown (the Head can change both in Settings). Listing is presentation only — none is activated, assigned to a Collector or given a rate; the Head sets each up in the portal.</p>
               @if (declaredOperations().length) {
                 <ul class="space-y-1.5 text-sm">
                   @for (op of declaredOperations(); track op.code) {

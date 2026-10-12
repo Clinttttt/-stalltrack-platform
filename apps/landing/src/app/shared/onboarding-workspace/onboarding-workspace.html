@@ -25,483 +25,6 @@
     </div>
 
     <div class="space-y-5">
-      <!-- ── Facilities pipeline (Section) ──────────────────────────────── -->
-      <div class="rounded-2xl border border-line bg-white p-5 shadow-soft sm:p-6">
-        <div class="flex items-start gap-3">
-          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" [class]="facilitiesDone() ? 'bg-green/10 text-green' : 'bg-navy text-gold'">
-            @if (facilitiesDone()) {
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
-            } @else {
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18" /><path d="M5 21V7l8-4v18" /><path d="M19 21V11l-6-4" /></svg>
-            }
-          </span>
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2">
-              <h3 class="font-display text-xl font-bold text-navy">Facilities &amp; fees</h3>
-              @if (facilitiesDone()) {
-                <span class="rounded-full bg-green-bg px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-green">Ready</span>
-              }
-              <span class="ml-auto rounded-full bg-mist px-2.5 py-0.5 text-[11px] font-bold text-muted">{{ doneFacilities() }}/{{ facilities().length }} configured</span>
-            </div>
-            <p class="mt-0.5 text-sm text-muted">Configure each facility you selected during assessment. Each is marked Done once its rate is set.</p>
-          </div>
-        </div>
-        <div class="mt-5">
-          <div class="mb-4 flex items-start gap-2 rounded-xl border border-dashed border-line bg-mist/50 px-3.5 py-2.5 text-xs text-muted">
-            <svg viewBox="0 0 24 24" class="mt-0.5 h-4 w-4 shrink-0 text-navy" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 8h.01M11 12h1v4h1" /></svg>
-            <span>Add only the facilities you operate, under your own names. Open each to set the rates it needs (for a slaughterhouse, its <strong>animal types</strong>). Individual stall and space rents, vendors, collectors, and staff are set up later in your live portal.</span>
-          </div>
-
-          <div class="space-y-3">
-            @for (f of facilities(); track f.id) {
-              <div [class]="'overflow-hidden rounded-xl border transition ' + (expandedId() === f.id ? 'border-gold/60 shadow-soft' : isFacilityDone(f) ? 'border-green/40' : 'border-line')">
-                <button type="button" (click)="toggleExpanded(f.id)" class="flex w-full items-center gap-3 bg-white px-4 py-3.5 text-left transition hover:bg-mist/40">
-                  <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg" [class]="isFacilityDone(f) ? 'bg-green/10 text-green' : 'bg-navy text-gold'">
-                    @if (isFacilityDone(f)) {
-                      <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
-                    } @else {
-                      <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18" /><path d="M5 21V7l8-4v18" /><path d="M19 21V11l-6-4" /></svg>
-                    }
-                  </span>
-                  <div class="min-w-0 flex-1">
-                    <div class="truncate font-display text-base font-bold text-navy">{{ f.name || 'New facility' }}</div>
-                    <div class="text-xs text-muted">{{ f.type }}{{ summaryFor(f) ? ' · ' + summaryFor(f) : '' }}</div>
-                  </div>
-                  <span [class]="'rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + (isFacilityDone(f) ? 'bg-green-bg text-green' : 'bg-amber-bg text-amber')">{{ isFacilityDone(f) ? 'Done' : 'To configure' }}</span>
-                  <svg viewBox="0 0 24 24" [class]="'h-4 w-4 text-muted transition-transform ' + (expandedId() === f.id ? 'rotate-180' : '')" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                </button>
-
-                @if (expandedId() === f.id) {
-                  <div class="border-t border-line bg-mist/30 p-4">
-                    <div class="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <label [class]="LABEL">Facility name</label>
-                        <input [class]="INPUT" [value]="f.name" (input)="setFacility(f.id, 'name', $any($event.target).value)" placeholder="e.g. New Public Market" />
-                        <p class="mt-1 text-[11px] leading-snug text-muted/80">The facility&rsquo;s official name as it appears on records. Its billing model is fixed by facility type.</p>
-                      </div>
-
-                      @if (showBaseRate(f)) {
-                        <div>
-                          <label [class]="LABEL">Base rate</label>
-                          <div class="relative">
-                            <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
-                            <input type="number" min="0" [value]="f.rateAmount" (input)="setFacility(f.id, 'rateAmount', $any($event.target).value)" [placeholder]="ratePlaceholderFor(f.type)" [class]="MONEY_INPUT" />
-                          </div>
-                          <p class="mt-1 text-[11px] leading-snug text-muted/80">{{ rateHelpFor(f.type) }}</p>
-                        </div>
-                      }
-
-                      @if (f.type === 'Weekly market') {
-                        <div>
-                          <label [class]="LABEL">Market day</label>
-                          <app-polished-select [options]="days" [value]="f.marketDay" (valueChange)="setFacility(f.id, 'marketDay', $event)" />
-                          <p class="mt-1 text-[11px] leading-snug text-muted/80">The weekday this market runs (e.g. Cantilan runs Fridays).</p>
-                        </div>
-                      }
-
-                      <div>
-                        <label [class]="LABEL">Ordinance reference <span class="font-normal normal-case text-muted/70">(optional)</span></label>
-                        <input [class]="INPUT" [value]="f.ordinance" (input)="setFacility(f.id, 'ordinance', $any($event.target).value)" placeholder="e.g. Municipal Ordinance No. 2019-05" />
-                        <p class="mt-1 text-[11px] leading-snug text-muted/80">The ordinance or revenue code that authorizes this fee (for audit &amp; receipts).</p>
-                      </div>
-                      <div class="sm:col-span-2">
-                        <label [class]="LABEL">Notes <span class="font-normal normal-case text-muted/70">(optional)</span></label>
-                        <input [class]="INPUT" [value]="f.notes" (input)="setFacility(f.id, 'notes', $any($event.target).value)" placeholder="e.g. market days, exemptions, special rules…" />
-                      </div>
-                    </div>
-
-                    @if (isPerHead(f)) {
-                      <!-- Per-head: explicit canonical billing identities + flexible office wording. -->
-                      <div class="mt-5 border-t border-line pt-4">
-                        <div class="flex items-center gap-2">
-                          <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82" /></svg>
-                          <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Animal labels &amp; per-head rates</span>
-                        </div>
-                        <p class="mt-1 text-xs text-muted">Choose the wording your office uses. StallTrack keeps Hog, Carabao, and Cow as stable animal types for billing.</p>
-
-                        @if (f.slaughterhouse?.legacyReviewRequired) {
-                          <div class="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
-                            <div class="font-bold">This older draft needs review before it can be submitted.</div>
-                            @for (message of f.slaughterhouse?.legacyReviewMessages || []; track message) {
-                              <div class="mt-1">{{ message }}</div>
-                            }
-                            <button type="button" (click)="confirmLegacySlaughterhouseReview(f.id)" class="mt-3 rounded-lg border border-amber-400 bg-white px-3 py-1.5 font-semibold">I reviewed and corrected the fields below</button>
-                          </div>
-                        }
-
-                        <div class="mt-3 grid gap-3 lg:grid-cols-2">
-                          <div class="rounded-xl border border-line bg-white p-4">
-                            <div class="text-xs font-bold uppercase tracking-wide text-navy">Hog rate</div>
-                            <div class="mt-3 grid gap-3 sm:grid-cols-2">
-                              <div>
-                                <label [class]="LABEL">Office label</label>
-                                <input [class]="INPUT" [value]="f.slaughterhouse?.hogLabel || ''" (input)="setSlaughterhouse(f.id, 'hogLabel', $any($event.target).value)" placeholder="Hog" />
-                              </div>
-                              <div>
-                                <label [class]="LABEL">Rate (per head)</label>
-                                <div class="relative">
-                                  <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
-                                  <input type="number" min="0" [value]="f.slaughterhouse?.hogAmount || ''" (input)="setSlaughterhouse(f.id, 'hogAmount', $any($event.target).value)" placeholder="250" [class]="MONEY_INPUT" />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="rounded-xl border border-line bg-white p-4">
-                            <div class="text-xs font-bold uppercase tracking-wide text-navy">Shared large-animal rate</div>
-                            <p class="mt-1 text-xs text-muted">Carabao and Cow remain separate animal types, but use one ordinance rate.</p>
-                            <div class="mt-3">
-                              <label [class]="LABEL">Rate (per head)</label>
-                              <div class="relative">
-                                <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
-                                <input type="number" min="0" [value]="f.slaughterhouse?.largeAnimalAmount || ''" (input)="setSlaughterhouse(f.id, 'largeAnimalAmount', $any($event.target).value)" placeholder="365" [class]="MONEY_INPUT" />
-                              </div>
-                            </div>
-                            <div class="mt-3 grid gap-3 sm:grid-cols-2">
-                              <div>
-                                <label [class]="LABEL">Carabao office label</label>
-                                <input [class]="INPUT" [value]="f.slaughterhouse?.carabaoLabel || ''" (input)="setSlaughterhouse(f.id, 'carabaoLabel', $any($event.target).value)" placeholder="Carabao" />
-                              </div>
-                              <div>
-                                <label [class]="LABEL">Cow office label</label>
-                                <input [class]="INPUT" [value]="f.slaughterhouse?.cowLabel || ''" (input)="setSlaughterhouse(f.id, 'cowLabel', $any($event.target).value)" placeholder="Cow" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="mt-4">
-                          <div class="text-[11px] font-bold uppercase tracking-wide text-muted">Additional animal types</div>
-                          <div class="mt-2 space-y-2">
-                          @for (r of f.slaughterhouse?.customAnimals || []; track r.id) {
-                            <div class="grid gap-3 rounded-lg border border-line bg-white p-3 sm:grid-cols-[1.6fr,1fr,auto] sm:items-end">
-                              <div>
-                                <label [class]="LABEL">Custom animal name</label>
-                                <input [class]="INPUT" [value]="r.label" (input)="setCustomAnimal(f.id, r.id, 'label', $any($event.target).value)" placeholder="e.g. Goat" />
-                              </div>
-                              <div>
-                                <label [class]="LABEL">Rate (per head)</label>
-                                <div class="relative">
-                                  <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
-                                  <input type="number" min="0" [value]="r.amount" (input)="setCustomAnimal(f.id, r.id, 'amount', $any($event.target).value)" placeholder="50" [class]="MONEY_INPUT" />
-                                </div>
-                              </div>
-                              <button type="button" (click)="removeCustomAnimal(f.id, r.id)" class="mb-0.5 inline-flex items-center justify-center rounded-lg border border-line px-2.5 py-2.5 text-muted transition hover:border-red/40 hover:text-red">
-                                <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
-                              </button>
-                            </div>
-                          }
-                          </div>
-                          <button type="button" (click)="addCustomAnimal(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
-                            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add animal
-                          </button>
-                        </div>
-                      </div>
-                    } @else if (f.type === 'Daily stall') {
-                      <!-- How a MONTH is measured, which decides whether a monthly amount exists at all. A market is
-                           collected per day either way; what a month owes is the ordinance's decision. Both answers are
-                           stated in the office's own figures, because the difference only becomes plain in the numbers. -->
-                      <div class="mt-5 border-t border-line pt-4">
-                        <div class="flex items-center gap-2">
-                          <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /></svg>
-                          <span class="text-[11px] font-bold uppercase tracking-wide text-muted">How a month is measured</span>
-                        </div>
-                        <p class="mt-1 text-xs text-muted">Your ordinance decides this.</p>
-
-                        <div class="mt-3 grid gap-2 sm:grid-cols-2">
-                          <label class="flex cursor-pointer items-start gap-3 rounded-lg border bg-white p-3"
-                                 [class.border-gold]="f.monthBasis !== 'PureDays'"
-                                 [class.border-line]="f.monthBasis === 'PureDays'">
-                            <input type="radio" [name]="'basis-' + f.id" class="mt-0.5 accent-navy"
-                                   [checked]="f.monthBasis !== 'PureDays'"
-                                   (change)="setFacility(f.id, 'monthBasis', 'RentGoal')" />
-                            <span>
-                              <span class="block text-sm font-semibold text-navy">Fixed monthly rent</span>
-                              <span class="block text-xs text-muted">The monthly obligation remains the same regardless of the number of days in the month.</span>
-                            </span>
-                          </label>
-
-                          <label class="flex cursor-pointer items-start gap-3 rounded-lg border bg-white p-3"
-                                 [class.border-gold]="f.monthBasis === 'PureDays'"
-                                 [class.border-line]="f.monthBasis !== 'PureDays'">
-                            <input type="radio" [name]="'basis-' + f.id" class="mt-0.5 accent-navy"
-                                   [checked]="f.monthBasis === 'PureDays'"
-                                   (change)="setFacility(f.id, 'monthBasis', 'PureDays')" />
-                            <span>
-                              <span class="block text-sm font-semibold text-navy">Calendar-day billing</span>
-                              <span class="block text-xs text-muted">The monthly obligation is based on the actual number of days in the month.</span>
-                            </span>
-                          </label>
-                        </div>
-
-                        <!-- Asked only where a month IS a rent. On the other basis no monthly amount exists to state, so the
-                             field is dropped rather than collected and ignored. -->
-                        @if (f.monthBasis !== 'PureDays') {
-                          <div class="mt-3 sm:max-w-[220px]">
-                            <label [class]="LABEL">Monthly rent <span class="font-normal text-muted">(optional)</span></label>
-                            <div class="relative">
-                              <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
-                              <input type="number" min="0" [value]="f.monthlyRent" (input)="setFacility(f.id, 'monthlyRent', $any($event.target).value)" [placeholder]="monthlyRentPlaceholder(f)" [class]="MONEY_INPUT" />
-                            </div>
-                            <p class="mt-1 text-xs text-muted">Left empty, a month is thirty daily rates.</p>
-                          </div>
-                        }
-                      </div>
-
-                      <!-- Market areas / sections (e.g. Fish, Meat, Vegetables) + per-section base rate & fees -->
-                      <div class="mt-5 border-t border-line pt-4">
-                        <div class="flex items-center gap-2">
-                          <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
-                          <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Market areas / sections</span>
-                        </div>
-                        <p class="mt-1 text-xs text-muted">
-                          Name each area in your own language and state its daily rate. An area left blank takes the first
-                          rate entered. The fish area carries a per-kilo weighing fee.
-                        </p>
-                        <div class="mt-3 space-y-2">
-                          @for (s of f.sections; track s.id) {
-                            <div class="rounded-lg border border-line bg-white p-3">
-                              <div class="grid gap-3 sm:grid-cols-[0.9fr,1fr,0.7fr,auto] sm:items-end">
-                                <div>
-                                  <label [class]="LABEL">Collection area</label>
-                                  <app-polished-select [options]="sectionKindOptions(f, s)" [value]="s.kind" (valueChange)="setSectionKind(f.id, s.id, $event)" />
-                                </div>
-                                <div>
-                                  <label [class]="LABEL">Your name for it</label>
-                                  <input [class]="INPUT" [value]="s.name" (input)="setSection(f.id, s.id, 'name', $any($event.target).value)" [placeholder]="sectionNamePlaceholder(s)" />
-                                  @if (needsOwnName(s)) {
-                                    <p class="mt-1 text-[11px] leading-snug text-amber">Required.</p>
-                                  }
-                                </div>
-                                <div>
-                                  <label [class]="LABEL">Base rate</label>
-                                  <div class="relative">
-                                    <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
-                                    <input type="number" min="0" [value]="s.rate" (input)="setSection(f.id, s.id, 'rate', $any($event.target).value)" placeholder="30" [class]="MONEY_INPUT" />
-                                  </div>
-                                </div>
-                                <button type="button" (click)="removeSection(f.id, s.id)" class="mb-0.5 inline-flex items-center justify-center rounded-lg border border-line px-2.5 py-2.5 text-muted transition hover:border-red/40 hover:text-red">
-                                  <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
-                                </button>
-                              </div>
-                              @if (isFishSection(s) && s.fees.length > 0) {
-                                <div class="mt-3 border-t border-line pt-3">
-                                  <div class="grid gap-3 sm:grid-cols-[0.7fr,auto] sm:items-end">
-                                    <div>
-                                      <label [class]="LABEL">Fish weighing fee</label>
-                                      <div class="relative">
-                                        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
-                                        <input type="number" min="0" [value]="s.fees[0].amount" (input)="setSecFee(f.id, s.id, s.fees[0].id, 'amount', $any($event.target).value)" placeholder="1" [class]="MONEY_INPUT" />
-                                      </div>
-                                    </div>
-                                    <div class="pb-2.5 text-sm font-medium text-muted">per kilo</div>
-                                  </div>
-                                  <p class="mt-1 text-[11px] leading-snug text-muted/80">Charged per kilogram weighed at the fish section (e.g. ₱1/kg).</p>
-                                </div>
-                              }
-                            </div>
-                          }
-                        </div>
-                        @if (canAddSection(f)) {
-                          <button type="button" (click)="addSection(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
-                            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add section
-                          </button>
-                        }
-                      </div>
-                    }
-
-                    <!-- Rent for a monthly rental / the office's own facility is set per space after activation. -->
-                    @if (isRentSetPerSpace(f)) {
-                      <p class="mt-4 rounded-lg border border-dashed border-line bg-mist/50 px-3 py-2 text-xs leading-snug text-muted">
-                        No rate is needed here. Each space&rsquo;s monthly rent is set in your portal after activation, once the spaces are registered.
-                      </p>
-                    }
-
-                    <!-- Electricity / water: declared under Revenue Operations, set up per stall after activation. An add-on an
-                         older draft saved stays visible and removable, so nothing the office typed disappears without a word. -->
-                    @if (f.type === 'Daily stall') {
-                    <div class="mt-5 border-t border-line pt-4">
-                      <div class="flex items-center gap-2">
-                        <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82" /></svg>
-                        <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Electricity &amp; water</span>
-                      </div>
-                      <p class="mt-1 text-xs text-muted">Metered utilities are billed per reading, so no rate is entered here. Declare them under Revenue Operations; which stalls are billed is set up per stall after activation.</p>
-                      @for (a of f.addOns; track a.id) {
-                        <div class="mt-3 flex items-start justify-between gap-3 rounded-lg border border-amber/40 bg-amber-bg/50 p-3 text-xs text-navy">
-                          <span>Saved earlier: <strong>{{ a.label }}</strong>, {{ a.basis.toLowerCase() }}{{ a.amount ? ' — ₱' + a.amount + ' ' + a.unit : '' }}. This is shown to your coordinator but not filed as a rate at activation.</span>
-                          <button type="button" (click)="removeFee(f.id, a.id)" class="shrink-0 font-semibold text-muted transition hover:text-red">Remove</button>
-                        </div>
-                      }
-                    </div>
-                    }
-
-                    <!-- Card actions -->
-                    <div class="mt-5 flex items-center justify-between gap-2 border-t border-line pt-4">
-                      <button type="button" (click)="removeFacility(f.id)" class="inline-flex items-center gap-1 text-xs font-semibold text-muted transition hover:text-red">
-                        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg> Remove facility
-                      </button>
-                      <button type="button" (click)="expandedId.set(null)" [disabled]="!isFacilityDone(f)" class="btn-navy !py-2" [class.cursor-not-allowed]="!isFacilityDone(f)" [class.opacity-50]="!isFacilityDone(f)">
-                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> {{ isFacilityDone(f) ? 'Done — collapse' : isPerHead(f) ? 'Add a rate to finish' : f.type === 'Daily stall' ? 'Price a section to finish' : isRentSetPerSpace(f) ? 'Name the facility to finish' : 'Set a base rate to finish' }}
-                      </button>
-                    </div>
-                  </div>
-                }
-              </div>
-            }
-          </div>
-
-          <div class="mt-4">
-            @if (picking()) {
-              <div class="rounded-xl border border-line bg-mist/40 p-3">
-                <div class="mb-2 flex items-center justify-between">
-                  <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Add a facility</span>
-                  <button type="button" (click)="picking.set(false)" class="text-xs font-semibold text-muted hover:text-navy">Cancel</button>
-                </div>
-                <div class="grid gap-2 sm:grid-cols-2">
-                  @for (c of catalog; track c.key) {
-                    <button type="button" (click)="addFromCatalog(c)" [disabled]="isCatalogUsed(c)"
-                      [class]="isCatalogUsed(c)
-                        ? 'group flex items-center gap-3 rounded-xl border border-line bg-mist px-3.5 py-2.5 text-left opacity-60 cursor-not-allowed'
-                        : 'group flex items-center gap-3 rounded-xl border border-line bg-white px-3.5 py-2.5 text-left transition hover:border-gold/60 hover:shadow-soft'">
-                      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-mist text-navy transition group-hover:bg-navy group-hover:text-gold">
-                        @switch (catalogIcon(c.type)) {
-                          @case ('coins') {
-                            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82" /></svg>
-                          }
-                          @case ('grid') {
-                            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
-                          }
-                          @default {
-                            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18" /><path d="M5 21V7l8-4v18" /><path d="M19 21V11l-6-4" /></svg>
-                          }
-                        }
-                      </span>
-                      <div class="min-w-0 flex-1">
-                        <div class="truncate text-sm font-semibold text-navy">{{ c.label.split(' — ')[0].split(' / ')[0].trim() }}</div>
-                        <div class="text-xs text-muted">{{ c.type }}{{ c.key === 'other' ? ' · up to 5 in total, including any added later' : '' }}</div>
-                      </div>
-                      @if (isCatalogUsed(c)) {
-                        <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700">
-                          <svg viewBox="0 0 24 24" class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5" /></svg>
-                          {{ c.key === 'other' ? 'Limit reached' : 'Added' }}
-                        </span>
-                      } @else {
-                        <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 text-muted transition group-hover:text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg>
-                      }
-                    </button>
-                  }
-                </div>
-              </div>
-            } @else {
-              <!-- One facility at a time. An office could otherwise add card after card while every one sat empty, and an
-                   unconfigured facility carries no rate - it would reach the platform as a space nobody can be billed for.
-                   Disabled AND explained, because a control that cannot act must look as though it cannot; the reason names the
-                   facility that is holding it, so the office knows where to go rather than hunting. -->
-              @if (unfinishedFacility()) {
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                  <button type="button" class="btn-navy cursor-not-allowed opacity-45" disabled>
-                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add facility
-                  </button>
-                  <span class="text-xs text-muted">Finish {{ unfinishedFacilityLabel() }} first.</span>
-                </div>
-              } @else {
-                <button type="button" (click)="picking.set(true)" class="btn-navy">
-                  <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add facility
-                </button>
-              }
-            }
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Revenue operations (Section, optional) ─────────────────────── -->
-      <div class="rounded-2xl border border-line bg-white p-5 shadow-soft sm:p-6">
-        <div class="flex items-start gap-3">
-          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-navy text-gold">
-            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10" /></svg>
-          </span>
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2">
-              <h3 class="font-display text-xl font-bold text-navy">Revenue Operations</h3>
-              <span class="rounded-full bg-mist px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-muted">Optional</span>
-              <span class="ml-auto rounded-full bg-mist px-2.5 py-0.5 text-[11px] font-bold text-muted">{{ selectedOperationCount() }} selected</span>
-            </div>
-            <p class="mt-0.5 text-sm text-muted">Choose the collection activities your municipality manages. You can complete their setup or make changes later in the Head Portal.</p>
-          </div>
-        </div>
-
-        <div class="mt-5 space-y-5">
-          @if (facilityOwnedOperations().length) {
-            <p class="rounded-xl border border-dashed border-line bg-mist/50 px-3.5 py-2.5 text-xs text-muted">
-              Already covered by your facilities: {{ facilityOwnedOperations().join(' · ') }}.
-            </p>
-          }
-
-          @if (lockedOperations() === null) {
-          @for (g of operationGroups; track g.key) {
-            <fieldset>
-              <legend class="text-[11px] font-bold uppercase tracking-wide text-muted">{{ g.label }}</legend>
-              <div class="mt-2 divide-y divide-line rounded-xl border border-line">
-                @for (op of operationCatalog; track op.code) {
-                  @if (op.group === g.key) {
-                    <div class="px-3.5 py-2.5">
-                      <label class="flex cursor-pointer items-start gap-3">
-                        <input type="checkbox" class="mt-1 h-4 w-4 shrink-0 accent-[#c9a227]" [checked]="isOperationSelected(op.code)" (change)="toggleOperation(op.code)" [attr.data-operation]="op.code" />
-                        <span class="min-w-0">
-                          <span class="block text-sm font-semibold text-navy">{{ op.label }}</span>
-                          <span class="block text-xs text-muted">{{ op.hint }}</span>
-                        </span>
-                      </label>
-                      @if (isOperationSelected(op.code)) {
-                        <div class="ml-7 mt-2 max-w-md">
-                          <label [class]="LABEL" [attr.for]="'op-name-' + op.code">Name for onboarding review (optional)</label>
-                          <input [id]="'op-name-' + op.code" [class]="INPUT" [value]="operationName(op.code)" [attr.maxlength]="maxLocalName"
-                            (input)="setOperationName(op.code, $any($event.target).value)" [placeholder]="op.label" />
-                          @if (operationProblem(op.code)) {
-                            <p class="mt-1 text-[11px] font-medium leading-snug text-red">{{ operationProblem(op.code) }}</p>
-                          } @else {
-                            <p class="mt-1 text-[11px] leading-snug text-muted/80">Your office&rsquo;s own name for this collection, recorded with your submission for review. It does not yet appear in your live portal or on receipts, and never changes how the collection is classified.</p>
-                          }
-                        </div>
-                      }
-                    </div>
-                  }
-                }
-              </div>
-            </fieldset>
-          }
-          }
-
-          @if (lockedOperations() !== null) {
-            <div class="rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-3 text-xs text-navy" role="status">
-              <p class="font-semibold">Revenue operations saved by a newer version of this workspace</p>
-              <p class="mt-1">This draft holds revenue operations in a format (version {{ lockedOperationsVersion() }}) this page cannot safely edit. They are kept exactly as saved &mdash; nothing is changed or downgraded &mdash; so the selector is hidden. Saving or submitting may be refused until this workspace is updated to read them. Your facilities, Head and branding can still be edited and saved.</p>
-              @if (confirmingDiscard()) {
-                <p class="mt-2 font-semibold text-red">This permanently removes these saved entries from your draft. Only do this if they are not yours.</p>
-                <button type="button" (click)="discardPreservedOperations()" class="mt-1.5 mr-3 font-semibold text-red underline">Yes, permanently discard</button>
-                <button type="button" (click)="cancelDiscardOperations()" class="mt-1.5 font-semibold underline">Keep them</button>
-              } @else {
-                <button type="button" (click)="askDiscardOperations()" class="mt-1.5 font-semibold underline">Discard these saved entries&hellip;</button>
-              }
-            </div>
-          }
-
-          @if (preservedOperations().length) {
-            <div class="rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-2.5 text-xs text-navy" role="status">
-              <p>{{ preservedOperations().length }} saved {{ preservedOperations().length === 1 ? 'entry' : 'entries' }} could not be read by this version ({{ preservedOperationNames().join(', ') }}). They are kept exactly as saved and are not deleted. If StallTrack does not recognise them, saving or submitting may be refused until this workspace supports them or you discard them.</p>
-              @if (confirmingDiscard()) {
-                <p class="mt-2 font-semibold text-red">This permanently removes these saved entries from your draft. Only do this if they are not yours.</p>
-                <button type="button" (click)="discardPreservedOperations()" class="mt-1.5 mr-3 font-semibold text-red underline">Yes, permanently discard</button>
-                <button type="button" (click)="cancelDiscardOperations()" class="mt-1.5 font-semibold underline">Keep them</button>
-              } @else {
-                <button type="button" (click)="askDiscardOperations()" class="mt-1.5 font-semibold underline">Discard these saved entries&hellip;</button>
-              }
-            </div>
-          }
-          <p class="text-xs text-muted">Choosing an operation records your intent only. It does not switch the collection on, register vendors or payors, or assign Collectors &mdash; the Head does that in the portal. Local names are recorded for your coordinator&rsquo;s review and are not yet shown in your live portal.</p>
-        </div>
-      </div>
-
       <!-- ── Administrator account (Section) ────────────────────────────── -->
       <div class="rounded-2xl border border-line bg-white p-5 shadow-soft sm:p-6">
         <div class="flex items-start gap-3">
@@ -598,6 +121,422 @@
               }
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- The facility card, rendered inside whichever revenue group the facility belongs to. -->
+      <ng-template #facilityCard let-f>
+          <div [class]="'overflow-hidden rounded-xl border transition ' + (expandedId() === f.id ? 'border-gold/60 shadow-soft' : isFacilityDone(f) ? 'border-green/40' : 'border-line')">
+            <button type="button" (click)="toggleExpanded(f.id)" class="flex w-full items-center gap-3 bg-white px-4 py-3.5 text-left transition hover:bg-mist/40">
+              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg" [class]="isFacilityDone(f) ? 'bg-green/10 text-green' : 'bg-navy text-gold'">
+                @if (isFacilityDone(f)) {
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+                } @else {
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18" /><path d="M5 21V7l8-4v18" /><path d="M19 21V11l-6-4" /></svg>
+                }
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="truncate font-display text-base font-bold text-navy">{{ f.name || 'New facility' }}</div>
+                <div class="text-xs text-muted">{{ f.type }}{{ summaryFor(f) ? ' · ' + summaryFor(f) : '' }}</div>
+              </div>
+              <span [class]="'rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + (isFacilityDone(f) ? 'bg-green-bg text-green' : 'bg-amber-bg text-amber')">{{ isFacilityDone(f) ? 'Done' : 'To configure' }}</span>
+              <svg viewBox="0 0 24 24" [class]="'h-4 w-4 text-muted transition-transform ' + (expandedId() === f.id ? 'rotate-180' : '')" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+            </button>
+    
+            @if (expandedId() === f.id) {
+              <div class="border-t border-line bg-mist/30 p-4">
+                <div class="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label [class]="LABEL">Facility name</label>
+                    <input [class]="INPUT" [value]="f.name" (input)="setFacility(f.id, 'name', $any($event.target).value)" placeholder="e.g. New Public Market" />
+                    <p class="mt-1 text-[11px] leading-snug text-muted/80">The facility&rsquo;s official name as it appears on records. Its billing model is fixed by facility type.</p>
+                  </div>
+    
+                  @if (showBaseRate(f)) {
+                    <div>
+                      <label [class]="LABEL">Base rate</label>
+                      <div class="relative">
+                        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
+                        <input type="number" min="0" [value]="f.rateAmount" (input)="setFacility(f.id, 'rateAmount', $any($event.target).value)" [placeholder]="ratePlaceholderFor(f.type)" [class]="MONEY_INPUT" />
+                      </div>
+                      <p class="mt-1 text-[11px] leading-snug text-muted/80">{{ rateHelpFor(f.type) }}</p>
+                    </div>
+                  }
+    
+                  @if (f.type === 'Weekly market') {
+                    <div>
+                      <label [class]="LABEL">Market day</label>
+                      <app-polished-select [options]="days" [value]="f.marketDay" (valueChange)="setFacility(f.id, 'marketDay', $event)" />
+                      <p class="mt-1 text-[11px] leading-snug text-muted/80">The weekday this market runs (e.g. Cantilan runs Fridays).</p>
+                    </div>
+                  }
+    
+                  <div>
+                    <label [class]="LABEL">Ordinance reference <span class="font-normal normal-case text-muted/70">(optional)</span></label>
+                    <input [class]="INPUT" [value]="f.ordinance" (input)="setFacility(f.id, 'ordinance', $any($event.target).value)" placeholder="e.g. Municipal Ordinance No. 2019-05" />
+                    <p class="mt-1 text-[11px] leading-snug text-muted/80">The ordinance or revenue code that authorizes this fee (for audit &amp; receipts).</p>
+                  </div>
+                  <div class="sm:col-span-2">
+                    <label [class]="LABEL">Notes <span class="font-normal normal-case text-muted/70">(optional)</span></label>
+                    <input [class]="INPUT" [value]="f.notes" (input)="setFacility(f.id, 'notes', $any($event.target).value)" placeholder="e.g. market days, exemptions, special rules…" />
+                  </div>
+                </div>
+    
+                @if (isPerHead(f)) {
+                  <!-- Per-head: explicit canonical billing identities + flexible office wording. -->
+                  <div class="mt-5 border-t border-line pt-4">
+                    <div class="flex items-center gap-2">
+                      <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82" /></svg>
+                      <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Animal labels &amp; per-head rates</span>
+                    </div>
+                    <p class="mt-1 text-xs text-muted">Choose the wording your office uses. StallTrack keeps Hog, Carabao, and Cow as stable animal types for billing.</p>
+    
+                    @if (f.slaughterhouse?.legacyReviewRequired) {
+                      <div class="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+                        <div class="font-bold">This older draft needs review before it can be submitted.</div>
+                        @for (message of f.slaughterhouse?.legacyReviewMessages || []; track message) {
+                          <div class="mt-1">{{ message }}</div>
+                        }
+                        <button type="button" (click)="confirmLegacySlaughterhouseReview(f.id)" class="mt-3 rounded-lg border border-amber-400 bg-white px-3 py-1.5 font-semibold">I reviewed and corrected the fields below</button>
+                      </div>
+                    }
+    
+                    <div class="mt-3 grid gap-3 lg:grid-cols-2">
+                      <div class="rounded-xl border border-line bg-white p-4">
+                        <div class="text-xs font-bold uppercase tracking-wide text-navy">Hog rate</div>
+                        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <label [class]="LABEL">Office label</label>
+                            <input [class]="INPUT" [value]="f.slaughterhouse?.hogLabel || ''" (input)="setSlaughterhouse(f.id, 'hogLabel', $any($event.target).value)" placeholder="Hog" />
+                          </div>
+                          <div>
+                            <label [class]="LABEL">Rate (per head)</label>
+                            <div class="relative">
+                              <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
+                              <input type="number" min="0" [value]="f.slaughterhouse?.hogAmount || ''" (input)="setSlaughterhouse(f.id, 'hogAmount', $any($event.target).value)" placeholder="250" [class]="MONEY_INPUT" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+    
+                      <div class="rounded-xl border border-line bg-white p-4">
+                        <div class="text-xs font-bold uppercase tracking-wide text-navy">Shared large-animal rate</div>
+                        <p class="mt-1 text-xs text-muted">Carabao and Cow remain separate animal types, but use one ordinance rate.</p>
+                        <div class="mt-3">
+                          <label [class]="LABEL">Rate (per head)</label>
+                          <div class="relative">
+                            <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
+                            <input type="number" min="0" [value]="f.slaughterhouse?.largeAnimalAmount || ''" (input)="setSlaughterhouse(f.id, 'largeAnimalAmount', $any($event.target).value)" placeholder="365" [class]="MONEY_INPUT" />
+                          </div>
+                        </div>
+                        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <label [class]="LABEL">Carabao office label</label>
+                            <input [class]="INPUT" [value]="f.slaughterhouse?.carabaoLabel || ''" (input)="setSlaughterhouse(f.id, 'carabaoLabel', $any($event.target).value)" placeholder="Carabao" />
+                          </div>
+                          <div>
+                            <label [class]="LABEL">Cow office label</label>
+                            <input [class]="INPUT" [value]="f.slaughterhouse?.cowLabel || ''" (input)="setSlaughterhouse(f.id, 'cowLabel', $any($event.target).value)" placeholder="Cow" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+    
+                    <div class="mt-4">
+                      <div class="text-[11px] font-bold uppercase tracking-wide text-muted">Additional animal types</div>
+                      <div class="mt-2 space-y-2">
+                      @for (r of f.slaughterhouse?.customAnimals || []; track r.id) {
+                        <div class="grid gap-3 rounded-lg border border-line bg-white p-3 sm:grid-cols-[1.6fr,1fr,auto] sm:items-end">
+                          <div>
+                            <label [class]="LABEL">Custom animal name</label>
+                            <input [class]="INPUT" [value]="r.label" (input)="setCustomAnimal(f.id, r.id, 'label', $any($event.target).value)" placeholder="e.g. Goat" />
+                          </div>
+                          <div>
+                            <label [class]="LABEL">Rate (per head)</label>
+                            <div class="relative">
+                              <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
+                              <input type="number" min="0" [value]="r.amount" (input)="setCustomAnimal(f.id, r.id, 'amount', $any($event.target).value)" placeholder="50" [class]="MONEY_INPUT" />
+                            </div>
+                          </div>
+                          <button type="button" (click)="removeCustomAnimal(f.id, r.id)" class="mb-0.5 inline-flex items-center justify-center rounded-lg border border-line px-2.5 py-2.5 text-muted transition hover:border-red/40 hover:text-red">
+                            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+                          </button>
+                        </div>
+                      }
+                      </div>
+                      <button type="button" (click)="addCustomAnimal(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
+                        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add animal
+                      </button>
+                    </div>
+                  </div>
+                } @else if (f.type === 'Daily stall') {
+                  <!-- How a MONTH is measured, which decides whether a monthly amount exists at all. A market is
+                       collected per day either way; what a month owes is the ordinance's decision. Both answers are
+                       stated in the office's own figures, because the difference only becomes plain in the numbers. -->
+                  <div class="mt-5 border-t border-line pt-4">
+                    <div class="flex items-center gap-2">
+                      <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /></svg>
+                      <span class="text-[11px] font-bold uppercase tracking-wide text-muted">How a month is measured</span>
+                    </div>
+                    <p class="mt-1 text-xs text-muted">Your ordinance decides this.</p>
+    
+                    <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                      <label class="flex cursor-pointer items-start gap-3 rounded-lg border bg-white p-3"
+                             [class.border-gold]="f.monthBasis !== 'PureDays'"
+                             [class.border-line]="f.monthBasis === 'PureDays'">
+                        <input type="radio" [name]="'basis-' + f.id" class="mt-0.5 accent-navy"
+                               [checked]="f.monthBasis !== 'PureDays'"
+                               (change)="setFacility(f.id, 'monthBasis', 'RentGoal')" />
+                        <span>
+                          <span class="block text-sm font-semibold text-navy">Fixed monthly rent</span>
+                          <span class="block text-xs text-muted">The monthly obligation remains the same regardless of the number of days in the month.</span>
+                        </span>
+                      </label>
+    
+                      <label class="flex cursor-pointer items-start gap-3 rounded-lg border bg-white p-3"
+                             [class.border-gold]="f.monthBasis === 'PureDays'"
+                             [class.border-line]="f.monthBasis !== 'PureDays'">
+                        <input type="radio" [name]="'basis-' + f.id" class="mt-0.5 accent-navy"
+                               [checked]="f.monthBasis === 'PureDays'"
+                               (change)="setFacility(f.id, 'monthBasis', 'PureDays')" />
+                        <span>
+                          <span class="block text-sm font-semibold text-navy">Calendar-day billing</span>
+                          <span class="block text-xs text-muted">The monthly obligation is based on the actual number of days in the month.</span>
+                        </span>
+                      </label>
+                    </div>
+    
+                    <!-- Asked only where a month IS a rent. On the other basis no monthly amount exists to state, so the
+                         field is dropped rather than collected and ignored. -->
+                    @if (f.monthBasis !== 'PureDays') {
+                      <div class="mt-3 sm:max-w-[220px]">
+                        <label [class]="LABEL">Monthly rent <span class="font-normal text-muted">(optional)</span></label>
+                        <div class="relative">
+                          <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
+                          <input type="number" min="0" [value]="f.monthlyRent" (input)="setFacility(f.id, 'monthlyRent', $any($event.target).value)" [placeholder]="monthlyRentPlaceholder(f)" [class]="MONEY_INPUT" />
+                        </div>
+                        <p class="mt-1 text-xs text-muted">Left empty, a month is thirty daily rates.</p>
+                      </div>
+                    }
+                  </div>
+    
+                  <!-- Market areas / sections (e.g. Fish, Meat, Vegetables) + per-section base rate & fees -->
+                  <div class="mt-5 border-t border-line pt-4">
+                    <div class="flex items-center gap-2">
+                      <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+                      <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Market areas / sections</span>
+                    </div>
+                    <p class="mt-1 text-xs text-muted">
+                      Name each area in your own language and state its daily rate. An area left blank takes the first
+                      rate entered. The fish area carries a per-kilo weighing fee.
+                    </p>
+                    <div class="mt-3 space-y-2">
+                      @for (s of f.sections; track s.id) {
+                        <div class="rounded-lg border border-line bg-white p-3">
+                          <div class="grid gap-3 sm:grid-cols-[0.9fr,1fr,0.7fr,auto] sm:items-end">
+                            <div>
+                              <label [class]="LABEL">Collection area</label>
+                              <app-polished-select [options]="sectionKindOptions(f, s)" [value]="s.kind" (valueChange)="setSectionKind(f.id, s.id, $event)" />
+                            </div>
+                            <div>
+                              <label [class]="LABEL">Your name for it</label>
+                              <input [class]="INPUT" [value]="s.name" (input)="setSection(f.id, s.id, 'name', $any($event.target).value)" [placeholder]="sectionNamePlaceholder(s)" />
+                              @if (needsOwnName(s)) {
+                                <p class="mt-1 text-[11px] leading-snug text-amber">Required.</p>
+                              }
+                            </div>
+                            <div>
+                              <label [class]="LABEL">Base rate</label>
+                              <div class="relative">
+                                <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
+                                <input type="number" min="0" [value]="s.rate" (input)="setSection(f.id, s.id, 'rate', $any($event.target).value)" placeholder="30" [class]="MONEY_INPUT" />
+                              </div>
+                            </div>
+                            <button type="button" (click)="removeSection(f.id, s.id)" class="mb-0.5 inline-flex items-center justify-center rounded-lg border border-line px-2.5 py-2.5 text-muted transition hover:border-red/40 hover:text-red">
+                              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+                            </button>
+                          </div>
+                          @if (isFishSection(s) && s.fees.length > 0) {
+                            <div class="mt-3 border-t border-line pt-3">
+                              <div class="grid gap-3 sm:grid-cols-[0.7fr,auto] sm:items-end">
+                                <div>
+                                  <label [class]="LABEL">Fish weighing fee</label>
+                                  <div class="relative">
+                                    <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">₱</span>
+                                    <input type="number" min="0" [value]="s.fees[0].amount" (input)="setSecFee(f.id, s.id, s.fees[0].id, 'amount', $any($event.target).value)" placeholder="1" [class]="MONEY_INPUT" />
+                                  </div>
+                                </div>
+                                <div class="pb-2.5 text-sm font-medium text-muted">per kilo</div>
+                              </div>
+                              <p class="mt-1 text-[11px] leading-snug text-muted/80">Charged per kilogram weighed at the fish section (e.g. ₱1/kg).</p>
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                    @if (canAddSection(f)) {
+                      <button type="button" (click)="addSection(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
+                        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add section
+                      </button>
+                    }
+                  </div>
+                }
+    
+                <!-- Rent for a monthly rental / the office's own facility is set per space after activation. -->
+                @if (isRentSetPerSpace(f)) {
+                  <p class="mt-4 rounded-lg border border-dashed border-line bg-mist/50 px-3 py-2 text-xs leading-snug text-muted">
+                    No rate is needed here. Each space&rsquo;s monthly rent is set in your portal after activation, once the spaces are registered.
+                  </p>
+                }
+    
+                <!-- Electricity / water: declared under Revenue Operations, set up per stall after activation. An add-on an
+                     older draft saved stays visible and removable, so nothing the office typed disappears without a word. -->
+                @if (f.type === 'Daily stall') {
+                <div class="mt-5 border-t border-line pt-4">
+                  <div class="flex items-center gap-2">
+                    <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82" /></svg>
+                    <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Electricity &amp; water</span>
+                  </div>
+                  <p class="mt-1 text-xs text-muted">Metered utilities are billed per reading, so no rate is entered here. Declare them under Revenue Operations; which stalls are billed is set up per stall after activation.</p>
+                  @for (a of f.addOns; track a.id) {
+                    <div class="mt-3 flex items-start justify-between gap-3 rounded-lg border border-amber/40 bg-amber-bg/50 p-3 text-xs text-navy">
+                      <span>Saved earlier: <strong>{{ a.label }}</strong>, {{ a.basis.toLowerCase() }}{{ a.amount ? ' — ₱' + a.amount + ' ' + a.unit : '' }}. This is shown to your coordinator but not filed as a rate at activation.</span>
+                      <button type="button" (click)="removeFee(f.id, a.id)" class="shrink-0 font-semibold text-muted transition hover:text-red">Remove</button>
+                    </div>
+                  }
+                </div>
+                }
+    
+                <!-- Card actions -->
+                <div class="mt-5 flex items-center justify-between gap-2 border-t border-line pt-4">
+                  <button type="button" (click)="removeFacility(f.id)" class="inline-flex items-center gap-1 text-xs font-semibold text-muted transition hover:text-red">
+                    <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg> Remove facility
+                  </button>
+                  <button type="button" (click)="expandedId.set(null)" [disabled]="!isFacilityDone(f)" class="btn-navy !py-2" [class.cursor-not-allowed]="!isFacilityDone(f)" [class.opacity-50]="!isFacilityDone(f)">
+                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> {{ isFacilityDone(f) ? 'Done — collapse' : isPerHead(f) ? 'Add a rate to finish' : f.type === 'Daily stall' ? 'Price a section to finish' : isRentSetPerSpace(f) ? 'Name the facility to finish' : 'Set a base rate to finish' }}
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+      </ng-template>
+
+      <!-- ── Revenue operations, grouped as the official Monthly Income statement groups them ──────────────── -->
+      <div class="rounded-2xl border border-line bg-white p-5 shadow-soft sm:p-6">
+        <div class="flex items-start gap-3">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" [class]="facilitiesDone() ? 'bg-green/10 text-green' : 'bg-navy text-gold'">
+            @if (facilitiesDone()) {
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+            } @else {
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10" /></svg>
+            }
+          </span>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <h3 class="font-display text-xl font-bold text-navy">Revenue Operations</h3>
+              @if (facilitiesDone()) {
+                <span class="rounded-full bg-green-bg px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-green">Ready</span>
+              }
+              <span class="ml-auto flex gap-2">
+                <span class="rounded-full bg-mist px-2.5 py-0.5 text-[11px] font-bold text-muted">{{ doneFacilities() }}/{{ facilities().length }} facilities configured</span>
+                <span class="rounded-full bg-mist px-2.5 py-0.5 text-[11px] font-bold text-muted">{{ selectedOperationCount() }} operations selected</span>
+              </span>
+            </div>
+            <p class="mt-0.5 text-sm text-muted">Choose the collection activities your municipality manages, under the same groups as your Monthly Income statement. Add only the facilities you operate, under your own names. You can complete setup or make changes later in the Head Portal.</p>
+          </div>
+        </div>
+
+        @if (unfinishedFacility()) {
+          <p class="mt-4 rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-2 text-xs text-navy" role="status">Finish {{ unfinishedFacilityLabel() }} before adding another facility.</p>
+        }
+
+        <div class="mt-5 space-y-6">
+          @for (g of revenueGroups; track g.key) {
+            <section [attr.aria-labelledby]="'rg-' + g.key" [attr.data-group]="g.key">
+              <h4 [id]="'rg-' + g.key" class="border-b border-line pb-1.5 font-display text-base font-bold text-navy">{{ g.label }}</h4>
+              <p class="mt-1.5 text-xs text-muted">{{ g.hint }}</p>
+
+              @if (facilitiesInGroup(g.key).length) {
+                <div class="mt-3 space-y-3">
+                  @for (f of facilitiesInGroup(g.key); track f.id) {
+                    <ng-container [ngTemplateOutlet]="facilityCard" [ngTemplateOutletContext]="{ $implicit: f }" />
+                  }
+                </div>
+              }
+
+              @if (catalogInGroup(g.key).length) {
+                <div class="mt-3 flex flex-wrap gap-2">
+                  @for (c of catalogInGroup(g.key); track c.key) {
+                    <button type="button" (click)="addFromCatalog(c)" [disabled]="isCatalogUsed(c) || !!unfinishedFacility()" [attr.data-add-facility]="c.key"
+                      class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy disabled:cursor-not-allowed disabled:opacity-50">
+                      <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                      {{ isCatalogUsed(c) ? (c.key === 'other' ? 'Limit of 5 reached' : catalogName(c) + ' added') : 'Add ' + catalogName(c) }}
+                    </button>
+                  }
+                </div>
+                @if (g.key === 'rent') {
+                  <p class="mt-2 text-[11px] leading-snug text-muted/80">A rental facility of your own (for example a second commercial center) is filed as a monthly-rental facility. Its place on the official statement is still awaiting an approved grouping, so it is kept under its own name. You can have up to 5 of these in total, including any added later in the Head Portal.</p>
+                }
+              }
+
+              @if (lockedOperations() === null && operationsInGroup(g.key).length) {
+                <div class="mt-3 divide-y divide-line rounded-xl border border-line">
+                  @for (op of operationsInGroup(g.key); track op.code) {
+                    <div class="px-3.5 py-2.5">
+                      <label class="flex cursor-pointer items-start gap-3">
+                        <input type="checkbox" class="mt-1 h-4 w-4 shrink-0 accent-[#c9a227]" [checked]="isOperationSelected(op.code)" (change)="toggleOperation(op.code)" [attr.data-operation]="op.code" />
+                        <span class="min-w-0">
+                          <span class="block text-sm font-semibold text-navy">{{ op.label }}</span>
+                          <span class="block text-xs text-muted">{{ op.hint }}</span>
+                        </span>
+                      </label>
+                      @if (isOperationSelected(op.code)) {
+                        <div class="ml-7 mt-2 max-w-md">
+                          <label [class]="LABEL" [attr.for]="'op-name-' + op.code">Your name for it (optional)</label>
+                          <input [id]="'op-name-' + op.code" [class]="INPUT" [value]="operationName(op.code)" [attr.maxlength]="maxLocalName"
+                            (input)="setOperationName(op.code, $any($event.target).value)" [placeholder]="op.label" />
+                          @if (operationProblem(op.code)) {
+                            <p class="mt-1 text-[11px] font-medium leading-snug text-red">{{ operationProblem(op.code) }}</p>
+                          } @else {
+                            <p class="mt-1 text-[11px] leading-snug text-muted/80">Your office&rsquo;s own name for this collection. It is used in your Head Portal&rsquo;s Operations list, and the Head can change it later in Settings. It never changes how the collection is classified or which receipt it uses.</p>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+          }
+
+          @if (lockedOperations() !== null) {
+            <div class="rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-3 text-xs text-navy" role="status">
+              <p class="font-semibold">Revenue operations saved by a newer version of this workspace</p>
+              <p class="mt-1">This draft holds revenue operations in a format (version {{ lockedOperationsVersion() }}) this page cannot safely edit. They are kept exactly as saved &mdash; nothing is changed or downgraded &mdash; so the operation choices are hidden. <strong>The draft cannot be saved or submitted while they are kept</strong>, because the platform will refuse a format it does not read, even for changes to your facilities, Head or branding. Use a newer version of this workspace, or discard the saved operations below and choose them again.</p>
+              @if (confirmingDiscard()) {
+                <p class="mt-2 font-semibold text-red">This permanently removes these saved operations from your draft. Only do this if they are not yours.</p>
+                <button type="button" (click)="discardLockedOperations()" class="mt-1.5 mr-3 font-semibold text-red underline">Yes, permanently discard</button>
+                <button type="button" (click)="cancelDiscardOperations()" class="mt-1.5 font-semibold underline">Keep them</button>
+              } @else {
+                <button type="button" (click)="askDiscardOperations()" class="mt-1.5 font-semibold underline">Discard these saved operations&hellip;</button>
+              }
+            </div>
+          }
+
+          @if (preservedOperations().length) {
+            <div class="rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-2.5 text-xs text-navy" role="status">
+              <p>{{ preservedOperations().length }} saved {{ preservedOperations().length === 1 ? 'entry' : 'entries' }} could not be read by this version ({{ preservedOperationNames().join(', ') }}). They are kept exactly as saved and are not deleted. If StallTrack does not recognise them, saving or submitting may be refused until this workspace supports them or you discard them.</p>
+              @if (confirmingDiscard()) {
+                <p class="mt-2 font-semibold text-red">This permanently removes only these entries from your draft. Everything else you chose stays.</p>
+                <button type="button" (click)="discardPreservedEntries()" class="mt-1.5 mr-3 font-semibold text-red underline">Yes, permanently discard</button>
+                <button type="button" (click)="cancelDiscardOperations()" class="mt-1.5 font-semibold underline">Keep them</button>
+              } @else {
+                <button type="button" (click)="askDiscardOperations()" class="mt-1.5 font-semibold underline">Discard these saved entries&hellip;</button>
+              }
+            </div>
+          }
+
+          <p class="text-xs text-muted">Choosing an operation records your intent and your name for it. It does not switch the collection on, register vendors or payors, assign Collectors, or set a rate &mdash; the Head does that in the portal. Individual stall and space rents, vendors, collectors, and staff are set up later in your live portal.</p>
         </div>
       </div>
 

@@ -138,6 +138,10 @@ export interface Config {
   operations?: OperationDeclaration[];
   /** Why a saved declaration block could not be read, so the operator sees it instead of a silent empty list. */
   operationProblems?: string[];
+  /** The saved workspace carried an operations block at all (false for a draft saved before declarations existed). */
+  operationsDeclared?: boolean;
+  /** The block exists but this console cannot read it, so activation must not guess what the office chose. */
+  operationsUnreadable?: boolean;
 }
 
 export interface ChecklistItem {

@@ -18,20 +18,33 @@ export interface OnboardingDraftDto {
 
 export type DraftResult = { ok: true; draft: OnboardingDraftDto } | { ok: false; error: string };
 
-function describeError(e: unknown): string {
+/**
+ * The reason the platform refused a save or submit, in its own words. A validation refusal carries its reasons under `error`
+ * (field -> messages); showing only the headline "Validation failed" left an office guessing what to fix.
+ */
+export function describeError(e: unknown): string {
   const err = e as { status?: number; error?: unknown };
   const s = err?.status;
   if (s === 404) return 'This onboarding link is invalid or has expired.';
   if (s === 0) return 'Cannot reach the server. Please check your connection and try again.';
   if (s === 429) return 'Too many requests. Please wait a moment and try again.';
-  const body = err?.error as { detail?: string; message?: string; title?: string } | string | undefined;
+  const body = err?.error as { detail?: string; message?: string; title?: string; error?: unknown } | string | undefined;
   if (typeof body === 'string' && body.trim()) return body;
   if (body && typeof body === 'object') {
+    const reasons = validationReasons(body.error);
+    if (reasons.length) return `${typeof body.message === 'string' ? body.message : 'Validation failed'}: ${reasons.join(' ')}`;
     if (typeof body.detail === 'string') return body.detail;
     if (typeof body.message === 'string') return body.message;
     if (typeof body.title === 'string') return body.title;
   }
   return 'Something went wrong. Please try again.';
+}
+
+function validationReasons(errors: unknown): string[] {
+  if (!errors || typeof errors !== 'object') return [];
+  return Object.values(errors as Record<string, unknown>)
+    .flatMap((v) => (Array.isArray(v) ? v : [v]))
+    .filter((m): m is string => typeof m === 'string' && m.trim().length > 0);
 }
 
 /** Data-access seam for the LGU onboarding workspace (Stage 2, by secure token). */

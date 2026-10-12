@@ -150,7 +150,7 @@
                             <li>{{ op.label }}@if (op.localName) { — “{{ op.localName }}” }</li>
                           }
                         </ul>
-                        <div class="mt-1 text-muted">Declared by the office as initial intent. These do not block activation and nothing is enabled by it.</div>
+                        <div class="mt-1 text-muted">Recorded as the municipality's operation list: only these are listed in its Head Portal, under the names shown. They do not block activation, and nothing is enabled, assigned or priced by it.</div>
                       </div>
                     }
                     @if (warnings().length) {
@@ -207,14 +207,22 @@
                 <span class="ml-auto rounded-full border border-line bg-white px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-navy">Active</span>
               </div>
               <div class="space-y-4 p-4">
+                <p class="rounded-lg border border-line bg-mist/50 px-3 py-2 text-xs text-muted" role="status">
+                  Activation is complete. {{ r.municipality }}'s request has moved from this queue to <strong>Activation history</strong>;
+                  it leaves the queue the next time the list refreshes. The Head account stays inactive until the Head sets a password through the link below.
+                </p>
                 <div>
                   <div class="a-label mb-1.5">
                     <app-icon name="key" className="mr-1 inline h-3.5 w-3.5 text-gold" />
                     Head account-activation link (emailed to the Head)
                   </div>
                   <div class="flex items-center gap-2">
-                    <code class="flex-1 break-all rounded-lg bg-navy px-3 py-2 text-xs text-gold-light">{{ r.headActivationLink }}</code>
-                    <button class="a-btn-ghost !px-3 !py-2" (click)="copyLink()">
+                    @if (r.headActivationLink) {
+                      <code class="flex-1 break-all rounded-lg bg-navy px-3 py-2 text-xs text-gold-light">{{ r.headActivationLink }}</code>
+                    } @else {
+                      <span class="flex-1 rounded-lg border border-line bg-mist/50 px-3 py-2 text-xs text-muted">No link was returned by the API.</span>
+                    }
+                    <button class="a-btn-ghost !px-3 !py-2" (click)="copyLink()" [disabled]="!r.headActivationLink">
                       <app-icon name="copy" className="h-4 w-4" /> {{ copied() ? 'Copied' : 'Copy' }}
                     </button>
                   </div>

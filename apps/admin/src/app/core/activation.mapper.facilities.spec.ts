@@ -226,19 +226,45 @@ describe('activation mapper: declared revenue operations', () => {
     expect(mapRequestToCommand(withOps([{ operationCode: 'WCF', selected: true }])).declaredOperations.map((o) => o.code)).toEqual(['WCF']);
   });
 
-  it('changes nothing that activation sends, and never blocks it', () => {
+  it('carries the declaration into the command as configuration - and never blocks activation or touches anything else', () => {
     const plain = mapRequestToCommand(base());
     const declared = mapRequestToCommand(
       withOps(
         ['FISH_MEAT_VENDOR_FEE', 'WEIGHT_AND_MEASURE', 'KANMANGGAY_SPACE_RENTAL', 'ECF', 'WCF'].map((operationCode) => ({
           operationCode,
           selected: true,
-          localDisplayName: 'Local name',
+          localDisplayName: operationCode === 'KANMANGGAY_SPACE_RENTAL' ? 'Municipal Plaza Rental' : undefined,
         })),
       ),
     );
-    expect(declared.command).toEqual(plain.command);
+    // Everything except the declarations is exactly what the same draft sent without them.
+    const { operationDeclarations, ...rest } = declared.command;
+    expect(rest).toEqual(plain.command);
+    expect(operationDeclarations).toEqual([
+      { operationCode: 'FISH_MEAT_VENDOR_FEE', selected: true },
+      { operationCode: 'WEIGHT_AND_MEASURE', selected: true },
+      { operationCode: 'KANMANGGAY_SPACE_RENTAL', selected: true, localDisplayName: 'Municipal Plaza Rental' },
+      { operationCode: 'ECF', selected: true },
+      { operationCode: 'WCF', selected: true },
+    ]);
     expect(declared.blockingErrors).toEqual([]);
+  });
+
+  it('distinguishes never asked, explicitly nothing, and an explicit unselection', () => {
+    // A draft saved before declarations existed: no field at all, so the municipality stays on the legacy fallback.
+    expect(mapRequestToCommand(base()).command.operationDeclarations).toBeUndefined();
+    // The workspace saved a block with nothing selected: an explicit empty list, which the server reads as "chose none".
+    expect(mapRequestToCommand(withOps([])).command.operationDeclarations).toEqual([]);
+    // An unselected operation is sent as unselected and carries no name.
+    const unselected = mapRequestToCommand(withOps([{ operationCode: 'LANDING_BERTHING', selected: false, localDisplayName: 'Pantalan' }]));
+    expect(unselected.command.operationDeclarations).toEqual([{ operationCode: 'LANDING_BERTHING', selected: false }]);
+  });
+
+  it('refuses to activate over a block it cannot read, rather than sending an empty list that would unlist everything', () => {
+    const newer = request(toReviewConfig({ facilities: [market()], operations: { version: 2, items: [{ code: 'WCF' }] } }));
+    const { command, blockingErrors } = mapRequestToCommand(newer);
+    expect(command.operationDeclarations).toBeUndefined();
+    expect(blockingErrors.join(' ')).toMatch(/cannot read/);
   });
 
   it('reads a draft saved before declarations existed as nothing declared', () => {

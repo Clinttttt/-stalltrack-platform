@@ -581,10 +581,25 @@ export function mapRequestToCommand(
     tpmMarketDay,
   };
 
-  // Declared revenue operations: initial intent, shown to the operator and carried no further. They are not part of the
-  // command, so they can neither block activation nor enable a service. A declaration the console cannot read is reported
-  // as a warning — it changes nothing that activation does.
+  // Declared revenue operations. They are shown to the operator and carried into the command as the municipality's operation
+  // configuration (listing and local names - presentation only). They cannot block activation for being unfinished, and they enable
+  // no service, assign no Collector and file no rate. A single unreadable ITEM is reported as a warning; an unreadable BLOCK is refused below.
   const declaredOperations = declaredRows(r.config?.operations);
+  // What activation records as the municipality's operation configuration. Only a block that was actually saved and can be read
+  // counts: no block means "never asked" (legacy fallback), and a block this console cannot read is refused rather than guessed
+  // at, because sending an empty list would explicitly unlist every operation the office may have chosen.
+  if (r.config?.operationsUnreadable) {
+    blockingErrors.push(
+      'The declared revenue operations are saved in a format this console cannot read. Return the draft for LGU review ' +
+        'rather than activating without them.',
+    );
+  } else if (r.config?.operationsDeclared) {
+    command.operationDeclarations = (r.config.operations ?? []).map((o) => ({
+      operationCode: o.operationCode,
+      selected: o.selected,
+      ...(o.selected && o.localDisplayName ? { localDisplayName: o.localDisplayName } : {}),
+    }));
+  }
   for (const problem of r.config?.operationProblems ?? []) warnings.push(`Declared revenue operations: ${problem}`);
 
   return { command, warnings, blockingErrors, declaredOperations };

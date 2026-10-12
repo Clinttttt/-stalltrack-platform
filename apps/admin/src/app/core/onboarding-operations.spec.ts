@@ -28,8 +28,10 @@ describe('parseOperations — the same rules as the server', () => {
   const read = (items: unknown[]) => parseOperations({ version: 1, items });
 
   it('treats an absent block as nothing declared', () => {
-    expect(parseOperations(undefined)).toEqual({ items: [], problems: [] });
-    expect(parseOperations({ version: 1 })).toEqual({ items: [], problems: [] });
+    expect(parseOperations(undefined)).toEqual({ present: false, unreadable: false, items: [], problems: [] });
+    // A saved block with no items is an explicit declaration of nothing, which is not the same as never having been asked.
+    expect(parseOperations({ version: 1 })).toEqual({ present: true, unreadable: false, items: [], problems: [] });
+    expect(parseOperations({ version: 2, items: [] }).unreadable).toBe(true);
   });
 
   it('refuses an item whose selected flag is missing or not a boolean', () => {

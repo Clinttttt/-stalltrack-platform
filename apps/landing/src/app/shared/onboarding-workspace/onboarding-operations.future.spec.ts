@@ -135,7 +135,7 @@ describe('OnboardingWorkspace — operations saved by a newer version', () => {
     expect(text).toMatch(/Discard these saved entries/);
   });
 
-  it('explains plainly that saving or submitting may be refused', () => {
+  it('says plainly that a kept newer block means the draft cannot be saved - not that other sections still can', () => {
     const ws = workspace(JSON.stringify({ ...base, operations: newer }));
     const fixture = TestBed.createComponent(OnboardingWorkspace);
     fixture.componentRef.setInput('configJson', JSON.stringify({ ...base, operations: newer }));
@@ -143,7 +143,68 @@ describe('OnboardingWorkspace — operations saved by a newer version', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(ws).toBeTruthy();
     expect(text).toMatch(/newer version of this workspace/);
-    expect(text).toMatch(/may be refused/);
+    expect(text).toMatch(/cannot be saved or submitted while they are kept/);
     expect(text).toMatch(/nothing is changed or downgraded/);
+    // The earlier wording promised exactly what the platform then refused.
+    expect(text).not.toMatch(/can still be edited and saved/);
+  });
+
+  it('discarding unreadable ENTRIES keeps the chosen operations and block-level fields; only a locked block resets them', () => {
+    const doc = {
+      ...base,
+      operations: {
+        version: 1,
+        reviewedBy: 'coordinator',
+        items: [{ operationCode: 'ECF', selected: true }, { operationCode: 'FUTURE_FEE', selected: true }],
+      },
+    };
+    const ws = workspace(JSON.stringify(doc));
+
+    ws.askDiscardOperations();
+    ws.discardPreservedEntries();
+
+    const out = saved(ws).operations;
+    expect(out.reviewedBy).toBe('coordinator'); // an unrelated block-level field survives the discard
+    expect(out.items).toEqual([{ operationCode: 'ECF', selected: true }]);
+
+    const locked = workspace(JSON.stringify({ ...base, operations: newer }));
+    locked.discardLockedOperations();
+    expect(saved(locked).operations).toEqual({ version: 1, items: [] });
+  });
+
+  it('places each facility under its official revenue group, and an office-owned facility under rent with its note', () => {
+    const ws = workspace(JSON.stringify(base));
+    const add = (key: string, name: string) => {
+      ws.addFromCatalog(ws.catalog.find((c) => c.key === key)!);
+      const all = ws.facilities();
+      ws.setFacility(all[all.length - 1].id, 'name', name);
+    };
+    add('public_market', 'Pamilihan');
+    expect(ws.groupOfFacility(ws.facilities()[0])).toBe('rent');
+    expect(ws.catalogInGroup('slaughterhouse').map((c) => c.key)).toEqual(['slaughterhouse']);
+    expect(ws.catalogInGroup('terminal').map((c) => c.key)).toEqual(['terminal']);
+    expect(ws.catalogInGroup('market').map((c) => c.key).sort()).toEqual(['iceplant', 'weekly']);
+    expect(ws.catalogInGroup('rent').map((c) => c.key).sort()).toEqual(['barbecue', 'commercial', 'other', 'public_market']);
+    expect(ws.operationsInGroup('space').map((o) => o.code)).toEqual([
+      'KANMANGGAY_SPACE_RENTAL', 'FIESTA_ARAW_LOT_RENTAL', 'VEGETABLE_FRUIT_SPACE_RENTAL',
+    ]);
+    // Every catalogued independent operation lands in exactly one group, so none is offered twice or lost.
+    const placed = [...ws.operationsInGroup('market'), ...ws.operationsInGroup('space')].map((o) => o.code).sort();
+    expect(placed).toEqual(ws.operationCatalog.map((o) => o.code).sort());
+  });
+
+  it('renders the five official groups in order, with no Cantilan-only wording', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ imports: [OnboardingWorkspace] });
+    const fixture = TestBed.createComponent(OnboardingWorkspace);
+    fixture.componentRef.setInput('configJson', JSON.stringify(base));
+    fixture.detectChanges();
+    const html = fixture.nativeElement as HTMLElement;
+    const headings = Array.from(html.querySelectorAll('h4')).map((h) => h.textContent?.trim());
+    expect(headings).toEqual([
+      'Income From Market', 'Rent Income — Stall Rental', 'Space Rental', 'Income From Terminal', 'Income From Slaughterhouse',
+    ]);
+    const text = html.textContent ?? '';
+    expect(text).not.toMatch(/Kanmanggay|Araw|Cantilan/i);
   });
 });

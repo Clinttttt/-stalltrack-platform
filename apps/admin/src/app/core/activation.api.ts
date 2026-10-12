@@ -136,6 +136,18 @@ export interface ActivateMunicipalityCommand {
   slaughterLabels?: ActivationSlaughterLabels;
   orSeries?: ActivationOrSeries;
   tpmMarketDay?: string | null;
+  /**
+   * The operations the LGU declared at onboarding, carried as the municipality's own operation configuration (listing and local
+   * name; presentation only). OMITTED when the draft carried no declarations at all - that leaves the municipality on the legacy
+   * fallback. An EMPTY list means the LGU explicitly chose none. Never inferred.
+   */
+  operationDeclarations?: ActivationOperation[];
+}
+
+export interface ActivationOperation {
+  operationCode: string;
+  selected: boolean;
+  localDisplayName?: string | null;
 }
 
 export interface ActivationResultDto {
@@ -148,6 +160,8 @@ export interface ActivationResultDto {
   stallsCreated: number;
   customAnimalTypesCreated: number;
   orSeriesConfigured: boolean;
+  /** The Head's one-time activation link for THIS environment, built by the API. Absent from an API that predates it. */
+  activationUrl?: string | null;
 }
 
 export type ActivateResult = { ok: true; result: ActivationResultDto } | { ok: false; error: string };

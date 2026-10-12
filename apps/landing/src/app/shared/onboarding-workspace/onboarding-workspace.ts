@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { PolishedSelect } from '../polished-select/polished-select';
 import {
@@ -14,6 +15,29 @@ import {
 
 /** The reserved custom slots an LGU's own facilities can take (backend FacilityCode.Custom1..Custom5). */
 const MAX_CUSTOM_FACILITIES = 5;
+
+// The groups of the official Monthly Income statement (OfficialMonthlyIncomeStructure): Income From Market, Rent Income (Stall
+// Rental), Space Rental, Income From Terminal, Income From Slaughterhouse. Grouping is how the workspace PRESENTS choices; it
+// never changes a classification. A facility of the office's own has no approved statement line yet, so it is shown under rent
+// with a note rather than placed by guess.
+type RevenueGroupKey = 'market' | 'rent' | 'space' | 'terminal' | 'slaughterhouse';
+const REVENUE_GROUPS: ReadonlyArray<{ key: RevenueGroupKey; label: string; hint: string }> = [
+  { key: 'market', label: 'Income From Market', hint: 'Market fees, vendor and utility collections, landing and transport fees, the weekly market and the ice plant.' },
+  { key: 'rent', label: 'Rent Income — Stall Rental', hint: 'Public market stalls, commercial centers, barbecue stands and other rental facilities. Rent is set for each space after activation.' },
+  { key: 'space', label: 'Space Rental', hint: 'Municipal spaces, event lots and vegetable / fruit spaces.' },
+  { key: 'terminal', label: 'Income From Terminal', hint: 'The transport terminal and its per-trip fee.' },
+  { key: 'slaughterhouse', label: 'Income From Slaughterhouse', hint: 'The slaughterhouse and its per-head animal rates.' },
+];
+const GROUP_OF_CATALOG: Readonly<Record<string, RevenueGroupKey>> = {
+  public_market: 'rent',
+  commercial: 'rent',
+  barbecue: 'rent',
+  other: 'rent',
+  iceplant: 'market',
+  weekly: 'market',
+  terminal: 'terminal',
+  slaughterhouse: 'slaughterhouse',
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Onboarding configuration workspace (DEMO / local state only).
@@ -300,7 +324,7 @@ function migrateLegacySlaughterhouse(items: RateItem[]): SlaughterhouseConfig {
 @Component({
   selector: 'app-onboarding-workspace',
   standalone: true,
-  imports: [PolishedSelect],
+  imports: [PolishedSelect, NgTemplateOutlet],
   templateUrl: './onboarding-workspace.html',
 })
 export class OnboardingWorkspace {
@@ -642,12 +666,51 @@ export class OnboardingWorkspace {
   cancelDiscardOperations(): void {
     this.confirmingDiscard.set(false);
   }
-  /** Explicit, confirmed removal of saved entries this version cannot edit (preserved entries and/or a locked block). */
-  discardPreservedOperations(): void {
+  /**
+   * Explicit, confirmed removal of ONLY the saved entries this version cannot edit. Everything else in the block - the operations
+   * the office chose and any block-level fields it does not own - is kept exactly as it was.
+   */
+  discardPreservedEntries(): void {
     this.preservedOperations.set([]);
+    this.confirmingDiscard.set(false);
+  }
+  /** Explicit, confirmed removal of a whole block this version cannot read. Nothing of it can be kept, so it starts empty. */
+  discardLockedOperations(): void {
     this.lockedOperations.set(null);
     this.operationsExtras = {};
+    this.preservedOperations.set([]);
     this.confirmingDiscard.set(false);
+  }
+  /** @deprecated Kept for callers that discard everything unreadable at once; prefer the two precise methods above. */
+  discardPreservedOperations(): void {
+    this.discardLockedOperations();
+  }
+
+  // ── revenue groups (the official Monthly Income structure) ────────────────────────────────────
+  readonly revenueGroups = REVENUE_GROUPS;
+  /** Which official group a facility sits under. From the type the office chose; a legacy draft falls back on its billing type. */
+  groupOfFacility(f: Facility): RevenueGroupKey {
+    const byKey = f.catalogKey ? GROUP_OF_CATALOG[f.catalogKey] : undefined;
+    if (byKey) return byKey;
+    switch (f.type) {
+      case 'Per head': return 'slaughterhouse';
+      case 'Per trip': return 'terminal';
+      case 'Weekly market': return 'market';
+      default: return 'rent';
+    }
+  }
+  facilitiesInGroup(key: string): Facility[] {
+    return this.facilities().filter((f) => this.groupOfFacility(f) === key);
+  }
+  catalogInGroup(key: string): CatalogItem[] {
+    return CATALOG.filter((c) => GROUP_OF_CATALOG[c.key] === key);
+  }
+  operationsInGroup(key: string) {
+    return OPERATION_CATALOG.filter((o) => (o.group === 'space' ? 'space' : 'market') === key);
+  }
+  /** The short name of a facility type, as the add button reads it. */
+  catalogName(c: CatalogItem): string {
+    return c.key === 'other' ? 'a rental facility of your own' : shortName(c.label);
   }
 
   isOperationSelected(code: string): boolean {

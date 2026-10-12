@@ -101,3 +101,65 @@ describe('Activation page rollout state', () => {
     fixture.destroy();
   });
 });
+
+describe("Activation page: the Head link comes from the API", () => {
+  const workspace = {
+    facilities: [{ id: "f", catalogKey: "public_market", name: "Pamilihan", type: "Daily stall", rateAmount: "", rateUnit: "per day", unitLabel: "stalls", units: "", sections: [{ name: "Gulayan", kind: "VegetableArea", units: "5", rate: "30", fees: [] }], addOns: [] }],
+    administrator: { name: "Ana Cruz", email: "ana@lgu.test" },
+    branding: { officeName: "Lanuza Enterprise Office (LEO)" },
+    operations: { version: 1, items: [{ operationCode: "MARKET_FEES", selected: true }] },
+  };
+
+  async function activate(result: unknown) {
+    const activateSpy = vi.fn().mockResolvedValue(result);
+    TestBed.configureTestingModule({
+      imports: [Activation],
+      providers: [
+        {
+          provide: AssessmentApi,
+          useValue: {
+            listMunicipalities: vi.fn().mockResolvedValue({ ok: true, municipalities: [] }),
+            list: vi.fn().mockResolvedValue({ ok: true, requests: [request("ready", "Lanuza", STATUS.APPROVED, "Activation")] }),
+            getDraftByRequest: vi.fn().mockResolvedValue({ ok: true, draft: { configJson: JSON.stringify(workspace) } }),
+          },
+        },
+        { provide: ActivationApi, useValue: { activate: activateSpy } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Activation);
+    const c = fixture.componentInstance;
+    await vi.waitFor(() => expect(c.loading()).toBe(false));
+    c.select("ready");
+    await vi.waitFor(() => expect(c.selected()?.config).toBeTruthy());
+    c.beginActivate();
+    await c.confirmActivate();
+    return { c, activateSpy, fixture };
+  }
+
+  it("uses the activation URL the API returned and never builds a production host from the token", async () => {
+    const local = "https://localhost:7167/activate/SECRET-LOCAL-TOKEN";
+    const { c, activateSpy, fixture } = await activate({ ok: true, result: { activationToken: "SECRET-LOCAL-TOKEN", activationUrl: local } });
+
+    expect(c.link()).toBe(local);
+    expect(c.selected()?.headActivationLink).toBe(local);
+    expect(c.link()).not.toContain("stalltrack.site");
+    // The command carried the declared operations as configuration.
+    expect(activateSpy.mock.calls[0][0].operationDeclarations).toEqual([{ operationCode: "MARKET_FEES", selected: true }]);
+    fixture.destroy();
+  });
+
+  it("does not invent a link when the API returns none, and says so", async () => {
+    const { c, fixture } = await activate({ ok: true, result: { activationToken: "TOKEN-ONLY" } });
+
+    expect(c.link()).toBe("");
+    expect(c.activateError()).toMatch(/did not return the Head.s activation link/);
+    expect(JSON.stringify(c.selected())).not.toContain("console.stalltrack.site");
+    fixture.destroy();
+  });
+
+  it("counts a municipality activated in this session as completed history straight away", async () => {
+    const { c, fixture } = await activate({ ok: true, result: { activationToken: "T", activationUrl: "https://x.test/activate/T" } });
+    expect(c.completedHistory().map((r) => r.municipality)).toContain("Lanuza");
+    fixture.destroy();
+  });
+});

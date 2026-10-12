@@ -65,8 +65,13 @@ export class Activation {
   readonly declaredOperations = signal<DeclaredOperationRow[]>([]);
 
   readonly scoped = computed(() => this.requests().filter(inScope));
+  /**
+   * Completed activations. One just committed in this session counts at once: the server has already moved its request to
+   * Completed, but this list is only reloaded on refresh, so waiting for that left "No completed activations yet" beside a
+   * municipality the console had just announced as live.
+   */
   readonly completedHistory = computed(() =>
-    this.requests().filter((r) => r.status === STATUS.COMPLETED && r.stage === 'Completed'),
+    this.requests().filter((r) => (r.status === STATUS.COMPLETED && r.stage === 'Completed') || r.activated),
   );
   readonly selected = computed<RequestRecord | null>(() => {
     const s = this.scoped();
@@ -189,7 +194,16 @@ export class Activation {
         this.activateError.set(res.error);
         return;
       }
-      const headLink = `https://console.stalltrack.site/activate/${res.result.activationToken}`;
+      // The API states the environment's own Head Portal link (its ACTIVATION_LINK_BASE). The console never rebuilds a host from
+      // the token: a hardcoded production host here once sent a local test's Head to production. An API that predates the
+      // field returns none, and then the operator is told so instead of being handed a guessed address.
+      const headLink = res.result.activationUrl?.trim() ?? '';
+      if (!headLink) {
+        this.activateError.set(
+          `${r.municipality} is activated, but this API did not return the Head's activation link. ` +
+            `The link was also emailed to the Head; ask the platform team to re-issue it if it did not arrive.`,
+        );
+      }
       this.link.set(headLink);
       this.activeMunis.update((s) => new Set(s).add(r.municipality.toLowerCase()));
       this.upsert({ ...r, activated: true, headActivationLink: headLink, headActivationMessage: this.draft() });

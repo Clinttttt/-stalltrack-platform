@@ -41,5 +41,7 @@ export function toReviewConfig(workspace: WorkspaceConfig | null): Config {
     officeName: workspace?.branding?.officeName?.trim() || undefined,
     operations: operations.items,
     operationProblems: operations.problems,
+    operationsDeclared: operations.present,
+    operationsUnreadable: operations.unreadable,
   };
 }
