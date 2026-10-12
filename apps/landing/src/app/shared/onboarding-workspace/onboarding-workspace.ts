@@ -28,6 +28,17 @@ const REVENUE_GROUPS: ReadonlyArray<{ key: RevenueGroupKey; label: string; hint:
   { key: 'terminal', label: 'Income From Terminal', hint: 'The transport terminal and its per-trip fee.' },
   { key: 'slaughterhouse', label: 'Income From Slaughterhouse', hint: 'The slaughterhouse and its per-head animal rates.' },
 ];
+// How each facility type reads on its add button (the catalog label is a longer, picker-style sentence).
+const ADD_NAME: Readonly<Record<string, string>> = {
+  public_market: 'Public Market',
+  commercial: 'Commercial Center',
+  barbecue: 'Barbecue stands',
+  iceplant: 'Iceplant',
+  weekly: 'Weekly market',
+  terminal: 'Transport terminal',
+  slaughterhouse: 'Slaughterhouse',
+  other: 'a rental facility of your own',
+};
 const GROUP_OF_CATALOG: Readonly<Record<string, RevenueGroupKey>> = {
   public_market: 'rent',
   commercial: 'rent',
@@ -710,7 +721,7 @@ export class OnboardingWorkspace {
   }
   /** The short name of a facility type, as the add button reads it. */
   catalogName(c: CatalogItem): string {
-    return c.key === 'other' ? 'a rental facility of your own' : shortName(c.label);
+    return ADD_NAME[c.key] ?? shortName(c.label);
   }
 
   isOperationSelected(code: string): boolean {
