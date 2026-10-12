@@ -1,5 +1,17 @@
 import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { PolishedSelect } from '../polished-select/polished-select';
+import {
+  MAX_LOCAL_NAME_LENGTH,
+  OPERATION_CATALOG,
+  OPERATION_GROUPS,
+  OperationState,
+  localNameProblem,
+  readOperations,
+  writeOperations,
+} from './onboarding-operations';
+
+/** The reserved custom slots an LGU's own facilities can take (backend FacilityCode.Custom1..Custom5). */
+const MAX_CUSTOM_FACILITIES = 5;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Onboarding configuration workspace (DEMO / local state only).
@@ -103,9 +115,6 @@ interface CatalogItem {
 const uid = (): string => Math.random().toString(36).slice(2, 9);
 const shortName = (label: string): string => label.split(' — ')[0].split(' / ')[0].trim();
 
-const FEE_UNITS = ['per month', 'per day', 'per kilo', 'per use', 'one-time'];
-// Display only: nothing downstream matches on these strings (checked), so they read as an office would write them.
-const FEE_MODES = ['All stalls', 'Selected stalls'];
 
 // The three collection areas a public-market daily sheet is organised into, plus the market's own. An LGU declares
 // which area each of its sections is and names it itself; the platform never reads meaning out of the name.
@@ -126,10 +135,8 @@ const SECTION_NAME_PLACEHOLDER: Record<MarketSectionKind, string> = {
   MeatSection: 'e.g. Meat Section, or Karne',
   CustomArea: 'e.g. Rice Section, or Bigasan',
 };
-const FEE_BASIS = ['Per consumption', 'Fixed amount'];
-// Utility add-ons are capped at these two presets (chosen from a fixed dropdown, not free text).
-const FEE_NAMES = ['Electricity', 'Water'];
-const MAX_ADDONS = FEE_NAMES.length;
+// Electricity / water are no longer entered as facility fees: they are declared under Revenue Operations and set up per stall
+// after activation. An add-on an older draft already holds is kept and shown read-only, so nothing the office typed is lost.
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const CATALOG: CatalogItem[] = [
@@ -313,11 +320,8 @@ export class OnboardingWorkspace {
   readonly MONEY_INPUT = this.INPUT + ' pl-7';
   readonly LABEL = 'block text-[11px] font-bold uppercase tracking-[0.1em] text-muted mb-1.5';
 
-  readonly feeUnits = FEE_UNITS;
-  readonly feeModes = FEE_MODES;
-  readonly feeBasis = FEE_BASIS;
-  readonly feeNames = FEE_NAMES;
-  readonly maxAddOns = MAX_ADDONS;
+  readonly operationGroups = OPERATION_GROUPS;
+  readonly maxLocalName = MAX_LOCAL_NAME_LENGTH;
   readonly days = DAYS;
   readonly catalog = CATALOG;
   readonly ratePlaceholder = RATE_PLACEHOLDER;
@@ -384,8 +388,14 @@ export class OnboardingWorkspace {
   }
   /** An area of the market's own must be named: the name is the only thing it can be filed under. */
   needsOwnName = (s: FacilitySection): boolean => s.kind === 'CustomArea' && !(s.name || '').trim();
-  /** Whether this facility keeps a single facility-level base rate (all types except Daily stall / Per head). */
-  showBaseRate = (f: Facility): boolean => f.type !== 'Daily stall' && f.type !== 'Per head';
+  /**
+   * Whether this facility keeps a facility-level rate the platform actually files: a per-trip terminal fee and a weekly
+   * market's per-vendor fee. A monthly rental (and an office's own facility) has none — rent is set for each space after
+   * activation, and asking for a figure here would show the office a rate that is never used.
+   */
+  showBaseRate = (f: Facility): boolean => f.type === 'Per trip' || f.type === 'Weekly market';
+  /** A facility whose rent is set per space after activation. */
+  isRentSetPerSpace = (f: Facility): boolean => f.type === 'Monthly rental' || f.type === 'Custom';
   isFacilityDone = (f: Facility): boolean => {
     if (!f.name.trim()) return false;
     if (f.type === 'Per head') {
@@ -401,6 +411,8 @@ export class OnboardingWorkspace {
       if (f.sections.some((s) => this.needsOwnName(s))) return false;
       return f.sections.some((s) => (s.rate || '').trim());
     }
+    // Rent for a monthly rental is set per space after activation, so a name is all that is needed here.
+    if (this.isRentSetPerSpace(f)) return true;
     return Boolean(f.rateAmount);
   };
 
@@ -421,6 +433,7 @@ export class OnboardingWorkspace {
       if (!priced.length) return '';
       return priced.length === 1 ? `₱${priced[0].rate} per day` : `${priced.length} priced areas`;
     }
+    if (this.isRentSetPerSpace(f)) return 'rent set per space';
     return f.rateAmount ? `₱${f.rateAmount} ${f.rateUnit}` : '';
   }
 
@@ -486,8 +499,11 @@ export class OnboardingWorkspace {
 
   /** True when this catalog type is already configured (so it can't be added again). Custom is exempt. */
   isCatalogUsed(c: CatalogItem): boolean {
-    return c.key !== 'other' && this.facilities().some((f) => f.catalogKey === c.key);
+    // The office's own facilities take a reserved custom slot each; once they are all used there is nowhere to file another.
+    if (c.key === 'other') return this.customFacilityCount() >= MAX_CUSTOM_FACILITIES;
+    return this.facilities().some((f) => f.catalogKey === c.key);
   }
+  readonly customFacilityCount = computed(() => this.facilities().filter((f) => f.catalogKey === 'other').length);
   toggleExpanded(id: string): void {
     this.expandedId.update((cur) => (cur === id ? null : id));
   }
@@ -594,28 +610,56 @@ export class OnboardingWorkspace {
     }));
   }
 
-  // facility-level fees
-  addFee(fid: string): void {
-    this.mapFacility(fid, (x) => {
-      // Utilities are capped at the fixed presets (Electricity / Water) and picked from a dropdown.
-      if (x.addOns.length >= MAX_ADDONS) return x;
-      const used = new Set(x.addOns.map((a) => a.label));
-      const label = FEE_NAMES.find((n) => !used.has(n)) ?? FEE_NAMES[0];
-      return {
-        ...x,
-        addOns: [...x.addOns, { id: uid(), label, basis: 'Per consumption', amount: '', unit: 'per month', mode: 'Selected stalls' }],
-      };
-    });
-  }
+  // A fee an older draft saved on a facility. It can be removed but no longer added: see the note above DAYS.
   removeFee(fid: string, feeId: string): void {
     this.mapFacility(fid, (x) => ({ ...x, addOns: x.addOns.filter((a) => a.id !== feeId) }));
   }
-  setFee(fid: string, feeId: string, key: keyof AddOn, val: string): void {
-    this.mapFacility(fid, (x) => ({
-      ...x,
-      addOns: x.addOns.map((a) => (a.id === feeId ? { ...a, [key]: val } : a)),
+
+  // ── revenue operations (initial intent only) ──────────────────────────────
+  readonly operationCatalog = OPERATION_CATALOG;
+  readonly operations = signal<Record<string, OperationState>>({});
+  /** Codes in a saved draft that this workspace does not recognise; shown once so nothing vanishes silently. */
+  readonly droppedOperations = signal<string[]>([]);
+
+  isOperationSelected(code: string): boolean {
+    return this.operations()[code]?.selected === true;
+  }
+  operationName(code: string): string {
+    return this.operations()[code]?.localDisplayName ?? '';
+  }
+  toggleOperation(code: string): void {
+    this.operations.update((o) => ({
+      ...o,
+      [code]: { selected: !(o[code]?.selected === true), localDisplayName: o[code]?.localDisplayName ?? '' },
     }));
   }
+  setOperationName(code: string, val: string): void {
+    this.operations.update((o) => ({
+      ...o,
+      [code]: { selected: o[code]?.selected === true, localDisplayName: val.slice(0, MAX_LOCAL_NAME_LENGTH) },
+    }));
+  }
+  operationProblem(code: string): string {
+    return localNameProblem(code, this.operations());
+  }
+  readonly operationsValid = computed(() => OPERATION_CATALOG.every((o) => !localNameProblem(o.code, this.operations())));
+  readonly selectedOperationCount = computed(() => OPERATION_CATALOG.filter((o) => this.operations()[o.code]?.selected).length);
+
+  /** What the office's own facilities already cover, so the operations list does not ask the same question twice. */
+  readonly facilityOwnedOperations = computed(() => {
+    const out: string[] = [];
+    for (const f of this.facilities()) {
+      const name = f.name.trim() || 'this facility';
+      switch (f.catalogKey) {
+        case 'public_market': out.push(`Stall fees — ${name}`); break;
+        case 'slaughterhouse': out.push(`Slaughterhouse — ${name}`); break;
+        case 'terminal': out.push(`Terminal — ${name}`); break;
+        case 'weekly': out.push(`Weekly market — ${name}`); break;
+        default: out.push(`Space rental — ${name}`);
+      }
+    }
+    return out;
+  });
 
   // admin / branding
   setAdmin(key: 'name' | 'position' | 'email', val: string): void {
@@ -644,7 +688,7 @@ export class OnboardingWorkspace {
   }
 
   submit(): void {
-    if (this.allDone()) this.submitDraft.emit(this.serialize());
+    if (this.allDone() && this.operationsValid()) this.submitDraft.emit(this.serialize());
   }
   editSubmission(): void {
     this.edit.emit();
@@ -653,9 +697,21 @@ export class OnboardingWorkspace {
     this.saveDraft.emit(this.serialize());
   }
 
+  /**
+   * Top-level fields of a saved document this workspace does not own. They are written back untouched, so a document
+   * saved by a newer workspace (or carrying a field a coordinator added) is not stripped by saving it here.
+   */
+  private extras: Record<string, unknown> = {};
+
   private serialize(): string {
     const facilities = this.facilities().map(({ rateItems: _legacy, ...f }) => f);
-    return JSON.stringify({ facilities, administrator: this.admin(), branding: this.branding() });
+    return JSON.stringify({
+      ...this.extras,
+      facilities,
+      administrator: this.admin(),
+      branding: this.branding(),
+      operations: writeOperations(this.operations()),
+    });
   }
 
   private hydrate(json: string): void {
@@ -664,7 +720,13 @@ export class OnboardingWorkspace {
         facilities?: Facility[];
         administrator?: { name?: string; position?: string; email?: string };
         branding?: { officeName?: string; orPrefix?: string; orStart?: string; logoName?: string; logoDataUri?: string };
+        operations?: unknown;
       };
+      const { facilities: _f, administrator: _a, branding: _b, operations: _o, ...rest } = cfg as Record<string, unknown>;
+      this.extras = rest;
+      const ops = readOperations(cfg.operations);
+      this.operations.set(ops.states);
+      this.droppedOperations.set(ops.dropped);
       if (Array.isArray(cfg.facilities))
         this.facilities.set(
           cfg.facilities.map((f) => {

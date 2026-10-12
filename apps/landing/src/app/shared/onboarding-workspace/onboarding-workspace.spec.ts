@@ -44,16 +44,33 @@ describe('OnboardingWorkspace — a facility must be finished before another is 
     expect(ws.facilities().length).toBe(1);
   });
 
+  function terminal(ws: OnboardingWorkspace) {
+    return ws.catalog.find((c) => c.key === 'terminal')!;
+  }
+
   it('refuses a second facility while the first has no rate', () => {
     const ws = workspace();
-    ws.addFromCatalog(commercialCentre(ws));
+    // A terminal bills a per-trip rate the platform files, so a named terminal with no rate is the dangerous state: it looks
+    // configured on screen and bills nobody.
+    ws.addFromCatalog(terminal(ws));
 
     ws.addFromCatalog(iceplant(ws));
 
-    // A catalogue facility arrives already named, so the rate is what is actually missing - and a named, unpriced facility is
-    // the dangerous state: it looks configured on screen and bills nobody.
     expect(ws.facilities().length).toBe(1);
     expect(ws.unfinishedFacility()).not.toBeNull();
+  });
+
+  it('does not ask a monthly rental for a facility-wide rate, since rent is set per space after activation', () => {
+    const ws = workspace();
+    ws.addFromCatalog(commercialCentre(ws));
+
+    const f = ws.facilities()[0];
+    expect(ws.showBaseRate(f)).toBe(false);
+    expect(ws.isFacilityDone(f)).toBe(true);
+    expect(ws.summaryFor(f)).toBe('rent set per space');
+    // …and a per-trip terminal still does, because that rate IS filed.
+    ws.addFromCatalog(terminal(ws));
+    expect(ws.showBaseRate(ws.facilities()[1])).toBe(true);
   });
 
   it('refuses a second facility while a custom one has no name', () => {
@@ -84,11 +101,11 @@ describe('OnboardingWorkspace — a facility must be finished before another is 
 
   it('names the facility that is holding things up, and falls back when it has no name yet', () => {
     const ws = workspace();
-    ws.addFromCatalog(commercialCentre(ws));
+    ws.addFromCatalog(terminal(ws));
     const first = ws.facilities()[0];
 
     // A catalogue facility arrives named, so the message can name it straight away.
-    expect(ws.unfinishedFacilityLabel()).toBe('Commercial Center');
+    expect(ws.unfinishedFacilityLabel()).toBe('Transport');
 
     // Cleared, or a custom facility never named: the message cannot point at a name that does not exist.
     ws.setFacility(first.id, 'name', '   ');
