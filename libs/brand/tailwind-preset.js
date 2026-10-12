@@ -9,6 +9,8 @@ module.exports = {
       colors: {
         navy: { DEFAULT: '#0d2137', 700: '#112d47', 600: '#1e3a5f' },
         gold: { DEFAULT: '#c8a84b', light: '#e8cc76' },
+        // Interactive accent shared with the Head Portal (--accent / --accent-hover / --accent-soft).
+        civic: { DEFAULT: '#1f5fbf', hover: '#194f9f', soft: '#eaf1fb' },
         ink: '#0d2137',
         mist: '#f0f4f8',
         line: '#dde4ea',

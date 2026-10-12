@@ -70,7 +70,32 @@ body {
   .btn-navy {
     @apply inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-5 py-3 text-sm font-bold text-white transition hover:bg-navy-600;
   }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-civic px-5 py-3 text-sm font-semibold text-white transition hover:bg-civic-hover;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white px-5 py-3 text-sm font-semibold text-navy transition hover:border-navy/30 hover:bg-mist;
+  }
+  .nav-link {
+    @apply text-sm font-medium text-navy/75 transition hover:text-navy;
+  }
+  .footer-link {
+    @apply transition hover:text-civic hover:underline;
+  }
   .section-title {
     @apply font-display text-3xl font-bold text-navy sm:text-4xl;
+  }
+}
+
+/* Keyboard focus is always visible on the public site. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #1f5fbf;
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 }
