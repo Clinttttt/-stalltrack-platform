@@ -64,21 +64,44 @@ export interface OperationItem {
 const KNOWN = new Set(OPERATION_CATALOG.map((o) => o.code));
 
 /**
+ * Whether a saved `operations` block is one this workspace can safely edit: an object whose `version` (when stated) is a
+ * version it knows and whose `items` (when stated) is a list. Anything else - a newer version, another shape - is NOT edited
+ * and NOT downgraded; the caller keeps it verbatim.
+ */
+export function isEditableOperationsBlock(raw: unknown): boolean {
+  if (raw == null) return true;
+  if (typeof raw !== 'object' || Array.isArray(raw)) return false;
+  const b = raw as { version?: unknown; items?: unknown };
+  if (b.version != null && !(Number.isInteger(b.version) && (b.version as number) >= 1 && (b.version as number) <= OPERATIONS_VERSION)) {
+    return false;
+  }
+  return b.items == null || Array.isArray(b.items);
+}
+
+/**
  * Reads a saved `operations` block. A draft saved before declarations existed has none and yields no selections.
  *
  * Nothing the office saved is thrown away. An entry this workspace can read becomes editable state; any other entry - a code
  * this version does not know (an older workspace opening a newer draft), a repeated code, or an item whose `selected` is not a
  * boolean - is returned untouched in `preserved` and written back on the next save, never translated into a different
- * operation. The office must discard such entries explicitly. The server decides whether it accepts them.
+ * operation. Block-level fields other than `version` and `items` come back in `extras` and are written back too. The office
+ * must discard preserved entries explicitly. The server decides whether it accepts them.
+ *
+ * Call this only for a block that passes {@link isEditableOperationsBlock}.
  */
 export function readOperations(raw: unknown): {
   states: Record<string, OperationState>;
   preserved: unknown[];
+  extras: Record<string, unknown>;
 } {
   const states: Record<string, OperationState> = {};
   const preserved: unknown[] = [];
+  const extras: Record<string, unknown> = {};
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    for (const [k, v] of Object.entries(raw)) if (k !== 'version' && k !== 'items') extras[k] = v;
+  }
   const items = (raw as { items?: unknown } | null | undefined)?.items;
-  if (!Array.isArray(items)) return { states, preserved };
+  if (!Array.isArray(items)) return { states, preserved, extras };
 
   for (const entry of items) {
     const e = (entry ?? {}) as { operationCode?: unknown; selected?: unknown; localDisplayName?: unknown };
@@ -91,7 +114,7 @@ export function readOperations(raw: unknown): {
     }
     states[code] = { selected: e.selected === true, localDisplayName: typeof e.localDisplayName === 'string' ? e.localDisplayName : '' };
   }
-  return { states, preserved };
+  return { states, preserved, extras };
 }
 
 /** A short description of a preserved entry for the notice shown to the office. */
@@ -107,6 +130,7 @@ export function describePreserved(entry: unknown): string {
 export function writeOperations(
   states: OperationStates,
   preserved: readonly unknown[] = [],
+  extras: Readonly<Record<string, unknown>> = {},
 ): { version: number; items: Array<OperationItem | unknown> } {
   const items: Array<OperationItem | unknown> = [];
   for (const o of OPERATION_CATALOG) {
@@ -116,7 +140,7 @@ export function writeOperations(
     if (!s.selected && !name) continue;
     items.push({ operationCode: o.code, selected: s.selected, ...(name ? { localDisplayName: name } : {}) });
   }
-  return { version: OPERATIONS_VERSION, items: [...items, ...preserved] };
+  return { ...extras, version: OPERATIONS_VERSION, items: [...items, ...preserved] };
 }
 
 /**

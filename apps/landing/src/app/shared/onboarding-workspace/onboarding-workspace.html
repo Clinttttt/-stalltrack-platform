@@ -437,6 +437,7 @@
             </p>
           }
 
+          @if (lockedOperations() === null) {
           @for (g of operationGroups; track g.key) {
             <fieldset>
               <legend class="text-[11px] font-bold uppercase tracking-wide text-muted">{{ g.label }}</legend>
@@ -469,11 +470,32 @@
               </div>
             </fieldset>
           }
+          }
+
+          @if (lockedOperations() !== null) {
+            <div class="rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-3 text-xs text-navy" role="status">
+              <p class="font-semibold">Revenue operations saved by a newer version of this workspace</p>
+              <p class="mt-1">This draft holds revenue operations in a format (version {{ lockedOperationsVersion() }}) this page cannot safely edit. They are kept exactly as saved &mdash; nothing is changed or downgraded &mdash; so the selector is hidden. Saving or submitting may be refused until this workspace is updated to read them. Your facilities, Head and branding can still be edited and saved.</p>
+              @if (confirmingDiscard()) {
+                <p class="mt-2 font-semibold text-red">This permanently removes these saved entries from your draft. Only do this if they are not yours.</p>
+                <button type="button" (click)="discardPreservedOperations()" class="mt-1.5 mr-3 font-semibold text-red underline">Yes, permanently discard</button>
+                <button type="button" (click)="cancelDiscardOperations()" class="mt-1.5 font-semibold underline">Keep them</button>
+              } @else {
+                <button type="button" (click)="askDiscardOperations()" class="mt-1.5 font-semibold underline">Discard these saved entries&hellip;</button>
+              }
+            </div>
+          }
 
           @if (preservedOperations().length) {
-            <div class="rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-2.5 text-xs text-navy">
-              <p>{{ preservedOperations().length }} saved {{ preservedOperations().length === 1 ? 'entry' : 'entries' }} could not be read by this version ({{ preservedOperationNames().join(', ') }}). They are kept exactly as saved and sent with your submission, so nothing is lost. If they are not yours, discard them.</p>
-              <button type="button" (click)="discardPreservedOperations()" class="mt-1.5 font-semibold underline">Discard these entries</button>
+            <div class="rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-2.5 text-xs text-navy" role="status">
+              <p>{{ preservedOperations().length }} saved {{ preservedOperations().length === 1 ? 'entry' : 'entries' }} could not be read by this version ({{ preservedOperationNames().join(', ') }}). They are kept exactly as saved and are not deleted. If StallTrack does not recognise them, saving or submitting may be refused until this workspace supports them or you discard them.</p>
+              @if (confirmingDiscard()) {
+                <p class="mt-2 font-semibold text-red">This permanently removes these saved entries from your draft. Only do this if they are not yours.</p>
+                <button type="button" (click)="discardPreservedOperations()" class="mt-1.5 mr-3 font-semibold text-red underline">Yes, permanently discard</button>
+                <button type="button" (click)="cancelDiscardOperations()" class="mt-1.5 font-semibold underline">Keep them</button>
+              } @else {
+                <button type="button" (click)="askDiscardOperations()" class="mt-1.5 font-semibold underline">Discard these saved entries&hellip;</button>
+              }
             </div>
           }
           <p class="text-xs text-muted">Choosing an operation records your intent only. It does not switch the collection on, register vendors or payors, or assign Collectors &mdash; the Head does that in the portal. Local names are recorded for your coordinator&rsquo;s review and are not yet shown in your live portal.</p>

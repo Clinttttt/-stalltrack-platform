@@ -7,6 +7,7 @@ import {
   OperationState,
   localNameProblem,
   describePreserved,
+  isEditableOperationsBlock,
   readOperations,
   writeOperations,
 } from './onboarding-operations';
@@ -622,8 +623,31 @@ export class OnboardingWorkspace {
   /** Codes in a saved draft that this workspace does not recognise; shown once so nothing vanishes silently. */
   readonly preservedOperations = signal<unknown[]>([]);
   readonly preservedOperationNames = computed(() => this.preservedOperations().map(describePreserved));
+  /** Block-level fields beyond `version` and `items`, written back untouched. */
+  private operationsExtras: Record<string, unknown> = {};
+  /**
+   * A whole `operations` block this version cannot safely edit (a newer version or another shape). It is held verbatim and
+   * written back byte-for-byte; the editor is withdrawn rather than risk rewriting or downgrading it.
+   */
+  readonly lockedOperations = signal<unknown>(null);
+  readonly lockedOperationsVersion = computed(() => {
+    const v = (this.lockedOperations() as { version?: unknown } | null)?.version;
+    return v == null ? 'unstated' : String(v);
+  });
+  /** Discarding is two steps on purpose: the first click only asks. */
+  readonly confirmingDiscard = signal(false);
+  askDiscardOperations(): void {
+    this.confirmingDiscard.set(true);
+  }
+  cancelDiscardOperations(): void {
+    this.confirmingDiscard.set(false);
+  }
+  /** Explicit, confirmed removal of saved entries this version cannot edit (preserved entries and/or a locked block). */
   discardPreservedOperations(): void {
     this.preservedOperations.set([]);
+    this.lockedOperations.set(null);
+    this.operationsExtras = {};
+    this.confirmingDiscard.set(false);
   }
 
   isOperationSelected(code: string): boolean {
@@ -716,7 +740,10 @@ export class OnboardingWorkspace {
       administrator: this.admin(),
       branding: this.branding(),
       // Entries this version cannot edit go back exactly as they were read: saving another field never erases them.
-      operations: writeOperations(this.operations(), this.preservedOperations()),
+      operations:
+        this.lockedOperations() !== null
+          ? this.lockedOperations()
+          : writeOperations(this.operations(), this.preservedOperations(), this.operationsExtras),
     });
   }
 
@@ -730,9 +757,14 @@ export class OnboardingWorkspace {
       };
       const { facilities: _f, administrator: _a, branding: _b, operations: _o, ...rest } = cfg as Record<string, unknown>;
       this.extras = rest;
-      const ops = readOperations(cfg.operations);
-      this.operations.set(ops.states);
-      this.preservedOperations.set(ops.preserved);
+      if (isEditableOperationsBlock(cfg.operations)) {
+        const ops = readOperations(cfg.operations);
+        this.operations.set(ops.states);
+        this.preservedOperations.set(ops.preserved);
+        this.operationsExtras = ops.extras;
+      } else {
+        this.lockedOperations.set(cfg.operations);
+      }
       if (Array.isArray(cfg.facilities))
         this.facilities.set(
           cfg.facilities.map((f) => {
