@@ -5,6 +5,7 @@ import { AssessmentApi } from '../../core/assessment.api';
 import { ActivationApi } from '../../core/activation.api';
 import { headUsernameFor, mapRequestToCommand } from '../../core/activation.mapper';
 import { parseWorkspaceConfig, toReviewConfig, WorkspaceConfig } from '../../core/onboarding-config';
+import { DeclaredOperationRow } from '../../core/onboarding-operations';
 import { installStageFreshness } from '../../core/stage-freshness';
 
 const inScope = (r: RequestRecord): boolean => r.status === STATUS.APPROVED && r.stage === 'Activation';
@@ -60,6 +61,8 @@ export class Activation {
   readonly activateError = signal('');
   readonly warnings = signal<string[]>([]);
   readonly mappingErrors = signal<string[]>([]);
+  /** Operations the office declared. Shown so the operator can tell "ready to activate" from "setup after activation". */
+  readonly declaredOperations = signal<DeclaredOperationRow[]>([]);
 
   readonly scoped = computed(() => this.requests().filter(inScope));
   readonly completedHistory = computed(() =>
@@ -147,9 +150,10 @@ export class Activation {
     if (!r) return;
     this.activateError.set('');
     const wc = this.configById()[r.id];
-    const { warnings, blockingErrors } = mapRequestToCommand(r, { officeName: wc?.branding?.officeName });
+    const { warnings, blockingErrors, declaredOperations } = mapRequestToCommand(r, { officeName: wc?.branding?.officeName });
     this.warnings.set(warnings);
     this.mappingErrors.set(blockingErrors);
+    this.declaredOperations.set(declaredOperations);
     this.link.set('');
     this.draft.set(activationTemplate(r.municipality));
     this.composing.set(true);
@@ -177,7 +181,7 @@ export class Activation {
       });
       if (blockingErrors.length) {
         this.mappingErrors.set(blockingErrors);
-        this.activateError.set('This legacy slaughterhouse configuration needs review before activation.');
+        this.activateError.set('This configuration needs review before activation.');
         return;
       }
       const res = await this.activationApi.activate(command);

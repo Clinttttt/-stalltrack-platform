@@ -7,10 +7,12 @@ import {
   ActivationOrSeries,
   ActivationRate,
   BillingArchetypeStr,
+  CustomFacilityCodeStr,
   FacilityCodeStr,
   FeeRateKeyStr,
 } from './activation.api';
 import { hasUndeclaredAreas, isCustomArea, MarketSectionKind, marketSectionLabelOf, withDeclaredAreas } from './market-sections';
+import { DeclaredOperationRow, declaredRows } from './onboarding-operations';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Maps a staged onboarding RequestRecord (the admin console's working config) to the
@@ -25,9 +27,12 @@ export interface MappedActivation {
   command: ActivateMunicipalityCommand;
   warnings: string[];
   blockingErrors: string[];
+  /**
+   * The revenue operations the office declared. Review information only: none of it is part of the command, so declaring an
+   * operation neither blocks activation nor enables anything. Each is set up in the Head Portal afterwards.
+   */
+  declaredOperations: DeclaredOperationRow[];
 }
-
-const ALL_CODES: FacilityCodeStr[] = ['NPM', 'TCC', 'NCC', 'BBQ', 'ICE', 'SLH', 'TRM', 'TPM'];
 
 /** The rate key that carries one collection area's own daily fee. Mirrors FacilityRateKeys.PerAreaDailyKey. */
 const PER_AREA_RATE_KEY: Record<MarketSectionKind, FeeRateKeyStr> = {
@@ -91,8 +96,41 @@ function archetypeOf(type: string): BillingArchetypeStr {  switch (type) {
   }
 }
 
-/** Best-effort facility name/type → fixed FacilityCode. */
-function candidateCode(f: DemoFacility): FacilityCodeStr {
+/**
+ * The facility types the onboarding workspace offers, and the canonical code each one IS. This is the explicit identity a
+ * draft carries (`catalogKey`); it is read verbatim and never inferred from the office's own facility name.
+ *
+ * `other` is deliberately absent: an office's own facility is not any canonical facility. It takes a reserved custom slot.
+ */
+const CATALOG_CODE: Readonly<Record<string, FacilityCodeStr>> = {
+  public_market: 'NPM',
+  commercial: 'TCC',
+  barbecue: 'BBQ',
+  iceplant: 'ICE',
+  slaughterhouse: 'SLH',
+  terminal: 'TRM',
+  weekly: 'TPM',
+};
+
+const CUSTOM_CODES: readonly CustomFacilityCodeStr[] = ['Custom1', 'Custom2', 'Custom3', 'Custom4', 'Custom5'];
+
+/** How each canonical code bills. A facility whose declared type contradicts its identity is refused, not re-coded. */
+const ARCHETYPE_OF_CODE: Readonly<Record<string, BillingArchetypeStr>> = {
+  NPM: 'DailyStall',
+  TCC: 'MonthlyRental',
+  NCC: 'MonthlyRental',
+  BBQ: 'MonthlyRental',
+  ICE: 'MonthlyRental',
+  SLH: 'PerHead',
+  TRM: 'PerTrip',
+  TPM: 'WeeklyMarket',
+};
+
+/**
+ * Compatibility ONLY, for drafts saved before the catalog key was recorded: a best-effort reading of the facility's type and
+ * name. Returns null when nothing matches — it never invents a code — and the caller reports that the identity was inferred.
+ */
+function legacyCandidateCode(f: DemoFacility): FacilityCodeStr | null {
   const n = f.name.toLowerCase();
   const t = f.type;
   if (t === 'Per head' || /slaughter/.test(n)) return 'SLH';
@@ -103,7 +141,7 @@ function candidateCode(f: DemoFacility): FacilityCodeStr {
   if (/new commercial|\bncc\b/.test(n)) return 'NCC';
   if (t === 'Daily stall' || /public market/.test(n)) return 'NPM';
   if (/commercial|tampak|\btcc\b|mall|center|centre/.test(n)) return 'TCC';
-  return 'TCC';
+  return null;
 }
 
 function parseOrSeries(raw: string | undefined): ActivationOrSeries | undefined {
@@ -196,20 +234,73 @@ export function mapRequestToCommand(
   const demoFacilities = r.config?.facilities ?? [];
 
   for (const f of demoFacilities) {
-    const archetype = archetypeOf(f.type);
-    if (archetype === 'Custom') {
-      warnings.push(`"${f.name}" has an unrecognized billing type ("${f.type}") — sent as Custom.`);
-    }
+    // The facility's identity (FacilityCode) is stable and internal; its NAME is the office's own. The code comes from the
+    // type the office chose in the workspace, never from the wording of its name, and is never swapped for another
+    // facility's code to resolve a collision — that would file one office's market under another facility's identity.
+    const declaredArchetype = archetypeOf(f.type);
+    let code: FacilityCodeStr | undefined;
+    let custom = false;
 
-    // Assign a distinct FacilityCode (backend keys facilities by code per LGU).
-    let code = candidateCode(f);
-    if (used.has(code)) {
-      const free = ALL_CODES.find((c) => !used.has(c));
-      if (free) {
-        warnings.push(`"${f.name}" collided on code ${code}; assigned ${free} instead.`);
-        code = free;
+    if (f.catalogKey === 'other') {
+      custom = true;
+    } else if (f.catalogKey) {
+      code = CATALOG_CODE[f.catalogKey];
+      if (!code) {
+        blockingErrors.push(
+          `"${f.name}" has a facility type this console does not recognise ("${f.catalogKey}"). Return the draft for LGU review.`,
+        );
+        continue;
+      }
+    } else {
+      code = legacyCandidateCode(f) ?? undefined;
+      if (code) {
+        warnings.push(`"${f.name}" was saved before facility types were recorded; it was read as ${code} from its type and name. Confirm this before committing.`);
+      } else if (declaredArchetype === 'MonthlyRental' || f.type === 'Custom') {
+        custom = true;
+        warnings.push(`"${f.name}" matches no standard facility; it is filed as one of the LGU's own monthly-rental facilities.`);
+      } else {
+        blockingErrors.push(
+          `"${f.name}" has an unrecognised billing type ("${f.type}") and matches no facility. Return the draft for LGU review.`,
+        );
+        continue;
       }
     }
+
+    // An office's own facility is a monthly-rental facility in a reserved custom slot. A standard facility whose archetype
+    // contradicts its declared type is refused rather than re-coded.
+    if (code && !custom && declaredArchetype !== ARCHETYPE_OF_CODE[code]) {
+      blockingErrors.push(
+        `"${f.name}" is a ${code} facility but was declared with the billing type "${f.type}". Return the draft for LGU review.`,
+      );
+      continue;
+    }
+    if (code && used.has(code)) {
+      // A second facility of the same standard type. Only a monthly-rental facility can legitimately move to a custom slot;
+      // a market, slaughterhouse, terminal or weekly market cannot be told apart from its twin, so say so.
+      if (ARCHETYPE_OF_CODE[code] === 'MonthlyRental') {
+        custom = true;
+        warnings.push(`"${f.name}" repeats the standard facility ${code}; it is filed as one of the LGU's own monthly-rental facilities.`);
+      } else {
+        blockingErrors.push(
+          `Two facilities resolve to ${code} ("${f.name}" and another). A municipality keeps one facility of this type; ` +
+            `return the draft so the LGU keeps one.`,
+        );
+        continue;
+      }
+    }
+    if (custom) {
+      const free = CUSTOM_CODES.find((c) => !used.has(c));
+      if (!free) {
+        blockingErrors.push(
+          `"${f.name}" cannot be added: a municipality can register up to ${CUSTOM_CODES.length} facilities of its own. ` +
+            `Remove one, or add this facility from the Head Portal after activation.`,
+        );
+        continue;
+      }
+      code = free;
+    }
+    if (!code) continue; // unreachable: every path above sets a code or continues
+    const archetype: BillingArchetypeStr = custom ? 'MonthlyRental' : declaredArchetype;
     used.add(code);
 
     // NOTE: activation provisions only the LGU identity, facilities, fixed rates, and the Head account.
@@ -277,8 +368,15 @@ export function mapRequestToCommand(
       // own areas that carries no rate, so it is read from a canonical area rather than from a custom one — a rice
       // section priced at 45 is not the market's rate for everybody else.
       const canonicalPriced = sections.filter((s) => !isCustomArea(s.kind) && num(s.rate));
-      const marketRate =
-        num(canonicalPriced[0]?.rate) ?? num((f.sections || []).find((s) => (s.rate ?? '').trim())?.rate) ?? num(f.rateAmount) ?? 0;
+      const statedMarketRate =
+        num(canonicalPriced[0]?.rate) ?? num((f.sections || []).find((s) => (s.rate ?? '').trim())?.rate) ?? num(f.rateAmount);
+      if (statedMarketRate === undefined) {
+        // A blank rate is not a zero rate. Filing 0 would make a market that charges nothing look configured.
+        blockingErrors.push(`"${f.name}" states no daily rate for any market area. Return the draft for LGU review.`);
+        continue;
+      }
+      const marketRate = statedMarketRate;
+      if (marketRate === 0) warnings.push(`"${f.name}" states a daily rate of 0; the market would collect nothing per stall.`);
       rates.push({ facilityCode: code, key: 'NpmDailyStall', amount: marketRate });
 
       // And the rate of each area the office priced, so an office that prices its areas apart is billed area by area.
@@ -324,21 +422,59 @@ export function mapRequestToCommand(
           warnings.push(`"${f.name}" states no per-kilo weighing fee for its fish area; it will be seeded at 0.`);
         }
       }
+      // Electricity / water. Neither is a facility rate: no billing path reads ElecPerKwh or WaterPerCubicMeter, and which
+      // stalls are billed for a utility is decided per stall after activation (utility eligibility, then readings). Filing
+      // a row would show a rate the office never charges, and a metered utility has no amount to file in the first place.
+      // So none is filed; an amount the office DID state is surfaced to the operator instead of vanishing.
       for (const a of f.addOns || []) {
-        const label = a.label.toLowerCase();
-        if (/electri/.test(label)) rates.push({ facilityCode: code, key: 'ElecPerKwh', amount: num(a.amount) ?? 0 });
-        else if (/water/.test(label)) rates.push({ facilityCode: code, key: 'WaterPerCubicMeter', amount: num(a.amount) ?? 0 });
+        const stated = num(a.amount);
+        if (stated && stated > 0) {
+          warnings.push(
+            `"${f.name}" stated ${a.label} at ${stated} (${a.unit || a.basis}). Utility amounts are not filed at activation; ` +
+              `the Head sets up utility service per stall after activation.`,
+          );
+        }
       }
     } else if (archetype === 'WeeklyMarket') {
-      rates.push({ facilityCode: code, key: 'TpmVendorDay', amount: num(f.rateAmount) ?? 0 });
+      const amount = num(f.rateAmount);
+      if (amount === undefined) {
+        blockingErrors.push(`"${f.name}" states no per-vendor market-day rate. Return the draft for LGU review.`);
+        continue;
+      }
+      rates.push({ facilityCode: code, key: 'TpmVendorDay', amount });
     } else if (archetype === 'PerTrip') {
-      rates.push({ facilityCode: code, key: 'TrmPerTrip', amount: num(f.rateAmount) ?? 0 });
+      const amount = num(f.rateAmount);
+      if (amount === undefined) {
+        blockingErrors.push(`"${f.name}" states no per-trip rate. Return the draft for LGU review.`);
+        continue;
+      }
+      rates.push({ facilityCode: code, key: 'TrmPerTrip', amount });
+    } else if (archetype === 'MonthlyRental') {
+      // Rent is set per space after activation; the billing engine reads no facility-level rate for a monthly rental. A
+      // figure an older draft carries here is reported so the operator knows it was not filed.
+      const stated = num(f.rateAmount);
+      if (stated && stated > 0) {
+        warnings.push(
+          `"${f.name}" stated a monthly rate of ${stated}. Rent is set for each space after activation, so this figure is not filed.`,
+        );
+      }
     } else if (archetype === 'PerHead') {
       if (f.slaughterhouse) {
-        rates.push({ facilityCode: code, key: 'SlhHogPerHead', amount: num(f.slaughterhouse.hogAmount) ?? 0 });
-        rates.push({ facilityCode: code, key: 'SlhLargePerHead', amount: num(f.slaughterhouse.largeAnimalAmount) ?? 0 });
+        const hog = num(f.slaughterhouse.hogAmount);
+        const large = num(f.slaughterhouse.largeAnimalAmount);
+        if (hog === undefined || large === undefined) {
+          blockingErrors.push(`"${f.name}" states no ${hog === undefined ? 'hog' : 'large-animal'} per-head rate. Return the draft for LGU review.`);
+          continue;
+        }
+        rates.push({ facilityCode: code, key: 'SlhHogPerHead', amount: hog });
+        rates.push({ facilityCode: code, key: 'SlhLargePerHead', amount: large });
         for (const item of f.slaughterhouse.customAnimals || []) {
-          customAnimals.push({ animalName: item.label.trim(), ratePerHead: num(item.amount) ?? 0 });
+          const perHead = num(item.amount);
+          if (perHead === undefined) {
+            blockingErrors.push(`"${item.label || '(blank animal name)'}" states no per-head rate. Return the draft for LGU review.`);
+            continue;
+          }
+          customAnimals.push({ animalName: item.label.trim(), ratePerHead: perHead });
         }
       } else {
         // Old submitted drafts may reach Activation without ever being reopened in the new workspace. Interpret only
@@ -444,5 +580,11 @@ export function mapRequestToCommand(
     tpmMarketDay,
   };
 
-  return { command, warnings, blockingErrors };
+  // Declared revenue operations: initial intent, shown to the operator and carried no further. They are not part of the
+  // command, so they can neither block activation nor enable a service. A declaration the console cannot read is reported
+  // as a warning — it changes nothing that activation does.
+  const declaredOperations = declaredRows(r.config?.operations);
+  for (const problem of r.config?.operationProblems ?? []) warnings.push(`Declared revenue operations: ${problem}`);
+
+  return { command, warnings, blockingErrors, declaredOperations };
 }

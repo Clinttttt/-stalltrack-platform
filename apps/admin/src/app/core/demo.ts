@@ -17,6 +17,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { SectionKind } from './market-sections';
+import type { OperationDeclaration } from './onboarding-operations';
 
 export const STAGES = ['Assessment', 'Onboarding', 'Validation', 'Activation'] as const;
 
@@ -90,6 +91,12 @@ export interface SlaughterhouseConfig {
 export interface Facility {
   name: string;
   type: string;
+  /**
+   * The workspace catalog entry the office chose this facility from (e.g. `public_market`, `other`). It is the explicit
+   * facility identity activation maps from; drafts saved before it was recorded have none and fall back to a documented,
+   * warned heuristic.
+   */
+  catalogKey?: string;
   rateAmount: string;
   /** A daily-stall market only: the monthly rent a space is let for, when the ordinance states one. */
   monthlyRent?: string;
@@ -127,6 +134,10 @@ export interface Config {
   users: ConfigUser[];
   /** Authoritative office wording saved by the LGU in the onboarding workspace. */
   officeName?: string;
+  /** The revenue operations the office declared (initial intent only), as saved in the workspace. */
+  operations?: OperationDeclaration[];
+  /** Why a saved declaration block could not be read, so the operator sees it instead of a silent empty list. */
+  operationProblems?: string[];
 }
 
 export interface ChecklistItem {

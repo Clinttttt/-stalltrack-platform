@@ -7,6 +7,7 @@ import { marketSectionLabelOf } from '../../core/market-sections';
 import { ActivationApi } from '../../core/activation.api';
 import { mapRequestToCommand } from '../../core/activation.mapper';
 import { parseWorkspaceConfig, toReviewConfig } from '../../core/onboarding-config';
+import { declaredRows, OPERATION_GROUP_LABEL } from '../../core/onboarding-operations';
 import { installStageFreshness } from '../../core/stage-freshness';
 
 const inScope = (r: RequestRecord): boolean =>
@@ -55,6 +56,11 @@ export class Validation {
   });
 
   readonly facilities = computed<Facility[]>(() => this.selected()?.config?.facilities ?? []);
+
+  /** The revenue operations the office declared. Initial intent only: each is set up in the Head Portal after activation. */
+  readonly declaredOperations = computed(() => declaredRows(this.selected()?.config?.operations));
+  readonly operationProblems = computed(() => this.selected()?.config?.operationProblems ?? []);
+  readonly operationGroups = OPERATION_GROUP_LABEL;
 
   readonly kpis = computed(() => {
     const facilities = this.facilities();

@@ -207,6 +207,27 @@
               </div>
             </div>
 
+            <!-- Declared revenue operations: the office's initial intent, shown exactly as saved. -->
+            <div class="mt-6 rounded-xl border border-line p-4">
+              <div class="a-label mb-1">Declared revenue operations</div>
+              <p class="mb-2 text-xs text-muted">Initial intent only. None is activated, assigned to a Collector or given a rate at activation; the Head sets each up in the portal.</p>
+              @if (declaredOperations().length) {
+                <ul class="space-y-1.5 text-sm">
+                  @for (op of declaredOperations(); track op.code) {
+                    <li class="flex flex-wrap items-center justify-between gap-x-3">
+                      <span class="font-medium text-navy">{{ op.label }}@if (op.localName) { <span class="font-normal text-muted"> — “{{ op.localName }}”</span> }</span>
+                      <span class="text-xs text-muted">{{ operationGroups[op.group] }} · setup after activation</span>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <p class="text-sm text-muted">None declared.</p>
+              }
+              @for (p of operationProblems(); track p) {
+                <p class="mt-2 text-xs font-medium text-amber">{{ p }}</p>
+              }
+            </div>
+
             <!-- Branding + users -->
             <div class="mt-6 grid gap-5 sm:grid-cols-2">
               <div class="rounded-xl border border-line p-4">

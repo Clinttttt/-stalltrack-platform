@@ -13,7 +13,9 @@ import { API_BASE_URL } from './api.config';
 // a rejected/invalid command commits nothing.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type FacilityCodeStr = 'NPM' | 'TCC' | 'NCC' | 'BBQ' | 'ICE' | 'SLH' | 'TRM' | 'TPM';
+export type FacilityCodeStr = 'NPM' | 'TCC' | 'NCC' | 'BBQ' | 'ICE' | 'SLH' | 'TRM' | 'TPM' | CustomFacilityCodeStr;
+/** The reserved slots for an LGU's own monthly-rental facilities. Backend: FacilityCode.Custom1..Custom5. */
+export type CustomFacilityCodeStr = 'Custom1' | 'Custom2' | 'Custom3' | 'Custom4' | 'Custom5';
 export type BillingArchetypeStr = 'DailyStall' | 'MonthlyRental' | 'WeeklyMarket' | 'PerTrip' | 'PerHead' | 'Custom';
 export type MarketSectionStr = 'VegetableArea' | 'FishSection' | 'MeatSection';
 export type FeeRateKeyStr =
