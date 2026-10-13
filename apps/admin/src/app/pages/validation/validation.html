@@ -1,4 +1,4 @@
-<div class="flex h-full flex-col">
+<div class="flex flex-1 flex-col lg:min-h-0">
   <!-- Summary band -->
   <div class="a-hero mb-4 shrink-0">
     <div class="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:gap-6">
@@ -52,14 +52,14 @@
     </aside>
 
     <!-- Review -->
-    <section class="a-card a-scroll p-5 sm:p-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto" aria-live="polite">
+    <section class="a-card flex min-w-0 flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden" aria-live="polite">
       @if (!selected()) {
         <div class="flex min-h-[18rem] flex-col items-center justify-center gap-3 text-center text-muted">
           <app-icon name="activity" className="h-10 w-10 opacity-40" />
           <p>Nothing is awaiting validation. Advance a municipality from LGU Onboarding.</p>
         </div>
       } @else if (selected(); as r) {
-        <div>
+        <div class="a-scroll min-w-0 p-5 sm:p-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
           <div class="flex flex-wrap items-start justify-between gap-3 border-b border-line pb-4">
             <div>
               <h2 class="font-display text-2xl font-bold">{{ r.municipality }}</h2>
@@ -296,29 +296,32 @@
               </div>
             </div>
 
-            <!-- Decision -->
-            <div class="mt-6 border-t border-line pt-5">
-              @if (actionError()) {
-                <div class="a-note-danger mb-3 text-sm" role="alert">{{ actionError() }}</div>
-              }
-              @if (confirmHidden()) {
-                <div class="a-note-warn mb-3 flex flex-wrap items-center justify-between gap-3" role="alert">
-                  <p>Rates and fees are still hidden. Reveal them to check the configuration, or approve without viewing.</p>
-                  <div class="flex gap-2">
-                    <button type="button" class="a-btn-ghost !py-1.5" (click)="revealDetails()" [disabled]="privacy.privacyMode()">Reveal details</button>
-                    <button type="button" class="a-btn-primary !py-1.5" (click)="requestApprove(r)" [disabled]="busy()">Approve anyway</button>
-                  </div>
-                </div>
-              }
-              <div class="flex flex-wrap gap-2.5">
-                <button class="a-btn-primary" (click)="requestApprove(r)" [disabled]="busy()">
-                  <app-icon name="check" className="h-4 w-4" /> {{ busy() ? 'Working…' : 'Approve and send to Activation' }}
-                </button>
-                <button class="a-btn-ghost" (click)="returnToOnboarding(r)" [disabled]="busy()">Return to onboarding</button>
-              </div>
-            </div>
           }
         </div>
+
+        <!-- Decision: always in view. A fixed footer of the panel on large screens, stuck to the bottom of the page on small ones. -->
+        @if (r.config) {
+          <footer class="sticky bottom-0 z-10 shrink-0 border-t border-line bg-white px-5 py-3 sm:px-6 lg:static">
+            @if (actionError()) {
+              <div class="a-note-danger mb-2 text-sm" role="alert">{{ actionError() }}</div>
+            }
+            @if (confirmHidden()) {
+              <div class="a-note-warn mb-2 flex flex-wrap items-center justify-between gap-2" role="alert">
+                <p class="min-w-0 flex-1 basis-60 text-sm">Rates and fees are still hidden. Reveal them to check the configuration, or approve without viewing.</p>
+                <div class="flex shrink-0 gap-2">
+                  <button type="button" class="a-btn-ghost !py-1.5" (click)="revealDetails()" [disabled]="privacy.privacyMode()">Reveal details</button>
+                  <button type="button" class="a-btn-primary !py-1.5" (click)="requestApprove(r)" [disabled]="busy()">Approve anyway</button>
+                </div>
+              </div>
+            }
+            <div class="flex flex-wrap items-center gap-2">
+              <button class="a-btn-primary" (click)="requestApprove(r)" [disabled]="busy()">
+                <app-icon name="check" className="h-4 w-4" /> {{ busy() ? 'Working…' : 'Approve and send to Activation' }}
+              </button>
+              <button class="a-btn-ghost" (click)="returnToOnboarding(r)" [disabled]="busy()">Return to onboarding</button>
+            </div>
+          </footer>
+        }
       }
     </section>
   </div>

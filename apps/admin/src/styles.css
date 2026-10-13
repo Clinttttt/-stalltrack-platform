@@ -111,6 +111,13 @@ body {
   }
 }
 
+/* The routed pages' host elements add no box: their root is laid out directly by the console shell. */
+app-console,
+app-validation,
+app-activation {
+  display: contents;
+}
+
 /* Thin scrollbars for panels */
 .a-scroll {
   scrollbar-width: thin;

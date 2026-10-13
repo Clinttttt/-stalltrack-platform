@@ -126,6 +126,23 @@ describe('Validation: sensitive submitted details are held back until a reviewer
     await vi.waitFor(() => expect(approveValidation).toHaveBeenCalledWith('r1'));
   });
 
+  it('keeps the decision in a fixed footer of the panel, outside the scrolling body, so it never leaves the screen', async () => {
+    const { fixture } = await setup();
+    const root = fixture.nativeElement as HTMLElement;
+    const footer = root.querySelector('section footer') as HTMLElement;
+    const body = root.querySelector('section .a-scroll') as HTMLElement;
+
+    expect(footer).toBeTruthy();
+    expect(footer.className).toContain('shrink-0');
+    expect(footer.className).toContain('sticky bottom-0'); // pinned to the page bottom on phones
+    expect(footer.className).toContain('lg:static'); // a fixed row of the panel on desktop
+    expect(footer.textContent).toContain('Approve and send to Activation');
+    expect(footer.textContent).toContain('Return to onboarding');
+    expect(body.contains(footer)).toBe(false);
+    expect(body.textContent).not.toContain('Approve and send to Activation');
+    expect(body.className).toContain('lg:overflow-y-auto'); // the scroll happens in the intended panel
+  });
+
   it('hides everything again when the reviewer leaves the page', async () => {
     const { click, privacy, fixture } = await setup();
     click('Reveal details');

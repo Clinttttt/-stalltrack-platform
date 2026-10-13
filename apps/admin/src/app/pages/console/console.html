@@ -1,4 +1,4 @@
-<div class="flex h-full flex-col">
+<div class="flex flex-1 flex-col lg:min-h-0">
   <!-- Summary band: the page title and the four counts that matter. -->
   <div class="a-hero mb-4 shrink-0">
     <div class="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:gap-6">
@@ -26,13 +26,13 @@
   <div class="flex flex-col gap-5 lg:min-h-0 lg:flex-1 lg:flex-row">
     <!-- Requests -->
     <aside class="a-card flex flex-col overflow-hidden lg:min-h-0 lg:w-[22rem] lg:shrink-0 xl:w-[24rem]" aria-label="Requests">
-      <div class="flex gap-1 border-b border-line p-2" role="tablist">
+      <div class="grid min-w-0 grid-cols-2 gap-1 border-b border-line p-2 sm:grid-cols-4 lg:grid-cols-2 2xl:grid-cols-4" role="tablist">
         @for (t of TABS; track t) {
           <button
             role="tab"
             [attr.aria-selected]="tab() === t"
             (click)="setTab(t)"
-            [class]="'inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-semibold transition ' + (tab() === t ? 'bg-civic-soft text-civic' : 'text-muted hover:bg-mist hover:text-ink')"
+            [class]="'inline-flex min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-semibold transition ' + (tab() === t ? 'bg-civic-soft text-civic' : 'text-muted hover:bg-mist hover:text-ink')"
           >
             {{ t }}
             <span class="text-xs font-medium opacity-80">{{ count(t) }}</span>
@@ -66,14 +66,14 @@
     </aside>
 
     <!-- Selected request -->
-    <section class="a-card a-scroll p-5 sm:p-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto" aria-live="polite">
+    <section class="a-card flex min-w-0 flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden" aria-live="polite">
       @if (!selected()) {
         <div class="flex min-h-[18rem] flex-col items-center justify-center gap-3 text-center text-muted">
           <app-icon name="file" className="h-10 w-10 opacity-40" />
           <p>Select a request to review it.</p>
         </div>
       } @else if (selected(); as r) {
-        <div>
+        <div class="a-scroll min-w-0 p-5 sm:p-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
           <div class="flex items-start justify-between gap-4 border-b border-line pb-4">
             <div>
               <h2 class="font-display text-2xl font-bold">{{ r.municipality }}</h2>
@@ -114,30 +114,6 @@
                     </p>
                   }
                 </div>
-                <div class="flex flex-wrap gap-2 border-t border-line bg-mist px-5 py-3.5">
-                  @if (actionError()) {
-                    <div class="a-note-danger w-full text-xs" role="alert">{{ actionError() }}</div>
-                  }
-                  @if (compose().mode === 'approve') {
-                    <button class="a-btn-primary" (click)="confirmApprove()" [disabled]="!compose().draft.trim() || busy()">
-                      <app-icon name="check" className="h-4 w-4" /> {{ busy() ? 'Sending…' : 'Send approval & open onboarding room' }}
-                    </button>
-                  } @else {
-                    <button class="a-btn-danger" (click)="confirmDecline()" [disabled]="!compose().draft.trim() || busy()">
-                      <app-icon name="x" className="h-4 w-4" /> {{ busy() ? 'Sending…' : 'Send decline' }}
-                    </button>
-                  }
-                  <button class="a-btn-ghost" (click)="cancelCompose()" [disabled]="busy()">Cancel</button>
-                </div>
-              </div>
-            } @else {
-              <div class="mt-5 flex flex-wrap gap-2.5">
-                <button class="a-btn-primary" (click)="beginApprove()">
-                  <app-icon name="check" className="h-4 w-4" /> Approve &amp; issue onboarding link
-                </button>
-                <button class="a-btn-danger" (click)="beginDecline()">
-                  <app-icon name="x" className="h-4 w-4" /> Decline
-                </button>
               </div>
             }
           }
@@ -226,14 +202,6 @@
                 </div>
               </div>
 
-              <div class="mt-4 flex flex-wrap items-center gap-3">
-                <button class="a-btn-primary" (click)="sendToValidation(r)" [disabled]="!r.lguSubmittedForValidation">
-                  Advance to Validation <app-icon name="chevronRight" className="h-4 w-4" />
-                </button>
-                @if (!r.lguSubmittedForValidation) {
-                  <span class="text-sm text-muted">Available once the LGU submits.</span>
-                }
-              </div>
 
               <!-- Messages -->
               <div class="mt-6">
@@ -268,6 +236,44 @@
             </div>
           }
         </div>
+
+        <!-- Actions: always in view. A fixed footer of the panel on large screens, stuck to the bottom of the page on small ones. -->
+        @if ((r.status === STATUS.PENDING) || (r.status === STATUS.APPROVED && r.stage === 'Onboarding')) {
+          <footer class="sticky bottom-0 z-10 shrink-0 border-t border-line bg-white px-5 py-3 sm:px-6 lg:static">
+            @if (actionError()) {
+              <div class="a-note-danger mb-2 text-xs" role="alert">{{ actionError() }}</div>
+            }
+            <div class="flex flex-wrap items-center gap-2">
+              @if (r.status === STATUS.PENDING) {
+                @if (compose().mode === 'approve') {
+                  <button class="a-btn-primary" (click)="confirmApprove()" [disabled]="!compose().draft.trim() || busy()">
+                    <app-icon name="check" className="h-4 w-4" /> {{ busy() ? 'Sending…' : 'Send approval' }}
+                  </button>
+                  <button class="a-btn-ghost" (click)="cancelCompose()" [disabled]="busy()">Cancel</button>
+                } @else if (compose().mode === 'decline') {
+                  <button class="a-btn-danger" (click)="confirmDecline()" [disabled]="!compose().draft.trim() || busy()">
+                    <app-icon name="x" className="h-4 w-4" /> {{ busy() ? 'Sending…' : 'Send decline' }}
+                  </button>
+                  <button class="a-btn-ghost" (click)="cancelCompose()" [disabled]="busy()">Cancel</button>
+                } @else {
+                  <button class="a-btn-primary" (click)="beginApprove()">
+                    <app-icon name="check" className="h-4 w-4" /> Approve &amp; issue link
+                  </button>
+                  <button class="a-btn-danger" (click)="beginDecline()">
+                    <app-icon name="x" className="h-4 w-4" /> Decline
+                  </button>
+                }
+              } @else {
+                <button class="a-btn-primary" (click)="sendToValidation(r)" [disabled]="!r.lguSubmittedForValidation">
+                  Advance to Validation <app-icon name="chevronRight" className="h-4 w-4" />
+                </button>
+                @if (!r.lguSubmittedForValidation) {
+                  <span class="text-sm text-muted">Available once the LGU submits.</span>
+                }
+              }
+            </div>
+          </footer>
+        }
       }
     </section>
   </div>
