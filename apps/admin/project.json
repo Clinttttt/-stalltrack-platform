@@ -41,7 +41,13 @@
         "development": {
           "optimization": false,
           "extractLicenses": false,
-          "sourceMap": true
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "apps/admin/src/app/core/api.config.ts",
+              "with": "apps/admin/src/app/core/api.config.development.ts"
+            }
+          ]
         }
       }
     },
