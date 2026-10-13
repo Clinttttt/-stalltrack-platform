@@ -51,7 +51,7 @@ body {
 }
 
 .facility-picker-menu::-webkit-scrollbar-thumb:hover {
-  background: #6a8aa0;
+  background: #5b6778;
 }
 
 @layer components {
@@ -59,31 +59,30 @@ body {
     @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
   }
   .eyebrow {
-    @apply inline-block text-[10px] font-bold uppercase leading-[1.65] tracking-[0.14em] text-gold sm:text-[11px] sm:leading-[1.5] sm:tracking-[0.18em];
+    @apply inline-block text-xs font-semibold leading-snug text-civic;
   }
-  .btn-gold {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-bold text-navy transition hover:bg-gold-light;
-  }
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10;
-  }
-  .btn-navy {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-5 py-3 text-sm font-bold text-white transition hover:bg-navy-600;
-  }
+  /* Primary action on a white or light surface. */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-civic px-5 py-3 text-sm font-semibold text-white transition hover:bg-civic-hover;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-civic px-5 py-3 text-sm font-semibold text-white transition hover:bg-civic-hover disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white px-5 py-3 text-sm font-semibold text-navy transition hover:border-navy/30 hover:bg-mist;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white px-5 py-3 text-sm font-semibold text-ink transition hover:border-civic/40 hover:bg-civic-soft;
+  }
+  /* The same two actions on a civic-blue band: white fill, and a white outline. */
+  .btn-light {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-civic transition hover:bg-civic-soft;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/50 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10;
   }
   .nav-link {
-    @apply text-sm font-medium text-navy/75 transition hover:text-navy;
+    @apply text-sm font-medium text-ink/75 transition hover:text-ink;
   }
   .footer-link {
     @apply transition hover:text-civic hover:underline;
   }
   .section-title {
-    @apply font-display text-3xl font-bold text-navy sm:text-4xl;
+    @apply font-display text-3xl font-bold text-ink sm:text-4xl;
   }
 }
 
@@ -97,5 +96,11 @@ body {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
 }
