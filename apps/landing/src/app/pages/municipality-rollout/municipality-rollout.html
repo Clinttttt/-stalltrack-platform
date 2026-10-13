@@ -153,7 +153,7 @@
             @for (step of rolloutSteps; track step.key; let index = $index) {
               <li reveal [delay]="index * 90" class="relative rounded-2xl border p-6" [class]="stepCardClass(stepState(index))">
                 <div class="flex items-center gap-3">
-                  <span class="grid h-10 w-10 place-items-center rounded-xl font-display text-lg font-bold" [class]="stepState(index) === 'done' ? 'bg-civic text-ink' : 'bg-civic-soft text-civic'">
+                  <span class="grid h-10 w-10 place-items-center rounded-xl font-display text-lg font-bold" [class]="stepState(index) === 'done' ? 'bg-civic text-white' : 'bg-civic-soft text-civic'">
                     @if (stepState(index) === 'done') {
                       <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m5 13 4 4L19 7" />
