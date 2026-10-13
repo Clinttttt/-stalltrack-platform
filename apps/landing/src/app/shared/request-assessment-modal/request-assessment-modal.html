@@ -1,5 +1,5 @@
 <div
-  class="fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-navy/75 p-4 backdrop-blur-sm sm:p-8"
+  class="fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-ink/60 p-4 sm:p-8"
   role="presentation"
   (mousedown)="close.emit()"
 >
@@ -7,186 +7,133 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="assessment-title"
-    class="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:max-h-[calc(100vh-4rem)]"
+    class="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:max-h-[calc(100vh-4rem)]"
     (mousedown)="$event.stopPropagation()"
   >
     <!-- Header -->
-    <div class="flex shrink-0 items-start justify-between gap-5 border-b border-line px-6 py-5 sm:px-8">
+    <div class="flex shrink-0 items-start justify-between gap-4 bg-civic px-6 py-5 text-white sm:px-8">
       <div>
-        <span class="eyebrow">LGU Assessment Request</span>
-        <h2 id="assessment-title" class="mt-2 font-display text-2xl font-bold text-navy sm:text-3xl">
-          {{ heading() }}
-        </h2>
-        <p class="mt-1 text-sm text-muted">Province of Surigao del Sur · CARCANMADCARLAN Cluster</p>
+        <h2 id="assessment-title" class="font-display text-2xl font-bold sm:text-3xl">{{ heading() }}</h2>
+        <p class="mt-1 text-sm text-white/85">{{ municipalityName() ? 'Municipality of ' + municipalityName() + ', Surigao del Sur' : 'Surigao del Sur' }}</p>
       </div>
       <button
         type="button"
         (click)="close.emit()"
         aria-label="Close assessment request form"
-        class="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-line text-navy transition hover:bg-mist"
+        class="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/40 text-white transition hover:bg-white/15"
       >
-        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
           <path d="m6 6 12 12M18 6 6 18" />
         </svg>
       </button>
     </div>
 
-    <form
-      (submit)="handleSubmit($event)"
-      class="min-h-0 overflow-y-auto px-6 pb-6 pt-5 sm:px-8 sm:pb-8 sm:pt-6"
-    >
-      <!-- Requesting office & focal person -->
-      <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-gold">Requesting office &amp; focal person</p>
-      <div class="mt-3 grid gap-5 sm:grid-cols-2">
-        <!-- The requesting office IS the municipality, so it is STATED rather than chosen from a list of office names an
-             LGU may not use. Its own address, in the order a government letterhead sets it out. No postal code: that is
-             per-municipality data this registry does not hold, and a wrong one on an official request is worse than none. -->
-        <div class="sm:col-span-2">
-          <p class="text-sm font-semibold text-navy">Requesting office</p>
-          <div class="mt-2 rounded-xl border border-line bg-mist/40 px-3.5 py-3">
-            <p class="text-sm font-medium leading-relaxed text-navy">{{ requestingOfficeAddress() }}</p>
-          </div>
-        </div>
+    <form (submit)="handleSubmit($event)" class="min-h-0 overflow-y-auto px-6 pb-6 pt-6 sm:px-8 sm:pb-8">
+      <!-- Requesting LGU: stated, not chosen. No postal code: that is per-municipality data the registry does not hold,
+           and a wrong one on an official request is worse than none. -->
+      <section aria-labelledby="sec-lgu">
+        <h3 id="sec-lgu" class="text-sm font-semibold text-ink">Requesting LGU</h3>
+        <p class="mt-2 rounded-lg border border-line bg-mist px-3.5 py-3 text-sm leading-relaxed text-ink">{{ requestingOfficeAddress() }}</p>
+      </section>
 
-        <label class="block text-sm font-semibold text-navy">
-          Focal person *
-          <input required name="Focal person" autocomplete="name" placeholder="e.g. Juan D. Dela Cruz" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
+      <!-- Contact person -->
+      <section class="mt-6" aria-labelledby="sec-contact">
+        <h3 id="sec-contact" class="text-sm font-semibold text-ink">Contact person</h3>
+        <div class="mt-3 grid gap-4 sm:grid-cols-2">
+          <label class="block text-sm font-medium text-ink">
+            Focal person <span class="text-civic" aria-hidden="true">*</span>
+            <input id="assess-first" required name="Focal person" autocomplete="name" placeholder="Juan D. Dela Cruz" [class]="fieldClass" />
+          </label>
+          <label class="block text-sm font-medium text-ink">
+            Position <span class="text-civic" aria-hidden="true">*</span>
+            <input required name="Position" autocomplete="organization-title" placeholder="Market Administrator" [class]="fieldClass" />
+          </label>
+          <label class="block text-sm font-medium text-ink">
+            Official email <span class="text-civic" aria-hidden="true">*</span>
+            <input required type="email" inputmode="email" name="Official email" autocomplete="email" placeholder="office@lgu.gov.ph" [class]="fieldClass" />
+          </label>
+          <label class="block text-sm font-medium text-ink">
+            Contact number <span class="text-civic" aria-hidden="true">*</span>
+            <input required type="tel" inputmode="tel" name="Contact number" autocomplete="tel" pattern="[0-9+()\s\-]{7,20}" title="Digits, spaces, + ( ) and - only" placeholder="09XX XXX XXXX" [class]="fieldClass" />
+          </label>
+        </div>
+      </section>
+
+      <!-- Assessment scope: examples drawn from the platform's own operation catalog. Which of these an office runs is
+           confirmed at onboarding, and nothing is activated by this request. -->
+      <section class="mt-6" aria-labelledby="sec-scope">
+        <h3 id="sec-scope" class="text-sm font-semibold text-ink">What an assessment may cover</h3>
+        <ul class="mt-3 grid gap-3 sm:grid-cols-2">
+          @for (g of scope; track g.title) {
+            <li class="rounded-lg border border-line px-3.5 py-3">
+              <p class="text-sm font-semibold text-ink">{{ g.title }}</p>
+              <p class="mt-0.5 text-xs text-muted">{{ g.summary }}</p>
+              <p class="mt-1.5 text-xs leading-relaxed text-ink/80">{{ g.items }}</p>
+            </li>
+          }
+        </ul>
+        <p class="mt-2 text-xs text-muted">These are examples, not a commitment: your office confirms what it runs during onboarding, and a request activates nothing.</p>
+      </section>
+
+      <!-- Authorization -->
+      <section class="mt-6" aria-labelledby="sec-auth">
+        <h3 id="sec-auth" class="text-sm font-semibold text-ink">Authorization</h3>
+        <label class="mt-3 block text-sm font-medium text-ink">
+          Notes <span class="font-normal text-muted">(optional)</span>
+          <textarea
+            name="Notes"
+            rows="3"
+            placeholder="Local ordinance references, target timeline, or anything else we should know."
+            [class]="fieldClass + ' resize-y'"
+          ></textarea>
         </label>
-        <label class="block text-sm font-semibold text-navy">
-          Position *
-          <input required name="Position" autocomplete="organization-title" placeholder="e.g. Market Administrator / EEMO Head" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
-        </label>
-        <label class="block text-sm font-semibold text-navy">
-          Official email *
-          <input required type="email" name="Official email" autocomplete="email" placeholder="office@lgu.gov.ph" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
-        </label>
-        <label class="block text-sm font-semibold text-navy">
-          Contact number *
-          <input required type="tel" name="Contact number" autocomplete="tel" placeholder="09XX XXX XXXX" class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20" />
-        </label>
-      </div>
 
-      <!-- What an assessment covers. STATED, not asked: the office judged a checklist unnecessary and slow, and each
-           facility is named, priced and given a collection model properly at onboarding. Listing them here tells the LGU
-           what the platform collects for, which is the useful half of the old question.
+        <div class="mt-4 space-y-1 rounded-lg border border-line bg-mist p-3 sm:p-4">
+          <label class="flex cursor-pointer items-start gap-3 rounded-lg p-2 text-xs leading-relaxed text-ink/80 transition hover:bg-white">
+            <span class="relative mt-0.5 grid h-[18px] w-[18px] shrink-0 place-items-center">
+              <input
+                required
+                type="checkbox"
+                name="Authorization acknowledgement"
+                value="Confirmed"
+                class="peer absolute inset-0 h-full w-full cursor-pointer appearance-none rounded border border-muted bg-white transition checked:border-civic checked:bg-civic focus-visible:ring-2 focus-visible:ring-civic/40"
+              />
+              <svg viewBox="0 0 24 24" class="pointer-events-none relative h-3.5 w-3.5 text-white opacity-0 transition peer-checked:opacity-100" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m20 6-11 11-5-5" />
+              </svg>
+            </span>
+            <span>
+              I confirm this request is made on behalf of the LGU, and that formal authorization and signed
+              documents will be provided during the secure onboarding step. <span class="font-semibold text-civic" aria-hidden="true">*</span>
+            </span>
+          </label>
+          <label class="flex cursor-pointer items-start gap-3 rounded-lg p-2 text-xs leading-relaxed text-ink/80 transition hover:bg-white">
+            <span class="relative mt-0.5 grid h-[18px] w-[18px] shrink-0 place-items-center">
+              <input
+                required
+                type="checkbox"
+                name="Data privacy consent"
+                value="Agreed"
+                class="peer absolute inset-0 h-full w-full cursor-pointer appearance-none rounded border border-muted bg-white transition checked:border-civic checked:bg-civic focus-visible:ring-2 focus-visible:ring-civic/40"
+              />
+              <svg viewBox="0 0 24 24" class="pointer-events-none relative h-3.5 w-3.5 text-white opacity-0 transition peer-checked:opacity-100" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m20 6-11 11-5-5" />
+              </svg>
+            </span>
+            <span>
+              I consent to StallTrack processing these details to respond to this request, in accordance with the
+              Data Privacy Act of 2012 (RA 10173) and the
+              <a href="/privacy" target="_blank" rel="noreferrer" class="font-semibold text-civic hover:underline">Privacy Policy</a>. <span class="font-semibold text-civic" aria-hidden="true">*</span>
+            </span>
+          </label>
+        </div>
+      </section>
 
-           THE ICONS ARE THE SYSTEM'S OWN FACILITY MARKS, copied stroke for stroke from FacilityMarkArt in the console - the
-           artwork the sidebar, the facility heroes and the collector's app all draw. Generic shapes borrowed from an icon set
-           put a dollar sign on the iceplant and a luggage tag on the slaughterhouse, so an office recognised nothing. These are
-           the drawings hand-authored for these facilities: a market stall, a storefront, a kettle grill, a block of ice, a
-           livestock head, a bus, and a scalloped awning for the weekly market.
-
-           ONE NAME EACH. "Barbecue / food stalls" and "Slaughterhouse - per head" were a name, an alias and a billing model on
-           one line: three facts where the reader needed one. How each is billed is settled at onboarding, so stating it here
-           only invited an LGU to think it had chosen something. -->
-      <p class="mt-7 text-[11px] font-bold uppercase tracking-[0.16em] text-gold">What an assessment covers</p>
-      <p class="mt-1 text-xs text-muted">Your facilities are named and priced during onboarding.</p>
-      <div class="mt-3 grid gap-x-6 gap-y-2.5 sm:grid-cols-2">
-        <div class="flex items-center gap-3 text-sm text-navy">
-          <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy/[0.04] text-navy/70">
-            <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 5.5 4.5h13L21 9.5Z" /><path d="M6 9.5V19" /><path d="M18 9.5V19" /><path d="M6 13.5h12" /></svg>
-          </span>
-          Public Market
-        </div>
-        <div class="flex items-center gap-3 text-sm text-navy">
-          <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy/[0.04] text-navy/70">
-            <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="14" rx="1.5" /><path d="M8 10h2" /><path d="M14 10h2" /><path d="M8 14h2" /><path d="M14 14h2" /><path d="M10.5 20v-3h3v3" /></svg>
-          </span>
-          Commercial Center
-        </div>
-        <div class="flex items-center gap-3 text-sm text-navy">
-          <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy/[0.04] text-navy/70">
-            <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h16" /><path d="M5.5 9.5c0 4.2 2.9 6.8 6.5 6.8s6.5-2.6 6.5-6.8" /><path d="m9.5 16-2.5 4.5" /><path d="m14.5 16 2.5 4.5" /><path d="M9.5 4c-.9 1.1.9 1.9 0 3" /><path d="M14.5 4c-.9 1.1.9 1.9 0 3" /></svg>
-          </span>
-          Barbecue
-        </div>
-        <div class="flex items-center gap-3 text-sm text-navy">
-          <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy/[0.04] text-navy/70">
-            <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="4.5" width="15" height="15" rx="3" /><path d="M12 8v8" /><path d="m8.6 10 6.8 4" /><path d="m15.4 10-6.8 4" /></svg>
-          </span>
-          Iceplant
-        </div>
-        <div class="flex items-center gap-3 text-sm text-navy">
-          <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy/[0.04] text-navy/70">
-            <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c2.6 0 4 1.6 4.3 3.4" /><path d="M20 5c-2.6 0-4 1.6-4.3 3.4" /><path d="M8.2 8.4h7.6l1.6 3.4a5.4 5.4 0 0 1-10.8 0z" /><path d="M10.6 15.6h2.8" /><path d="M12 15.6v2.6" /></svg>
-          </span>
-          Slaughterhouse
-        </div>
-        <div class="flex items-center gap-3 text-sm text-navy">
-          <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy/[0.04] text-navy/70">
-            <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="11" rx="2" /><path d="M3.5 10.5h17" /><circle cx="7.5" cy="18.5" r="1.6" /><circle cx="16.5" cy="18.5" r="1.6" /></svg>
-          </span>
-          Transport Terminal
-        </div>
-        <div class="flex items-center gap-3 text-sm text-navy">
-          <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy/[0.04] text-navy/70">
-            <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 5.5 4.5h13L21 9" /><path d="M3 9c1.2 0 1.2 1.4 2.4 1.4S6.6 9 7.8 9s1.2 1.4 2.4 1.4S11.4 9 12.6 9s1.2 1.4 2.4 1.4S16.2 9 17.4 9s1.2 1.4 2.4 1.4S21 9 21 9" /><path d="M6 11V19" /><path d="M18 11V19" /><path d="M6 15h12" /></svg>
-          </span>
-          Tabo Market
-        </div>
-      </div>
-
-      <p class="mt-7 text-[11px] font-bold uppercase tracking-[0.16em] text-gold">Authorization &amp; readiness</p>
-
-      <label class="mt-5 block text-sm font-semibold text-navy">
-        Additional notes
-        <textarea
-          name="Notes"
-          rows="3"
-          placeholder="Local ordinance references, target timeline, or anything else we should know."
-          class="mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20 resize-y"
-        ></textarea>
-      </label>
-
-      <!-- Consent -->
-      <div class="mt-6 space-y-1 rounded-2xl border border-line bg-mist/60 p-4 sm:p-5">
-        <label class="flex cursor-pointer items-start gap-3 rounded-xl p-2 text-xs leading-relaxed text-navy/70 transition hover:bg-white/70">
-          <span class="relative mt-0.5 grid h-[18px] w-[18px] shrink-0 place-items-center">
-            <input
-              required
-              type="checkbox"
-              name="Authorization acknowledgement"
-              value="Confirmed"
-              class="peer absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-md border border-line bg-white transition checked:border-navy checked:bg-navy focus-visible:ring-2 focus-visible:ring-gold/40"
-            />
-            <svg viewBox="0 0 24 24" class="pointer-events-none relative h-3.5 w-3.5 text-white opacity-0 transition peer-checked:opacity-100" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m20 6-11 11-5-5" />
-            </svg>
-          </span>
-          <span>
-            I confirm this request is made on behalf of the LGU, and that formal authorization and signed
-            documents will be provided during the secure onboarding step. <span class="font-semibold text-gold">*</span>
-          </span>
-        </label>
-        <label class="flex cursor-pointer items-start gap-3 rounded-xl p-2 text-xs leading-relaxed text-navy/70 transition hover:bg-white/70">
-          <span class="relative mt-0.5 grid h-[18px] w-[18px] shrink-0 place-items-center">
-            <input
-              required
-              type="checkbox"
-              name="Data privacy consent"
-              value="Agreed"
-              class="peer absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-md border border-line bg-white transition checked:border-navy checked:bg-navy focus-visible:ring-2 focus-visible:ring-gold/40"
-            />
-            <svg viewBox="0 0 24 24" class="pointer-events-none relative h-3.5 w-3.5 text-white opacity-0 transition peer-checked:opacity-100" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m20 6-11 11-5-5" />
-            </svg>
-          </span>
-          <span>
-            I consent to StallTrack processing these details to respond to this request, in accordance with the
-            Data Privacy Act of 2012 (RA 10173) and the
-            <a href="/privacy" target="_blank" rel="noreferrer" class="font-semibold text-navy hover:underline">Privacy Policy</a>. <span class="font-semibold text-gold">*</span>
-          </span>
-        </label>
-      </div>
-
-      <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-        @if (submitError()) {
-          <p class="text-sm font-medium text-red-600 sm:mr-auto">{{ submitError() }}</p>
-        }
-        <button type="button" (click)="close.emit()" [disabled]="submitting()" class="inline-flex items-center justify-center gap-2 rounded-xl border border-line px-5 py-3 text-sm font-semibold text-navy/80 transition hover:bg-mist disabled:opacity-60">
-          Cancel
-        </button>
-        <button type="submit" [disabled]="submitting()" class="btn-navy disabled:opacity-70">
+      @if (submitError()) {
+        <p class="mt-5 rounded-lg border border-[#e6c4c4] bg-red-bg px-3.5 py-2.5 text-sm font-medium text-red" role="alert">{{ submitError() }}</p>
+      }
+      <div class="mt-5 flex justify-end">
+        <button type="submit" [disabled]="submitting()" class="btn-primary w-full sm:w-auto">
           {{ submitting() ? 'Submitting…' : 'Submit Assessment Request' }}
         </button>
       </div>

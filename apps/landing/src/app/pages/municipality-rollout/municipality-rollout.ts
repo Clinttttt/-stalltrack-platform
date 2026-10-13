@@ -127,9 +127,9 @@ export class MunicipalityRollout {
 
   stepCardClass(state: 'done' | 'current' | 'upcoming'): string {
     return state === 'current'
-      ? 'border-gold bg-white shadow-card ring-1 ring-gold/60'
+      ? 'border-civic bg-white shadow-card ring-1 ring-civic/60'
       : state === 'done'
-        ? 'border-gold/40 bg-white shadow-soft'
+        ? 'border-civic/40 bg-white shadow-soft'
         : 'border-line bg-mist shadow-soft';
   }
 

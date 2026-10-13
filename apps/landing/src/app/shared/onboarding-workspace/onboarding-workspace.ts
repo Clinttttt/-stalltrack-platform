@@ -353,9 +353,9 @@ export class OnboardingWorkspace {
 
   // Design-system class strings (mirror the React module constants).
   readonly INPUT =
-    'w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-navy outline-none transition placeholder:text-muted/60 focus:border-gold focus:ring-2 focus:ring-gold/20';
+    'w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-muted/60 focus:border-civic focus:ring-2 focus:ring-civic/20';
   readonly MONEY_INPUT = this.INPUT + ' pl-7';
-  readonly LABEL = 'block text-[11px] font-bold uppercase tracking-[0.1em] text-muted mb-1.5';
+  readonly LABEL = 'block text-sm font-medium text-ink mb-1.5';
 
   readonly operationGroups = OPERATION_GROUPS;
   readonly maxLocalName = MAX_LOCAL_NAME_LENGTH;
@@ -397,6 +397,18 @@ export class OnboardingWorkspace {
   readonly sectionFlags = computed(() => [this.facilitiesDone(), this.adminDone(), this.brandingDone()]);
   readonly doneCount = computed(() => this.sectionFlags().filter(Boolean).length);
   readonly allDone = computed(() => this.doneCount() === this.sectionFlags().length);
+
+  /** The same three completion flags, in page order, named for the stepper and for the list of what is still missing. */
+  readonly steps = computed(() => [
+    { id: 'sec-head', label: 'Head account', done: this.adminDone() },
+    { id: 'sec-branding', label: 'Branding & receipts', done: this.brandingDone() },
+    { id: 'sec-ops', label: 'Facilities & operations', done: this.facilitiesDone() },
+  ]);
+  readonly missing = computed(() => this.steps().filter((x) => !x.done));
+
+  jumpTo(id: string): void {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   readonly pct = computed(() => Math.round((this.doneCount() / this.sectionFlags().length) * 100));
 
   isPerHead = (f: Facility): boolean => f.type === 'Per head';

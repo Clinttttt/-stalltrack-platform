@@ -1,34 +1,50 @@
 @if (submitted()) {
-  <div class="overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-600 p-8 text-white shadow-card sm:p-10">
-    <span class="grid h-12 w-12 place-items-center rounded-2xl bg-gold text-navy">
-      <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+  <div class="rounded-xl border border-civic-line bg-civic-soft p-6 sm:p-8">
+    <span class="grid h-11 w-11 place-items-center rounded-full bg-civic text-white">
+      <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg>
     </span>
-    <h2 class="mt-4 font-display text-2xl font-bold sm:text-3xl">Submitted for validation — thank you, {{ municipalityName() }}.</h2>
-    <p class="mt-3 max-w-2xl text-base leading-relaxed text-white/70">
-      Your configuration ({{ facilities().length }} {{ facilities().length === 1 ? 'facility' : 'facilities' }}) has been sent to your
-      onboarding coordinator for the validation dry-run. Once it passes review, {{ municipalityName() }}&rsquo;s portal is approved
-      for activation and the Head receives a private registration link.
+    <h2 class="mt-4 font-display text-2xl font-bold text-ink sm:text-3xl">Submitted for validation</h2>
+    <p class="mt-2 max-w-2xl text-base leading-relaxed text-ink/80">
+      Thank you, {{ municipalityName() }}. Your configuration ({{ facilities().length }} {{ facilities().length === 1 ? 'facility' : 'facilities' }}) is
+      with the platform team for review. Once it passes, your portal is approved for activation and the Head receives a private registration link.
     </p>
-    <button (click)="editSubmission()" class="btn-ghost mt-6">Edit submission</button>
+    <button (click)="editSubmission()" class="btn-secondary mt-5">Edit submission</button>
   </div>
 } @else {
   <div>
-    <!-- Progress -->
-    <div class="sticky top-[4.25rem] z-20 -mx-1 mb-6 rounded-2xl border border-line bg-white/95 px-4 py-3 shadow-soft backdrop-blur">
+    <!-- Progress: the three sections an office completes before it can submit -->
+    <nav class="sticky top-16 z-20 -mx-1 mb-6 rounded-xl border border-line bg-white/95 px-4 py-3 shadow-soft backdrop-blur" aria-label="Configuration progress">
       <div class="flex items-center justify-between gap-4">
-        <div class="text-sm font-semibold text-navy">Configuration progress</div>
-        <div class="text-sm font-semibold text-muted">{{ doneCount() }} of {{ sectionFlags().length }} sections · {{ pct() }}%</div>
+        <span class="text-sm font-semibold text-ink">Configuration</span>
+        <span class="text-sm text-muted" aria-live="polite">{{ doneCount() }} of {{ sectionFlags().length }} sections ready</span>
       </div>
-      <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-mist">
-        <div class="h-full rounded-full bg-gold transition-all duration-500" [style.width.%]="pct()"></div>
-      </div>
-    </div>
+      <ol class="mt-2.5 grid gap-2 sm:grid-cols-3">
+        @for (st of steps(); track st.id; let i = $index) {
+          <li>
+            <button type="button" (click)="jumpTo(st.id)"
+              class="flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 text-left text-sm transition"
+              [class]="st.done ? 'border-civic-line bg-civic-soft text-civic' : 'border-line bg-white text-ink/80 hover:border-civic/40 hover:bg-mist'">
+              <span class="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[11px] font-bold"
+                [class]="st.done ? 'bg-civic text-white' : 'border border-muted text-muted'">
+                @if (st.done) {
+                  <svg viewBox="0 0 24 24" class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg>
+                } @else {
+                  {{ i + 1 }}
+                }
+              </span>
+              <span class="font-medium">{{ st.label }}</span>
+              <span class="sr-only">{{ st.done ? ' — ready' : ' — not ready yet' }}</span>
+            </button>
+          </li>
+        }
+      </ol>
+    </nav>
 
     <div class="space-y-5">
-      <!-- ── Administrator account (Section) ────────────────────────────── -->
-      <div class="rounded-2xl border border-line bg-white p-5 shadow-soft sm:p-6">
+      <!-- ── Head account ─────────────────────────────────────────────────── -->
+      <div id="sec-head" class="scroll-mt-40 rounded-xl border border-line bg-white p-5 shadow-soft sm:p-6">
         <div class="flex items-start gap-3">
-          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" [class]="adminDone() ? 'bg-green/10 text-green' : 'bg-navy text-gold'">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" [class]="adminDone() ? 'bg-green/10 text-green' : 'bg-civic-soft text-civic'">
             @if (adminDone()) {
               <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
             } @else {
@@ -37,16 +53,16 @@
           </span>
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
-              <h3 class="font-display text-xl font-bold text-navy">Head account</h3>
+              <h3 class="font-display text-xl font-bold text-ink">Head account</h3>
               @if (adminDone()) {
-                <span class="rounded-full bg-green-bg px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-green">Ready</span>
+                <span class="rounded-full bg-green-bg px-2.5 py-0.5 text-xs font-semibold text-green">Ready</span>
               }
             </div>
             <!-- "Head" is the platform's own name for this role, not a synonym invented here: the portal signs them into a
                  "Head Portal" and the domain refers to the Head throughout. Calling them the administrator on this page and the
                  Head everywhere after activation left an office with two words for one person - and worse, the note below says
                  they go on to create "admins", so "administrator" was the word for both the owner and their staff. -->
-            <p class="mt-0.5 text-sm text-muted">Designate the office Head who will own the portal. They receive the private registration link after activation.</p>
+            <p class="mt-0.5 text-sm text-muted">The Head owns the portal and receives the registration link after activation.</p>
           </div>
         </div>
         <div class="mt-5">
@@ -65,17 +81,13 @@
               <p class="mt-1 text-[11px] leading-snug text-muted/80">The registration link is sent here after activation.</p>
             </div>
           </div>
-          <div class="mt-3 flex items-start gap-2 rounded-xl border border-dashed border-line bg-mist/50 px-3.5 py-2.5 text-xs text-muted">
-            <svg viewBox="0 0 24 24" class="mt-0.5 h-4 w-4 shrink-0 text-navy" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 8h.01M11 12h1v4h1" /></svg>
-            <span>The Head sets their own password via a secure link — never entered here — then creates and manages their own staff (admins and collectors) inside the portal.</span>
-          </div>
         </div>
       </div>
 
-      <!-- ── Branding (Section) ─────────────────────────────────────────── -->
-      <div class="rounded-2xl border border-line bg-white p-5 shadow-soft sm:p-6">
+      <!-- ── Branding ─────────────────────────────────────────────────────── -->
+      <div id="sec-branding" class="scroll-mt-40 rounded-xl border border-line bg-white p-5 shadow-soft sm:p-6">
         <div class="flex items-start gap-3">
-          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" [class]="brandingDone() ? 'bg-green/10 text-green' : 'bg-navy text-gold'">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" [class]="brandingDone() ? 'bg-green/10 text-green' : 'bg-civic-soft text-civic'">
             @if (brandingDone()) {
               <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
             } @else {
@@ -84,12 +96,12 @@
           </span>
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
-              <h3 class="font-display text-xl font-bold text-navy">Branding &amp; receipts</h3>
+              <h3 class="font-display text-xl font-bold text-ink">Branding &amp; receipts</h3>
               @if (brandingDone()) {
-                <span class="rounded-full bg-green-bg px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-green">Ready</span>
+                <span class="rounded-full bg-green-bg px-2.5 py-0.5 text-xs font-semibold text-green">Ready</span>
               }
             </div>
-            <p class="mt-0.5 text-sm text-muted">How reports and Official Receipts are labeled.</p>
+            <p class="mt-0.5 text-sm text-muted">How reports and Official Receipts are headed.</p>
           </div>
         </div>
         <div class="mt-5">
@@ -107,7 +119,7 @@
                 } @else {
                   <span class="grid h-12 w-12 place-items-center rounded-lg border border-dashed border-line bg-mist text-muted"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" /><path d="M8 7h8M8 11h8M8 15h5" /></svg></span>
                 }
-                <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
+                <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm font-semibold text-ink/80 transition hover:border-civic/50 hover:text-ink">
                   <input type="file" accept="image/png,image/jpeg,image/svg+xml" class="hidden" (change)="onLogo($event)" />
                   <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5-5 5 5" /><path d="M12 5v12" /></svg> {{ branding().logoName ? 'Change logo' : 'Upload logo' }}
                 </label>
@@ -126,9 +138,9 @@
 
       <!-- The facility card, rendered inside whichever revenue group the facility belongs to. -->
       <ng-template #facilityCard let-f>
-          <div [class]="'overflow-hidden rounded-xl border transition ' + (expandedId() === f.id ? 'border-gold/60 shadow-soft' : isFacilityDone(f) ? 'border-green/40' : 'border-line')">
+          <div [class]="'overflow-hidden rounded-xl border transition ' + (expandedId() === f.id ? 'border-civic/50 shadow-soft' : isFacilityDone(f) ? 'border-green/40' : 'border-line')">
             <button type="button" (click)="toggleExpanded(f.id)" class="flex w-full items-center gap-3 bg-white px-4 py-3.5 text-left transition hover:bg-mist/40">
-              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg" [class]="isFacilityDone(f) ? 'bg-green/10 text-green' : 'bg-navy text-gold'">
+              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg" [class]="isFacilityDone(f) ? 'bg-green/10 text-green' : 'bg-civic-soft text-civic'">
                 @if (isFacilityDone(f)) {
                   <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
                 } @else {
@@ -136,10 +148,10 @@
                 }
               </span>
               <div class="min-w-0 flex-1">
-                <div class="truncate font-display text-base font-bold text-navy">{{ f.name || 'New facility' }}</div>
+                <div class="truncate font-display text-base font-bold text-ink">{{ f.name || 'New facility' }}</div>
                 <div class="text-xs text-muted">{{ f.type }}{{ summaryFor(f) ? ' · ' + summaryFor(f) : '' }}</div>
               </div>
-              <span [class]="'rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + (isFacilityDone(f) ? 'bg-green-bg text-green' : 'bg-amber-bg text-amber')">{{ isFacilityDone(f) ? 'Done' : 'To configure' }}</span>
+              <span [class]="'rounded-full px-2.5 py-0.5 text-xs font-semibold ' + (isFacilityDone(f) ? 'bg-green-bg text-green' : 'bg-amber-bg text-amber')">{{ isFacilityDone(f) ? 'Done' : 'To configure' }}</span>
               <svg viewBox="0 0 24 24" [class]="'h-4 w-4 text-muted transition-transform ' + (expandedId() === f.id ? 'rotate-180' : '')" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
             </button>
 
@@ -186,8 +198,8 @@
                   <!-- Per-head: explicit canonical billing identities + flexible office wording. -->
                   <div class="mt-5 border-t border-line pt-4">
                     <div class="flex items-center gap-2">
-                      <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82" /></svg>
-                      <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Animal labels &amp; per-head rates</span>
+                      <svg viewBox="0 0 24 24" class="h-4 w-4 text-civic" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82" /></svg>
+                      <span class="text-xs font-semibold text-muted">Animal labels &amp; per-head rates</span>
                     </div>
                     <p class="mt-1 text-xs text-muted">Choose the wording your office uses. StallTrack keeps Hog, Carabao, and Cow as stable animal types for billing.</p>
 
@@ -203,7 +215,7 @@
 
                     <div class="mt-3 grid gap-3 lg:grid-cols-2">
                       <div class="rounded-xl border border-line bg-white p-4">
-                        <div class="text-xs font-bold uppercase tracking-wide text-navy">Hog rate</div>
+                        <div class="text-xs font-semibold text-ink">Hog rate</div>
                         <div class="mt-3 grid gap-3 sm:grid-cols-2">
                           <div>
                             <label [class]="LABEL">Office label</label>
@@ -220,7 +232,7 @@
                       </div>
 
                       <div class="rounded-xl border border-line bg-white p-4">
-                        <div class="text-xs font-bold uppercase tracking-wide text-navy">Shared large-animal rate</div>
+                        <div class="text-xs font-semibold text-ink">Shared large-animal rate</div>
                         <p class="mt-1 text-xs text-muted">Carabao and Cow remain separate animal types, but use one ordinance rate.</p>
                         <div class="mt-3">
                           <label [class]="LABEL">Rate (per head)</label>
@@ -243,7 +255,7 @@
                     </div>
 
                     <div class="mt-4">
-                      <div class="text-[11px] font-bold uppercase tracking-wide text-muted">Additional animal types</div>
+                      <div class="text-xs font-semibold text-muted">Additional animal types</div>
                       <div class="mt-2 space-y-2">
                       @for (r of f.slaughterhouse?.customAnimals || []; track r.id) {
                         <div class="grid gap-3 rounded-lg border border-line bg-white p-3 sm:grid-cols-[1.6fr,1fr,auto] sm:items-end">
@@ -264,7 +276,7 @@
                         </div>
                       }
                       </div>
-                      <button type="button" (click)="addCustomAnimal(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
+                      <button type="button" (click)="addCustomAnimal(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-ink/80 transition hover:border-civic/50 hover:text-ink">
                         <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add animal
                       </button>
                     </div>
@@ -275,32 +287,32 @@
                        stated in the office's own figures, because the difference only becomes plain in the numbers. -->
                   <div class="mt-5 border-t border-line pt-4">
                     <div class="flex items-center gap-2">
-                      <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /></svg>
-                      <span class="text-[11px] font-bold uppercase tracking-wide text-muted">How a month is measured</span>
+                      <svg viewBox="0 0 24 24" class="h-4 w-4 text-civic" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /></svg>
+                      <span class="text-xs font-semibold text-muted">How a month is measured</span>
                     </div>
                     <p class="mt-1 text-xs text-muted">Your ordinance decides this.</p>
 
                     <div class="mt-3 grid gap-2 sm:grid-cols-2">
                       <label class="flex cursor-pointer items-start gap-3 rounded-lg border bg-white p-3"
-                             [class.border-gold]="f.monthBasis !== 'PureDays'"
+                             [class.border-civic]="f.monthBasis !== 'PureDays'"
                              [class.border-line]="f.monthBasis === 'PureDays'">
-                        <input type="radio" [name]="'basis-' + f.id" class="mt-0.5 accent-navy"
+                        <input type="radio" [name]="'basis-' + f.id" class="mt-0.5 accent-civic"
                                [checked]="f.monthBasis !== 'PureDays'"
                                (change)="setFacility(f.id, 'monthBasis', 'RentGoal')" />
                         <span>
-                          <span class="block text-sm font-semibold text-navy">Fixed monthly rent</span>
+                          <span class="block text-sm font-semibold text-ink">Fixed monthly rent</span>
                           <span class="block text-xs text-muted">The monthly obligation remains the same regardless of the number of days in the month.</span>
                         </span>
                       </label>
 
                       <label class="flex cursor-pointer items-start gap-3 rounded-lg border bg-white p-3"
-                             [class.border-gold]="f.monthBasis === 'PureDays'"
+                             [class.border-civic]="f.monthBasis === 'PureDays'"
                              [class.border-line]="f.monthBasis !== 'PureDays'">
-                        <input type="radio" [name]="'basis-' + f.id" class="mt-0.5 accent-navy"
+                        <input type="radio" [name]="'basis-' + f.id" class="mt-0.5 accent-civic"
                                [checked]="f.monthBasis === 'PureDays'"
                                (change)="setFacility(f.id, 'monthBasis', 'PureDays')" />
                         <span>
-                          <span class="block text-sm font-semibold text-navy">Calendar-day billing</span>
+                          <span class="block text-sm font-semibold text-ink">Calendar-day billing</span>
                           <span class="block text-xs text-muted">The monthly obligation is based on the actual number of days in the month.</span>
                         </span>
                       </label>
@@ -323,8 +335,8 @@
                   <!-- Market areas / sections (e.g. Fish, Meat, Vegetables) + per-section base rate & fees -->
                   <div class="mt-5 border-t border-line pt-4">
                     <div class="flex items-center gap-2">
-                      <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
-                      <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Market areas / sections</span>
+                      <svg viewBox="0 0 24 24" class="h-4 w-4 text-civic" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+                      <span class="text-xs font-semibold text-muted">Market areas / sections</span>
                     </div>
                     <p class="mt-1 text-xs text-muted">
                       Name each area in your own language and state its daily rate. An area left blank takes the first
@@ -375,7 +387,7 @@
                       }
                     </div>
                     @if (canAddSection(f)) {
-                      <button type="button" (click)="addSection(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy">
+                      <button type="button" (click)="addSection(f.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-ink/80 transition hover:border-civic/50 hover:text-ink">
                         <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg> Add section
                       </button>
                     }
@@ -394,12 +406,12 @@
                 @if (f.type === 'Daily stall') {
                 <div class="mt-5 border-t border-line pt-4">
                   <div class="flex items-center gap-2">
-                    <svg viewBox="0 0 24 24" class="h-4 w-4 text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82" /></svg>
-                    <span class="text-[11px] font-bold uppercase tracking-wide text-muted">Electricity &amp; water</span>
+                    <svg viewBox="0 0 24 24" class="h-4 w-4 text-civic" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82" /></svg>
+                    <span class="text-xs font-semibold text-muted">Electricity &amp; water</span>
                   </div>
                   <p class="mt-1 text-xs text-muted">Metered utilities are billed per reading, so no rate is entered here. Declare them under Revenue Operations; which stalls are billed is set up per stall after activation.</p>
                   @for (a of f.addOns; track a.id) {
-                    <div class="mt-3 flex items-start justify-between gap-3 rounded-lg border border-amber/40 bg-amber-bg/50 p-3 text-xs text-navy">
+                    <div class="mt-3 flex items-start justify-between gap-3 rounded-lg border border-amber/40 bg-amber-bg/50 p-3 text-xs text-ink">
                       <span>Saved earlier: <strong>{{ a.label }}</strong>, {{ a.basis.toLowerCase() }}{{ a.amount ? ' — ₱' + a.amount + ' ' + a.unit : '' }}. This is shown to your coordinator but not filed as a rate at activation.</span>
                       <button type="button" (click)="removeFee(f.id, a.id)" class="shrink-0 font-semibold text-muted transition hover:text-red">Remove</button>
                     </div>
@@ -412,7 +424,7 @@
                   <button type="button" (click)="removeFacility(f.id)" class="inline-flex items-center gap-1 text-xs font-semibold text-muted transition hover:text-red">
                     <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg> Remove facility
                   </button>
-                  <button type="button" (click)="expandedId.set(null)" [disabled]="!isFacilityDone(f)" class="btn-navy !py-2" [class.cursor-not-allowed]="!isFacilityDone(f)" [class.opacity-50]="!isFacilityDone(f)">
+                  <button type="button" (click)="expandedId.set(null)" [disabled]="!isFacilityDone(f)" class="btn-primary !py-2" [class.cursor-not-allowed]="!isFacilityDone(f)" [class.opacity-50]="!isFacilityDone(f)">
                     <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> {{ isFacilityDone(f) ? 'Done — collapse' : isPerHead(f) ? 'Add a rate to finish' : f.type === 'Daily stall' ? 'Price a section to finish' : isRentSetPerSpace(f) ? 'Name the facility to finish' : 'Set a base rate to finish' }}
                   </button>
                 </div>
@@ -421,10 +433,10 @@
           </div>
       </ng-template>
 
-      <!-- ── Revenue operations, grouped as the official Monthly Income statement groups them ──────────────── -->
-      <div class="rounded-2xl border border-line bg-white p-5 shadow-soft sm:p-6">
+      <!-- ── Facilities and revenue operations, grouped as the official Monthly Income statement groups them ──── -->
+      <div id="sec-ops" class="scroll-mt-40 rounded-xl border border-line bg-white p-5 shadow-soft sm:p-6">
         <div class="flex items-start gap-3">
-          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" [class]="facilitiesDone() ? 'bg-green/10 text-green' : 'bg-navy text-gold'">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" [class]="facilitiesDone() ? 'bg-green/10 text-green' : 'bg-civic-soft text-civic'">
             @if (facilitiesDone()) {
               <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
             } @else {
@@ -433,27 +445,27 @@
           </span>
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-2">
-              <h3 class="font-display text-xl font-bold text-navy">Revenue Operations</h3>
+              <h3 class="font-display text-xl font-bold text-ink">Facilities &amp; revenue operations</h3>
               @if (facilitiesDone()) {
-                <span class="rounded-full bg-green-bg px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-green">Ready</span>
+                <span class="rounded-full bg-green-bg px-2.5 py-0.5 text-xs font-semibold text-green">Ready</span>
               }
               <span class="ml-auto flex gap-2">
-                <span class="rounded-full bg-mist px-2.5 py-0.5 text-[11px] font-bold text-muted">{{ doneFacilities() }}/{{ facilities().length }} facilities configured</span>
-                <span class="rounded-full bg-mist px-2.5 py-0.5 text-[11px] font-bold text-muted">{{ selectedOperationCount() }} operations selected</span>
+                <span class="rounded-full bg-mist px-2.5 py-0.5 text-[11px] font-bold text-muted">{{ doneFacilities() }}/{{ facilities().length }} facilities</span>
+                <span class="rounded-full bg-mist px-2.5 py-0.5 text-[11px] font-bold text-muted">{{ selectedOperationCount() }} operations</span>
               </span>
             </div>
-            <p class="mt-0.5 text-sm text-muted">Choose the collection activities your municipality manages, under the same groups as your Monthly Income statement. Add only the facilities you operate, under your own names. You can complete setup or make changes later in the Head Portal.</p>
+            <p class="mt-0.5 text-sm text-muted">Add the facilities you operate and choose the collections you manage. Choosing records your intent and your own name for it; rates, payors and Collectors are set up in the Head Portal after activation.</p>
           </div>
         </div>
 
         @if (unfinishedFacility()) {
-          <p class="mt-4 rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-2 text-xs text-navy" role="status">Finish {{ unfinishedFacilityLabel() }} before adding another facility.</p>
+          <p class="mt-4 rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-2 text-xs text-ink" role="status">Finish {{ unfinishedFacilityLabel() }} before adding another facility.</p>
         }
 
         <div class="mt-5 space-y-6">
           @for (g of revenueGroups; track g.key) {
             <section [attr.aria-labelledby]="'rg-' + g.key" [attr.data-group]="g.key">
-              <h4 [id]="'rg-' + g.key" class="border-b border-line pb-1.5 font-display text-base font-bold text-navy">{{ g.label }}</h4>
+              <h4 [id]="'rg-' + g.key" class="border-b border-line pb-1.5 font-display text-base font-bold text-ink">{{ g.label }}</h4>
               <p class="mt-1.5 text-xs text-muted">{{ g.hint }}</p>
 
               @if (facilitiesInGroup(g.key).length) {
@@ -468,7 +480,7 @@
                 <div class="mt-3 flex flex-wrap gap-2">
                   @for (c of catalogInGroup(g.key); track c.key) {
                     <button type="button" (click)="addFromCatalog(c)" [disabled]="isCatalogUsed(c) || !!unfinishedFacility()" [attr.data-add-facility]="c.key"
-                      class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy/80 transition hover:border-gold/60 hover:text-navy disabled:cursor-not-allowed disabled:opacity-50">
+                      class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-ink/80 transition hover:border-civic/50 hover:text-ink disabled:cursor-not-allowed disabled:opacity-50">
                       <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg>
                       {{ isCatalogUsed(c) ? (c.key === 'other' ? 'Limit of 5 reached' : catalogName(c) + ' added') : 'Add ' + catalogName(c) }}
                     </button>
@@ -483,22 +495,20 @@
                 <div class="mt-3 divide-y divide-line rounded-xl border border-line">
                   @for (op of operationsInGroup(g.key); track op.code) {
                     <div class="px-3.5 py-2.5">
-                      <label class="flex cursor-pointer items-start gap-3">
-                        <input type="checkbox" class="mt-1 h-4 w-4 shrink-0 accent-[#c9a227]" [checked]="isOperationSelected(op.code)" (change)="toggleOperation(op.code)" [attr.data-operation]="op.code" />
+                      <label class="flex cursor-pointer items-start gap-3" [attr.title]="op.hint">
+                        <input type="checkbox" class="mt-1 h-4 w-4 shrink-0 accent-civic" [checked]="isOperationSelected(op.code)" (change)="toggleOperation(op.code)" [attr.data-operation]="op.code" />
                         <span class="min-w-0">
-                          <span class="block text-sm font-semibold text-navy">{{ op.label }}</span>
-                          <span class="block text-xs text-muted">{{ op.hint }}</span>
+                          <span class="block text-sm font-semibold text-ink">{{ op.label }}</span>
+                          <span class="sr-only">{{ op.hint }}</span>
                         </span>
                       </label>
                       @if (isOperationSelected(op.code)) {
                         <div class="ml-7 mt-2 max-w-md">
-                          <label [class]="LABEL" [attr.for]="'op-name-' + op.code">Your name for it (optional)</label>
+                          <label [class]="LABEL" [attr.for]="'op-name-' + op.code">Your name for it <span class="font-normal text-muted">(optional)</span></label>
                           <input [id]="'op-name-' + op.code" [class]="INPUT" [value]="operationName(op.code)" [attr.maxlength]="maxLocalName"
                             (input)="setOperationName(op.code, $any($event.target).value)" [placeholder]="op.label" />
                           @if (operationProblem(op.code)) {
                             <p class="mt-1 text-[11px] font-medium leading-snug text-red">{{ operationProblem(op.code) }}</p>
-                          } @else {
-                            <p class="mt-1 text-[11px] leading-snug text-muted/80">Your office&rsquo;s own name for this collection. It is used in your Head Portal&rsquo;s Operations list, and the Head can change it later in Settings. It never changes how the collection is classified or which receipt it uses.</p>
                           }
                         </div>
                       }
@@ -510,7 +520,7 @@
           }
 
           @if (lockedOperations() !== null) {
-            <div class="rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-3 text-xs text-navy" role="status">
+            <div class="rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-3 text-xs text-ink" role="status">
               <p class="font-semibold">Revenue operations saved by a newer version of this workspace</p>
               <p class="mt-1">This draft holds revenue operations in a format (version {{ lockedOperationsVersion() }}) this page cannot safely edit. They are kept exactly as saved &mdash; nothing is changed or downgraded &mdash; so the operation choices are hidden. <strong>The draft cannot be saved or submitted while they are kept</strong>, because the platform will refuse a format it does not read, even for changes to your facilities, Head or branding. Use a newer version of this workspace, or discard the saved operations below and choose them again.</p>
               @if (confirmingDiscard()) {
@@ -524,7 +534,7 @@
           }
 
           @if (preservedOperations().length) {
-            <div class="rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-2.5 text-xs text-navy" role="status">
+            <div class="rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-2.5 text-xs text-ink" role="status">
               <p>{{ preservedOperations().length }} saved {{ preservedOperations().length === 1 ? 'entry' : 'entries' }} could not be read by this version ({{ preservedOperationNames().join(', ') }}). They are kept exactly as saved and are not deleted. If StallTrack does not recognise them, saving or submitting may be refused until this workspace supports them or you discard them.</p>
               @if (confirmingDiscard()) {
                 <p class="mt-2 font-semibold text-red">This permanently removes only these entries from your draft. Everything else you chose stays.</p>
@@ -536,42 +546,40 @@
             </div>
           }
 
-          <p class="text-xs text-muted">Choosing an operation records your intent and your name for it. It does not switch the collection on, register vendors or payors, assign Collectors, or set a rate &mdash; the Head does that in the portal. Individual stall and space rents, vendors, collectors, and staff are set up later in your live portal.</p>
-        </div>
-      </div>
-
-      <!-- Operational-data note -->
-      <div class="flex items-start gap-3 rounded-2xl border border-line bg-white p-5 shadow-soft">
-        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-mist text-navy"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 8h.01M11 12h1v4h1" /></svg></span>
-        <div>
-          <h3 class="font-display text-base font-bold text-navy">Vendors &amp; daily collections come later</h3>
-          <p class="mt-1 text-sm leading-relaxed text-muted">
-            Stallholders/payors, daily collections, and utility readings are entered inside your live portal after activation —
-            just like day-to-day operations. Onboarding only sets up your facilities, fees, administrator, and branding.
-          </p>
         </div>
       </div>
     </div>
 
     <!-- Submit -->
-    <div class="mt-6 overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-600 p-6 text-white shadow-card sm:p-8">
-      <div class="grid items-center gap-6 lg:grid-cols-[1.4fr,0.6fr]">
+    <section class="mt-6 rounded-xl border border-line bg-white p-5 shadow-soft sm:p-6" aria-labelledby="submit-title">
+      <div class="grid items-center gap-5 lg:grid-cols-[1.4fr,0.6fr]">
         <div>
-          <span class="text-[11px] font-bold uppercase tracking-[0.22em] text-gold">Next step</span>
-          <h2 class="mt-2 font-display text-2xl font-bold sm:text-3xl">Submit {{ municipalityName() }}&rsquo;s configuration for validation.</h2>
-          <p class="mt-2 max-w-2xl text-sm leading-relaxed text-white/68">
-            {{ allDone() ? 'All sections are ready. Submitting sends your configuration to the coordinator for the validation dry-run.' : 'Complete all ' + sectionFlags().length + ' sections to submit (' + doneCount() + '/' + sectionFlags().length + ' ready).' }}
-          </p>
+          <h2 id="submit-title" class="font-display text-xl font-bold text-ink sm:text-2xl">
+            {{ allDone() && operationsValid() ? 'Ready to submit' : 'Submit for validation' }}
+          </h2>
+          @if (allDone() && operationsValid()) {
+            <p class="mt-1.5 text-sm text-muted">All {{ sectionFlags().length }} sections are ready. Submitting sends {{ municipalityName() }}&rsquo;s configuration to the platform team for review.</p>
+          } @else {
+            <p class="mt-1.5 text-sm text-muted">Still needed before you can submit:</p>
+            <ul class="mt-1.5 flex flex-wrap gap-2">
+              @for (st of missing(); track st.id) {
+                <li><button type="button" (click)="jumpTo(st.id)" class="rounded-full bg-amber-bg px-3 py-1 text-xs font-semibold text-amber hover:underline">{{ st.label }}</button></li>
+              }
+              @if (!operationsValid()) {
+                <li><button type="button" (click)="jumpTo('sec-ops')" class="rounded-full bg-amber-bg px-3 py-1 text-xs font-semibold text-amber hover:underline">Fix the operation names marked above</button></li>
+              }
+            </ul>
+          }
         </div>
-        <div class="lg:justify-self-end space-y-2">
-          <button type="button" (click)="saveProgress()" [disabled]="busy()" class="btn-ghost w-full disabled:opacity-50">
+        <div class="space-y-2 lg:justify-self-end">
+          <button type="button" (click)="saveProgress()" [disabled]="busy()" class="btn-secondary w-full disabled:opacity-50">
             {{ busy() ? 'Saving…' : 'Save progress' }}
           </button>
-          <button type="button" (click)="submit()" [disabled]="!allDone() || !operationsValid() || busy()" class="btn-gold w-full" [class.cursor-not-allowed]="!allDone() || !operationsValid() || busy()" [class.opacity-50]="!allDone() || !operationsValid() || busy()">
-            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> Submit for validation
+          <button type="button" (click)="submit()" [disabled]="!allDone() || !operationsValid() || busy()" class="btn-primary w-full">
+            Submit for validation
           </button>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 }

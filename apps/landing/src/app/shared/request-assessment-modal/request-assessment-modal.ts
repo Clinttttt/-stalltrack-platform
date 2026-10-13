@@ -11,6 +11,39 @@ import {
 import { Router } from '@angular/router';
 import { Municipality } from '../../core/municipality.model';
 import { AssessmentService } from '../../core/assessment.service';
+import { OPERATION_CATALOG } from '../onboarding-workspace/onboarding-operations';
+
+const nameOf = (code: string): string => OPERATION_CATALOG.find((o) => o.code === code)?.label ?? code;
+
+/**
+ * What an assessment may cover, in four short groups. The operation names are read from the platform's own operation catalog
+ * (the same one the onboarding workspace offers), so this list cannot drift from what an office is later asked to choose from.
+ * The plain-language leads name the facilities that are set up as facilities rather than as operations.
+ *
+ * Examples, not a promise: which of them an office actually runs is confirmed during onboarding.
+ */
+export const ASSESSMENT_SCOPE: ReadonlyArray<{ title: string; summary: string; items: string; codes: readonly string[] }> = [
+  {
+    title: 'Markets & vendors',
+    summary: 'Public market and commercial facilities',
+    codes: ['FISH_MEAT_VENDOR_FEE', 'MARKET_FEES'],
+  },
+  {
+    title: 'Spaces & rentals',
+    summary: 'Stalls and municipal spaces',
+    codes: ['KANMANGGAY_SPACE_RENTAL', 'VEGETABLE_FRUIT_SPACE_RENTAL', 'FIESTA_ARAW_LOT_RENTAL'],
+  },
+  {
+    title: 'Utilities & services',
+    summary: 'Metered utilities and inspections',
+    codes: ['ECF', 'WCF', 'WEIGHT_AND_MEASURE'],
+  },
+  {
+    title: 'Facilities & transport',
+    summary: 'Slaughterhouse, iceplant and transport terminal',
+    codes: ['TRANSPORTATION', 'LANDING_BERTHING', 'TRANSFER_LARGE_CATTLE'],
+  },
+].map((g) => ({ ...g, items: g.codes.map(nameOf).join(' · ') }));
 
 /**
  * Faithful Angular port of the React <RequestAssessmentModal>.
@@ -40,8 +73,10 @@ export class RequestAssessmentModal {
   /** Mirrors the React `onClose` prop. */
   readonly close = output<void>();
 
+  readonly scope = ASSESSMENT_SCOPE;
+
   readonly fieldClass =
-    'mt-2 w-full rounded-xl border border-line bg-white px-3.5 py-3 font-normal text-navy outline-none transition placeholder:text-muted/70 focus:border-gold focus:ring-2 focus:ring-gold/20';
+    'mt-1.5 w-full rounded-lg border border-line bg-white px-3.5 py-2.5 font-normal text-ink outline-none transition placeholder:text-muted/70 focus:border-civic focus:ring-2 focus:ring-civic/20 [&:user-invalid]:border-[#c98a8a]';
 
   readonly confirmationUrl = signal('');
   readonly submitting = signal(false);
@@ -82,6 +117,7 @@ export class RequestAssessmentModal {
       };
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', onKeyDown);
+      document.getElementById('assess-first')?.focus();
 
       this.destroyRef.onDestroy(() => {
         document.body.style.overflow = previousOverflow;

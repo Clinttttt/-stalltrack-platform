@@ -5,7 +5,7 @@
   <nav class="container-px flex h-16 items-center justify-between" aria-label="Main navigation">
     <a routerLink="/" class="flex items-center gap-2.5 rounded-lg" aria-label="StallTrack home">
       <img src="/carcanmadcarlan/logo/stalltrack-seal-transparent.png" alt="" width="40" height="40" class="h-10 w-10 object-contain" />
-      <span class="font-display text-xl font-bold text-navy">
+      <span class="font-display text-xl font-bold text-ink">
         Stall<span class="text-gold">Track</span>
       </span>
     </a>
@@ -28,7 +28,7 @@
       aria-label="Open navigation menu"
       [attr.aria-expanded]="open()"
     >
-      <svg viewBox="0 0 24 24" class="h-5 w-5 stroke-navy" fill="none" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <svg viewBox="0 0 24 24" class="h-5 w-5 stroke-ink" fill="none" stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <path d="M4 7h16M4 12h16M4 17h16" />
       </svg>
     </button>
@@ -40,17 +40,17 @@
   <div class="fixed inset-0 z-50 md:hidden" role="presentation">
     <button
       type="button"
-      class="absolute inset-0 bg-navy/55"
+      class="absolute inset-0 bg-ink/55"
       (click)="closeMenu()"
       aria-label="Close navigation menu"
     ></button>
     <aside class="absolute right-0 top-0 flex h-[100dvh] w-[min(20rem,86vw)] flex-col border-l border-line bg-white shadow-2xl">
       <div class="flex items-center justify-between border-b border-line px-5 py-4">
-        <span class="font-display text-lg font-bold text-navy">Stall<span class="text-gold">Track</span></span>
+        <span class="font-display text-lg font-bold text-ink">Stall<span class="text-gold">Track</span></span>
         <button
           type="button"
           (click)="closeMenu()"
-          class="grid h-10 w-10 place-items-center rounded-lg border border-line text-navy"
+          class="grid h-10 w-10 place-items-center rounded-lg border border-line text-ink"
           aria-label="Close navigation menu"
         >
           <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18" /><path d="M6 6l12 12" /></svg>
@@ -60,9 +60,9 @@
       <div class="flex flex-1 flex-col gap-1 overflow-y-auto px-5 py-5">
         @for (l of links; track l.href) {
           @if (l.route) {
-            <a [routerLink]="l.route" (click)="closeMenu()" class="rounded-lg px-3 py-3 text-base font-semibold text-navy hover:bg-mist">{{ l.label }}</a>
+            <a [routerLink]="l.route" (click)="closeMenu()" class="rounded-lg px-3 py-3 text-base font-semibold text-ink hover:bg-mist">{{ l.label }}</a>
           } @else {
-            <a [href]="l.href" (click)="closeMenu()" class="rounded-lg px-3 py-3 text-base font-semibold text-navy hover:bg-mist">{{ l.label }}</a>
+            <a [href]="l.href" (click)="closeMenu()" class="rounded-lg px-3 py-3 text-base font-semibold text-ink hover:bg-mist">{{ l.label }}</a>
           }
         }
         <a routerLink="/municipalities" (click)="closeMenu()" class="btn-primary mt-3">Request an assessment</a>

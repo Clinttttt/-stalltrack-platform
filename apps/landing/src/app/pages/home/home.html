@@ -1,5 +1,5 @@
 <div class="flex min-h-screen flex-col">
-  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-navy">Skip to content</a>
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-ink">Skip to content</a>
   <app-navbar />
 
   <main id="main" class="flex-1">
@@ -8,10 +8,10 @@
       <div class="container-px grid items-center gap-10 py-14 sm:py-20 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14 lg:py-24">
         <div class="max-w-xl">
           <p class="text-xs font-semibold uppercase tracking-[0.14em] text-civic">For LGU economic enterprise offices</p>
-          <h1 class="mt-3 font-display text-[2.4rem] font-bold leading-[1.08] tracking-tight text-navy sm:text-5xl lg:text-[3.25rem]">
+          <h1 class="mt-3 font-display text-[2.4rem] font-bold leading-[1.08] tracking-tight text-ink sm:text-5xl lg:text-[3.25rem]">
             Municipal enterprise collections, organized.
           </h1>
-          <p class="mt-5 text-base leading-relaxed text-navy/75 sm:text-lg">
+          <p class="mt-5 text-base leading-relaxed text-ink/75 sm:text-lg">
             StallTrack gives your office one place for registered sources, daily collections, official records and
             monthly reports, set up around how your municipality actually operates.
           </p>
@@ -27,8 +27,8 @@
             <li class="flex items-start gap-4 rounded-lg px-4 py-4" [class]="i < flow.length - 1 ? 'border-b border-line' : ''">
               <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-civic-soft text-sm font-bold text-civic" aria-hidden="true">{{ i + 1 }}</span>
               <div>
-                <p class="font-semibold text-navy">{{ s.title }}</p>
-                <p class="mt-0.5 text-sm text-navy/65">{{ s.text }}</p>
+                <p class="font-semibold text-ink">{{ s.title }}</p>
+                <p class="mt-0.5 text-sm text-ink/65">{{ s.text }}</p>
               </div>
             </li>
           }
@@ -40,12 +40,12 @@
     <section id="features" class="scroll-mt-20 py-14 sm:py-20">
       <div class="container-px">
         <h2 class="section-title max-w-2xl">What your office works with</h2>
-        <p class="mt-3 max-w-2xl text-navy/70">Five parts of one system, each keeping its own record.</p>
+        <p class="mt-3 max-w-2xl text-ink/70">Five parts of one system, each keeping its own record.</p>
         <div class="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
           @for (f of features; track f.title) {
             <article class="border-t border-line pt-5">
-              <h3 class="text-lg font-semibold text-navy">{{ f.title }}</h3>
-              <p class="mt-2 text-sm leading-relaxed text-navy/70">{{ f.text }}</p>
+              <h3 class="text-lg font-semibold text-ink">{{ f.title }}</h3>
+              <p class="mt-2 text-sm leading-relaxed text-ink/70">{{ f.text }}</p>
             </article>
           }
         </div>
@@ -60,25 +60,25 @@
           @for (s of steps; track s.title; let i = $index) {
             <li>
               <p class="text-sm font-bold text-civic">Step {{ i + 1 }}</p>
-              <h3 class="mt-1 text-lg font-semibold text-navy">{{ s.title }}</h3>
-              <p class="mt-2 text-sm leading-relaxed text-navy/70">{{ s.text }}</p>
+              <h3 class="mt-1 text-lg font-semibold text-ink">{{ s.title }}</h3>
+              <p class="mt-2 text-sm leading-relaxed text-ink/70">{{ s.text }}</p>
             </li>
           }
         </ol>
-        <p class="mt-10 max-w-2xl text-sm text-navy/65">
+        <p class="mt-10 max-w-2xl text-sm text-ink/65">
           Setup is reviewed before it goes live. Requesting an assessment does not create an account or activate anything on its own.
         </p>
       </div>
     </section>
 
     <!-- Assessment -->
-    <section class="bg-navy py-14 text-white sm:py-20">
+    <section class="bg-civic py-14 text-white sm:py-20">
       <div class="container-px flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div class="max-w-xl">
           <h2 class="font-display text-3xl font-bold sm:text-4xl">Bring StallTrack to your LGU</h2>
           <p class="mt-3 text-white/75">Tell us about your municipality and its enterprise operations. We review your request and follow up with the next step.</p>
         </div>
-        <a routerLink="/municipalities" class="inline-flex shrink-0 items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-navy transition hover:bg-mist">Request an assessment</a>
+        <a routerLink="/municipalities" class="inline-flex shrink-0 items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-ink transition hover:bg-mist">Request an assessment</a>
       </div>
     </section>
   </main>
