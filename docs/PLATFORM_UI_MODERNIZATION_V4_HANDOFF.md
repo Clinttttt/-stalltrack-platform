@@ -11,7 +11,8 @@ or merged. The EEMO repository, Claude 1's Operations V11 worktree and the main 
 | `a158d92` | feat(platform): one civic-blue theme for the public Landing and the Platform Admin |
 | `0431259` | feat(platform-admin): modernize the console and mask sensitive review details |
 | `a3f6224` | feat(landing): modernize the assessment request, onboarding workspace and public pages |
-| (this file) | docs: handoff and before/after evidence |
+| `0064983` | fix(landing): readable step numerals and the done marker on the new blue |
+| `af9fad5` | docs(platform): UI modernization V4 handoff with before/after evidence |
 
 ## 2. Shared theme (`a158d92`)
 
