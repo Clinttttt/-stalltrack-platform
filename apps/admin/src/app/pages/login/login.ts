@@ -5,6 +5,7 @@ import { Title } from '@angular/platform-browser';
 import { Icon } from '../../shared/icon/icon';
 import { AuthService } from '../../core/auth.service';
 import { PlatformSetupService } from '../../core/platform-setup.service';
+import { AuthShell } from '../../shared/auth-shell/auth-shell';
 
 /**
  * Sign-in for the platform operator. Split brand/form panel; authorization is enforced by the API, which
@@ -18,7 +19,7 @@ import { PlatformSetupService } from '../../core/platform-setup.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, Icon, RouterLink],
+  imports: [FormsModule, Icon, RouterLink, AuthShell],
   templateUrl: './login.html',
 })
 export class Login {

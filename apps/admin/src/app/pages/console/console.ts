@@ -3,6 +3,7 @@ import { Icon } from '../../shared/icon/icon';
 import { AssessmentApi } from '../../core/assessment.api';
 import { fmtLog } from '../../core/format';
 import { installStageFreshness } from '../../core/stage-freshness';
+import { PrivacyService } from '../../shared/privacy/privacy.service';
 import {
   CHAT_TEMPLATES,
   RequestRecord,
@@ -46,13 +47,12 @@ export function assessmentFields(r: RequestRecord): Array<[string, string]> {
   return rows;
 }
 
-// Status tones. Amber and red still carry meaning (needs attention / refused), but "green" is rendered as the
-// same navy-on-white pill the Activation page uses for Live: a government console should not celebrate a
-// normal state with colour, and gold remains the only accent.
+// Status chips: the colour never stands alone (the label carries the meaning). Approved and in-progress states use the civic
+// blue rather than a celebratory green: a government console does not decorate a normal state.
 const TONE: Record<'amber' | 'green' | 'red', string> = {
-  amber: 'bg-amber-bg text-amber',
-  green: 'border border-line bg-white text-navy',
-  red: 'bg-red-bg text-red',
+  amber: 'a-chip-warn',
+  green: 'a-chip-info',
+  red: 'a-chip-danger',
 };
 
 // This page handles the Assessment + Onboarding stages only. Validation/Activation
@@ -91,6 +91,7 @@ interface Compose {
 export class Console {
   private readonly api = inject(AssessmentApi);
   private readonly destroyRef = inject(DestroyRef);
+  readonly privacy = inject(PrivacyService);
 
   // Expose helpers/constants to the template.
   readonly TABS = TABS;
@@ -135,9 +136,24 @@ export class Console {
     return r ? STAGES.indexOf(r.stage as (typeof STAGES)[number]) : -1;
   });
 
+  /** The onboarding link is a live credential: hidden until asked for, for one request at a time. Copy works either way. */
+  readonly linkRevealed = computed(() => this.privacy.isRevealed('link:' + (this.selectedId() ?? '')));
+
+  maskedLink(link: string): string {
+    return link.replace(/[^/]+$/, '••••••••');
+  }
+
+  toggleLink(): void {
+    const id = this.selectedId();
+    if (!id) return;
+    if (this.linkRevealed()) this.privacy.hide();
+    else this.privacy.reveal('link:' + id);
+  }
+
   constructor() {
     void this.refresh();
     installStageFreshness(this.destroyRef, () => this.refresh(false));
+    this.destroyRef.onDestroy(() => this.privacy.hide());
   }
 
   async refresh(showLoading = true): Promise<void> {
@@ -162,6 +178,7 @@ export class Console {
   }
 
   select(r: RequestRecord): void {
+    this.privacy.hide();
     this.selectedId.set(r.id);
     this.compose.set({ mode: null, draft: '', link: '' });
     this.chatDraft.set('');

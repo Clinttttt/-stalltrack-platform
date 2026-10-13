@@ -1,3 +1,4 @@
+import { AuthShell } from '../../shared/auth-shell/auth-shell';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,7 +13,7 @@ import { PlatformSetupService } from '../../core/platform-setup.service';
 @Component({
   selector: 'app-console-setup',
   standalone: true,
-  imports: [FormsModule, Icon],
+  imports: [FormsModule, Icon, AuthShell],
   templateUrl: './setup.html',
 })
 export class ConsoleSetup {

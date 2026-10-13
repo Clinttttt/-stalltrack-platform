@@ -1,38 +1,36 @@
 <div class="flex h-[100dvh] overflow-hidden bg-mist text-ink">
-  <!-- Sidebar -->
-  <aside class="hidden w-64 shrink-0 flex-col bg-navy text-white lg:flex">
-    <div class="flex items-center gap-3 border-b border-white/10 px-6 py-5">
-      <!-- Real StallTrack mark instead of an "S" letter tile: this is the platform's official identity and
-           the asset is already served from apps/admin/public. -->
-      <img src="/stalltrack-logo.png" alt="StallTrack" class="h-10 w-10 shrink-0 object-contain" />
+  <!-- Sidebar (desktop) -->
+  <aside class="hidden w-60 shrink-0 flex-col border-r border-line bg-white lg:flex">
+    <div class="flex items-center gap-3 px-5 py-5">
+      <img src="/stalltrack-logo.png" alt="" class="h-10 w-10 shrink-0 object-contain" />
       <div class="leading-tight">
-        <div class="font-display text-lg font-bold tracking-wide">StallTrack</div>
-        <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Platform Admin</div>
+        <div class="font-display text-lg font-bold">StallTrack</div>
+        <div class="text-xs text-muted">Platform Admin</div>
       </div>
     </div>
 
-    <nav class="flex-1 px-3 py-5">
-      <div class="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">Console</div>
+    <nav class="flex-1 px-3 py-2" aria-label="Console">
       @for (item of nav; track item.to) {
         <a
           [routerLink]="item.to"
           routerLinkActive
           #rla="routerLinkActive"
           [routerLinkActiveOptions]="{ exact: true }"
-          [class]="'mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ' + (rla.isActive ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white')"
+          [attr.aria-current]="rla.isActive ? 'page' : null"
+          [class]="'mb-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition ' + (rla.isActive ? 'bg-civic-soft text-civic' : 'text-ink/75 hover:bg-mist hover:text-ink')"
         >
-          <app-icon [name]="item.icon" className="h-5 w-5 text-gold" />
+          <app-icon [name]="item.icon" className="h-5 w-5" />
           {{ item.label }}
         </a>
       }
     </nav>
 
-    <div class="border-t border-white/10 p-3">
+    <div class="border-t border-line p-3">
       <button
         (click)="signOut()"
-        class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/5 hover:text-white"
+        class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-ink/75 transition hover:bg-mist hover:text-ink"
       >
-        <app-icon name="logout" className="h-5 w-5 text-gold" />
+        <app-icon name="logout" className="h-5 w-5" />
         Sign out
       </button>
     </div>
@@ -40,49 +38,66 @@
 
   <!-- Main -->
   <div class="flex min-w-0 flex-1 flex-col">
-    <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-line bg-white/95 px-5 backdrop-blur sm:px-8">
-      <div class="flex items-center gap-3">
-        <span class="grid h-8 w-8 place-items-center rounded-lg bg-navy font-display text-base font-bold text-gold lg:hidden">S</span>
-        <div>
-          <div class="text-sm font-bold text-navy">LGU Assessment &amp; Onboarding</div>
-          <div class="text-[11px] text-muted">StallTrack Platform · CARCANMADCARLAN</div>
+    <header class="z-30 shrink-0 border-b border-line bg-white">
+      <div class="flex h-16 items-center justify-between px-5 sm:px-8">
+        <div class="flex items-center gap-3 lg:hidden">
+          <img src="/stalltrack-logo.png" alt="" class="h-9 w-9 shrink-0 object-contain" />
+          <div class="leading-tight">
+            <div class="font-display text-base font-bold">StallTrack</div>
+            <div class="text-xs text-muted">Platform Admin</div>
+          </div>
+        </div>
+        <div class="hidden text-sm font-semibold lg:block">LGU assessment and onboarding</div>
+
+        <div class="flex items-center gap-3">
+          <div class="hidden text-right sm:block">
+            <div class="text-sm font-semibold">{{ user?.displayName || 'Platform Operator' }}</div>
+          </div>
+          <span class="grid h-9 w-9 place-items-center rounded-full bg-civic-soft text-civic" aria-hidden="true">
+            <app-icon name="user" className="h-4 w-4" />
+          </span>
+          <button (click)="signOut()" class="a-btn-ghost !px-3 !py-2 lg:hidden" title="Sign out" aria-label="Sign out">
+            <app-icon name="logout" className="h-4 w-4" />
+          </button>
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        <div class="hidden text-right sm:block">
-          <div class="text-sm font-semibold text-navy">{{ user?.displayName || 'Platform Operator' }}</div>
-          <div class="text-[11px] text-muted">Signed in</div>
-        </div>
-        <span class="grid h-9 w-9 place-items-center rounded-full bg-navy text-gold">
-          <app-icon name="user" className="h-4 w-4" />
-        </span>
-        <button (click)="signOut()" class="a-btn-ghost !px-3 !py-2 lg:hidden" title="Sign out">
-          <app-icon name="logout" className="h-4 w-4" />
-        </button>
-      </div>
+
+      <!-- Navigation below the desktop width: the sidebar is not shown there. -->
+      <nav class="flex gap-1 overflow-x-auto px-4 pb-2 lg:hidden" aria-label="Console">
+        @for (item of nav; track item.to) {
+          <a
+            [routerLink]="item.to"
+            routerLinkActive
+            #rlm="routerLinkActive"
+            [routerLinkActiveOptions]="{ exact: true }"
+            [attr.aria-current]="rlm.isActive ? 'page' : null"
+            [class]="'shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold transition ' + (rlm.isActive ? 'bg-civic text-white' : 'text-ink/75 hover:bg-mist')"
+          >
+            {{ item.label }}
+          </a>
+        }
+      </nav>
     </header>
 
-    <main class="flex-1 min-h-0 overflow-y-auto px-5 py-6 sm:px-8 lg:overflow-hidden">
-      <!-- Confirming the address is what allows a password reset later, and this account has nobody above it to
-           restore its access. One line, and the one action that settles it. -->
+    <main class="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 lg:overflow-hidden">
+      <!-- A confirmed address is what allows a password reset, and this account has nobody above it to restore its access. -->
       @if (unconfirmedEmail(); as address) {
-        <div class="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3">
-          <p class="text-sm text-ink">
+        <div class="a-note-warn mb-4 flex flex-wrap items-center justify-between gap-3">
+          <p>
             @if (sent()) {
-              Confirmation sent to <span class="font-semibold text-navy">{{ address }}</span>. Open the link to finish.
+              Confirmation sent to <span class="font-semibold">{{ address }}</span>. Open the link to finish.
             } @else {
-              <span class="font-semibold text-navy">{{ address }}</span> is not confirmed, so this account cannot reset
-              its own password.
+              <span class="font-semibold">{{ address }}</span> is not confirmed, so this account cannot reset its own password.
             }
           </p>
           @if (!sent()) {
-            <button type="button" class="a-btn-ghost !py-2" [disabled]="sending()" (click)="confirmEmail()">
+            <button type="button" class="a-btn-ghost !py-1.5" [disabled]="sending()" (click)="confirmEmail()">
               {{ sending() ? 'Sending…' : 'Send confirmation' }}
             </button>
           }
         </div>
         @if (sendError()) {
-          <div class="mb-5 rounded-xl border border-[#e6c4c4] bg-red-bg px-4 py-3 text-sm text-red">{{ sendError() }}</div>
+          <div class="a-note-danger mb-4" role="alert">{{ sendError() }}</div>
         }
       }
 

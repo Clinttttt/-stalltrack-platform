@@ -1,43 +1,41 @@
 <div class="flex h-full flex-col">
-  <!-- Hero: same dark navy summary band as Activation, so the three operator pages read as one console. The
-       counts that used to sit in four separate white tiles now form one authoritative header row. -->
-  <div class="mb-4 shrink-0 overflow-hidden rounded-2xl bg-navy text-white shadow-soft">
+  <!-- Summary band: the page title and the four counts that matter. -->
+  <div class="a-hero mb-4 shrink-0">
     <div class="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:gap-6">
       <div class="flex items-center gap-3.5">
-        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/10 text-gold">
+        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-white/15" aria-hidden="true">
           <app-icon name="layers" className="h-5 w-5" />
         </span>
         <div class="leading-tight">
-          <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">StallTrack Platform · CARCANMADCARLAN</div>
-          <div class="font-display text-xl font-bold">LGU Onboarding</div>
-          <div class="text-xs text-white/60">Assess municipal requests and guide approved LGUs through onboarding</div>
+          <h1 class="font-display text-xl font-bold">LGU Onboarding</h1>
+          <p class="a-hero-muted text-sm">Assessment requests and onboarding progress</p>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 lg:ml-auto lg:gap-x-8">
+      <dl class="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 lg:ml-auto lg:gap-x-8">
         @for (s of stats(); track s.label) {
-          <div class="lg:border-l lg:border-white/10 lg:pl-6 lg:first:border-0 lg:first:pl-0">
-            <div class="font-display text-2xl font-bold leading-none">{{ s.value }}</div>
-            <div class="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/55">{{ s.label }}</div>
+          <div class="lg:border-l lg:border-white/25 lg:pl-6 lg:first:border-0 lg:first:pl-0">
+            <dd class="font-display text-2xl font-bold leading-none">{{ s.value }}</dd>
+            <dt class="a-hero-muted mt-1 text-xs">{{ s.label }}</dt>
           </div>
         }
-      </div>
+      </dl>
     </div>
   </div>
 
   <div class="flex flex-col gap-5 lg:min-h-0 lg:flex-1 lg:flex-row">
-    <!-- List -->
-    <aside class="a-card flex flex-col overflow-hidden lg:min-h-0 lg:w-[22rem] lg:shrink-0 xl:w-[24rem]">
-      <div class="flex border-b border-line bg-mist/60">
+    <!-- Requests -->
+    <aside class="a-card flex flex-col overflow-hidden lg:min-h-0 lg:w-[22rem] lg:shrink-0 xl:w-[24rem]" aria-label="Requests">
+      <div class="flex gap-1 border-b border-line p-2" role="tablist">
         @for (t of TABS; track t) {
           <button
+            role="tab"
+            [attr.aria-selected]="tab() === t"
             (click)="setTab(t)"
-            [class]="'flex-1 inline-flex items-center justify-center gap-1 whitespace-nowrap border-b-2 px-2 py-2.5 text-[12px] font-semibold transition ' + (tab() === t ? 'border-gold text-navy' : 'border-transparent text-muted hover:text-navy')"
+            [class]="'inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-semibold transition ' + (tab() === t ? 'bg-civic-soft text-civic' : 'text-muted hover:bg-mist hover:text-ink')"
           >
             {{ t }}
-            <span [class]="'rounded-full px-1.5 text-[10px] ' + (tab() === t ? 'bg-gold text-navy' : 'bg-line text-navy/70')">
-              {{ count(t) }}
-            </span>
+            <span class="text-xs font-medium opacity-80">{{ count(t) }}</span>
           </button>
         }
       </div>
@@ -51,90 +49,77 @@
           @for (r of filtered(); track r.id) {
             <button
               (click)="select(r)"
-              [class]="'block w-full border-b border-line px-4 py-3.5 text-left transition ' + (selectedId() === r.id ? 'bg-white shadow-[inset_3px_0_0_#c8a84b]' : 'hover:bg-mist')"
+              [attr.aria-current]="selectedId() === r.id ? 'true' : null"
+              [class]="'block w-full border-b border-line px-4 py-3.5 text-left transition ' + (selectedId() === r.id ? 'bg-civic-soft shadow-[inset_3px_0_0_#1f5fbf]' : 'hover:bg-mist')"
             >
               <div class="flex items-center justify-between gap-2">
-                <span class="font-display text-base font-bold text-navy">{{ r.municipality }}</span>
-                <span [class]="'rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + TONE[statusTone(r.status)]">
-                  {{ statusLabel(r.status) }}
-                </span>
+                <span class="font-display text-base font-bold">{{ r.municipality }}</span>
+                <span [class]="TONE[statusTone(r.status)]">{{ statusLabel(r.status) }}</span>
               </div>
-              <!-- The focal person, not the requesting office. That office is now the municipality's full address, which wrapped
-                   to three lines in this column and repeated the name already in the heading. Who signed the request is what
-                   tells one entry from another. -->
-              <div class="mt-0.5 truncate text-xs text-muted">{{ r.focalPerson }}</div>
-              <div class="mt-1 text-[11px] text-muted/80">{{ fmtLog(r.submittedAt) }}</div>
+              <!-- Who signed the request tells one entry from another; the office is already in the heading. -->
+              <div class="mt-0.5 truncate text-sm text-muted">{{ r.focalPerson }}</div>
+              <div class="mt-0.5 text-xs text-muted">{{ fmtLog(r.submittedAt) }}</div>
             </button>
           }
         }
       </div>
     </aside>
 
-    <!-- Detail -->
-    <section class="a-card a-scroll p-6 sm:p-7 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+    <!-- Selected request -->
+    <section class="a-card a-scroll p-5 sm:p-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto" aria-live="polite">
       @if (!selected()) {
         <div class="flex min-h-[18rem] flex-col items-center justify-center gap-3 text-center text-muted">
           <app-icon name="file" className="h-10 w-10 opacity-40" />
-          <p>Select an assessment request to review its details.</p>
+          <p>Select a request to review it.</p>
         </div>
       } @else if (selected(); as r) {
         <div>
           <div class="flex items-start justify-between gap-4 border-b border-line pb-4">
             <div>
-              <div class="font-display text-2xl font-bold text-navy">{{ r.municipality }}</div>
-              <!-- The requesting office, stated once. It IS the municipality's address and carries the province, so the rows
-                   below no longer repeat either. Older requests hold an office name here instead; both read correctly. -->
-              <div class="mt-0.5 max-w-xl text-sm leading-relaxed text-muted">{{ r.requestingOffice || r.province }}</div>
+              <h2 class="font-display text-2xl font-bold">{{ r.municipality }}</h2>
+              <p class="mt-0.5 max-w-xl text-sm text-muted">{{ r.requestingOffice || r.province }}</p>
             </div>
-            <span [class]="'rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + TONE[statusTone(r.status)]">
-              {{ statusLabel(r.status) }}
-            </span>
+            <span [class]="TONE[statusTone(r.status)]">{{ statusLabel(r.status) }}</span>
           </div>
 
-          <div class="mt-5 text-[11px] font-bold uppercase tracking-[0.1em] text-muted">Submitted assessment</div>
-          <dl class="mt-3 grid gap-x-6 sm:grid-cols-2">
+          <h3 class="mt-5 text-sm font-semibold">Submitted assessment</h3>
+          <dl class="mt-2 grid gap-x-6 sm:grid-cols-2">
             @for (f of fields(); track f[0]) {
               <div class="flex flex-col border-b border-line py-2">
-                <dt class="text-[11px] uppercase tracking-wide text-muted">{{ f[0] }}</dt>
-                <dd [class]="'mt-0.5 break-words text-sm ' + (f[1] ? 'text-navy' : 'text-muted/70')">{{ f[1] || '—' }}</dd>
+                <dt class="text-xs text-muted">{{ f[0] }}</dt>
+                <dd [class]="'mt-0.5 break-words text-sm ' + (f[1] ? '' : 'text-muted')">{{ f[1] || '—' }}</dd>
               </div>
             }
           </dl>
 
-          <!-- PENDING → approve/decline -->
+          <!-- Pending: approve or decline -->
           @if (r.status === STATUS.PENDING) {
             @if (compose().mode) {
-              <div class="mt-5 overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
-                <div class="flex items-center gap-3 bg-navy px-5 py-3.5 text-white">
-                  <img src="/stalltrack-logo.png" alt="StallTrack" class="h-10 w-10 shrink-0 object-contain" />
-                  <div class="leading-tight">
-                    <div class="font-display text-base font-bold">StallTrack Platform</div>
-                    <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Official onboarding correspondence</div>
-                  </div>
-                  <span [class]="'ml-auto rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + (compose().mode === 'approve' ? 'border border-line bg-white text-navy' : 'bg-red-bg text-red')">
-                    {{ compose().mode === 'approve' ? 'Approval' : 'Decline' }}
-                  </span>
+              <div class="mt-5 overflow-hidden rounded-xl border border-line bg-white">
+                <div class="flex items-center justify-between gap-3 border-b border-line bg-mist px-5 py-3">
+                  <span class="text-sm font-semibold">{{ compose().mode === 'approve' ? 'Approval message' : 'Decline message' }}</span>
+                  <span [class]="compose().mode === 'approve' ? 'a-chip-info' : 'a-chip-danger'">{{ compose().mode === 'approve' ? 'Approval' : 'Decline' }}</span>
                 </div>
                 <div class="space-y-1 border-b border-line px-5 py-3 text-sm">
-                  <div class="flex gap-3"><span class="w-16 shrink-0 text-muted">To</span><span class="font-semibold text-navy">{{ r.officialEmail }}</span></div>
-                  <div class="flex gap-3"><span class="w-16 shrink-0 text-muted">Subject</span><span class="text-navy">StallTrack assessment — {{ r.municipality }}</span></div>
+                  <div class="flex gap-3"><span class="w-16 shrink-0 text-muted">To</span><span class="font-semibold">{{ r.officialEmail }}</span></div>
+                  <div class="flex gap-3"><span class="w-16 shrink-0 text-muted">Subject</span><span>StallTrack assessment — {{ r.municipality }}</span></div>
                 </div>
                 <div class="px-5 py-4">
-                  <div class="a-label mb-1.5">Message body</div>
-                  <textarea rows="7" [value]="compose().draft" (input)="setDraft($any($event.target).value)" class="a-input resize-y font-sans leading-relaxed"></textarea>
+                  <label class="a-label mb-1.5 block" for="compose-body">Message</label>
+                  <textarea id="compose-body" rows="7" [value]="compose().draft" (input)="setDraft($any($event.target).value)" class="a-input resize-y leading-relaxed"></textarea>
                   @if (compose().mode === 'approve') {
-                    <div class="mt-3 flex items-start gap-2 rounded-lg border border-line bg-mist/60 px-3 py-2 text-xs text-muted">
-                      <app-icon name="link" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold" />
-                      <span>A secure onboarding link is generated by the server when you send, and appears in the onboarding room below.</span>
-                    </div>
+                    <p class="a-note mt-3 flex items-start gap-2 text-xs">
+                      <app-icon name="link" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-civic" />
+                      <span>The server generates a secure onboarding link when you send.</span>
+                    </p>
                   }
                 </div>
-                <div class="flex flex-wrap gap-2 border-t border-line bg-mist/50 px-5 py-3.5">
+                <div class="flex flex-wrap gap-2 border-t border-line bg-mist px-5 py-3.5">
                   @if (actionError()) {
-                    <div class="w-full rounded-lg border border-red/40 bg-red-bg px-3 py-2 text-xs font-medium text-red">{{ actionError() }}</div>
+                    <div class="a-note-danger w-full text-xs" role="alert">{{ actionError() }}</div>
                   }
                   @if (compose().mode === 'approve') {
-                    <button class="a-btn-navy" (click)="confirmApprove()" [disabled]="!compose().draft.trim() || busy()">
+                    <button class="a-btn-primary" (click)="confirmApprove()" [disabled]="!compose().draft.trim() || busy()">
                       <app-icon name="check" className="h-4 w-4" /> {{ busy() ? 'Sending…' : 'Send approval & open onboarding room' }}
                     </button>
                   } @else {
@@ -147,7 +132,7 @@
               </div>
             } @else {
               <div class="mt-5 flex flex-wrap gap-2.5">
-                <button class="a-btn-navy" (click)="beginApprove()">
+                <button class="a-btn-primary" (click)="beginApprove()">
                   <app-icon name="check" className="h-4 w-4" /> Approve &amp; issue onboarding link
                 </button>
                 <button class="a-btn-danger" (click)="beginDecline()">
@@ -157,131 +142,125 @@
             }
           }
 
-          <!-- DECLINED -->
+          <!-- Declined -->
           @if (r.status === STATUS.DECLINED) {
-            <div class="mt-5 rounded-xl border border-[#e6c4c4] bg-red-bg p-4">
-              <div class="text-[11px] font-bold uppercase tracking-[0.1em] text-red/80">Decline notice sent</div>
-              <p class="mt-2 whitespace-pre-line text-sm text-navy">{{ r.decisionMessage }}</p>
+            <div class="a-note-danger mt-5 !text-ink">
+              <div class="text-sm font-semibold text-red">Decline notice sent</div>
+              <p class="mt-1.5 whitespace-pre-line text-sm">{{ r.decisionMessage }}</p>
             </div>
           }
 
-          <!-- APPROVED → onboarding room -->
+          <!-- Approved: the private onboarding room -->
           @if (r.status === STATUS.APPROVED && r.stage === 'Onboarding') {
             <div class="mt-6 border-t border-line pt-5">
-              <div class="text-[11px] font-bold uppercase tracking-[0.1em] text-muted">Private onboarding room — {{ r.municipality }}</div>
+              <h3 class="text-sm font-semibold">Onboarding room</h3>
 
-              <ol class="mt-4 flex">
+              <ol class="mt-4 flex" aria-label="Stages">
                 @for (s of STAGES; track s; let i = $index) {
                   <li class="relative flex flex-1 flex-col items-center text-center">
                     @if (i < STAGES.length - 1) {
-                      <span [class]="'absolute left-1/2 top-4 h-0.5 w-full ' + (i < stageIndex() ? 'bg-gold' : 'bg-line')"></span>
+                      <span [class]="'absolute left-1/2 top-4 h-0.5 w-full ' + (i < stageIndex() ? 'bg-civic' : 'bg-line')"></span>
                     }
-                    <span [class]="'relative z-10 grid h-8 w-8 place-items-center rounded-full border-2 text-xs font-bold ' + (i < stageIndex() ? 'border-gold bg-gold text-navy' : i === stageIndex() ? 'border-navy bg-navy text-gold ring-4 ring-navy/10' : 'border-line bg-mist text-muted')">
+                    <span [class]="'relative z-10 grid h-8 w-8 place-items-center rounded-full border-2 text-xs font-bold ' + (i < stageIndex() ? 'border-civic bg-civic text-white' : i === stageIndex() ? 'border-civic bg-white text-civic ring-4 ring-civic/10' : 'border-line bg-mist text-muted')">
                       @if (i < stageIndex()) {
                         <app-icon name="check" className="h-4 w-4" />
                       } @else {
                         {{ i + 1 }}
                       }
                     </span>
-                    <span [class]="'mt-1.5 text-xs font-semibold ' + (i < stageIndex() || i === stageIndex() ? 'text-navy' : 'text-muted')">{{ s }}</span>
+                    <span [class]="'mt-1.5 text-xs font-semibold ' + (i <= stageIndex() ? '' : 'text-muted')">{{ s }}</span>
                   </li>
                 }
               </ol>
 
               <div class="mt-6">
-                <div class="a-label">Onboarding link issued to {{ r.officialEmail }}</div>
+                <div class="a-label">Link sent to {{ r.officialEmail }}</div>
                 <div class="mt-1.5 flex items-center gap-2">
-                  <code class="flex-1 break-all rounded-lg bg-navy px-3 py-2 text-xs text-gold-light">{{ r.onboardingLink }}</code>
-                  <button class="a-btn-ghost !px-3 !py-2" (click)="copyLink(r)">
+                  <code class="min-w-0 flex-1 break-all rounded-lg border border-line bg-mist px-3 py-2 text-xs" aria-label="Onboarding link">{{ linkRevealed() ? r.onboardingLink : maskedLink(r.onboardingLink) }}</code>
+                  <button class="a-btn-ghost !px-3 !py-2" type="button" (click)="toggleLink()" [disabled]="privacy.privacyMode() && !linkRevealed()">{{ linkRevealed() ? 'Hide' : 'Show' }}</button>
+                  <button class="a-btn-primary !px-3 !py-2" (click)="copyLink(r)">
                     <app-icon name="copy" className="h-4 w-4" /> {{ copied() ? 'Copied' : 'Copy' }}
                   </button>
                 </div>
               </div>
 
               <!-- LGU response -->
-              <div class="mt-5 overflow-hidden rounded-2xl border border-line">
-                <div class="flex items-center gap-2 border-b border-line bg-mist/60 px-4 py-2.5">
-                  <app-icon name="inbox" className="h-4 w-4 text-navy" />
-                  <span class="text-[11px] font-bold uppercase tracking-[0.1em] text-muted">LGU response</span>
-                  <span class="ml-auto text-[10px] text-muted/70">syncs via API</span>
-                </div>
+              <div class="mt-5 overflow-hidden rounded-xl border border-line">
+                <div class="border-b border-line bg-mist px-4 py-2.5 text-sm font-semibold">LGU progress</div>
                 <div class="space-y-3 p-4">
                   <div class="flex items-start gap-2.5">
-                    <span [class]="'mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ' + (r.lguAcknowledgedAt ? 'border border-navy/20 bg-white text-navy' : 'bg-mist text-muted')">
+                    <span [class]="'mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ' + (r.lguAcknowledgedAt ? 'bg-civic text-white' : 'bg-mist text-muted')">
                       <app-icon [name]="r.lguAcknowledgedAt ? 'check' : 'clock'" className="h-3.5 w-3.5" />
                     </span>
                     <div class="text-sm">
-                      <div class="font-semibold text-navy">Onboarding link opened</div>
-                      <div class="text-muted">{{ r.lguAcknowledgedAt ? 'Acknowledged on ' + fmtLog(r.lguAcknowledgedAt) : 'Awaiting — updates when the LGU opens their link.' }}</div>
+                      <div class="font-semibold">Link opened</div>
+                      <div class="text-muted">{{ r.lguAcknowledgedAt ? fmtLog(r.lguAcknowledgedAt) : 'Waiting for the LGU to open it.' }}</div>
                     </div>
                   </div>
                   <div class="flex items-start gap-2.5">
-                    <span [class]="'mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ' + (r.lguSubmittedForValidation ? 'border border-navy/20 bg-white text-navy' : 'bg-mist text-muted')">
+                    <span [class]="'mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ' + (r.lguSubmittedForValidation ? 'bg-civic text-white' : 'bg-mist text-muted')">
                       <app-icon [name]="r.lguSubmittedForValidation ? 'check' : 'clock'" className="h-3.5 w-3.5" />
                     </span>
                     <div class="text-sm">
-                      <div class="font-semibold text-navy">Onboarding submitted for validation</div>
-                      <div class="text-muted">{{ r.lguSubmittedForValidation ? 'Submitted on ' + fmtLog(r.lguSubmittedForValidation) + ' — checklist complete.' : 'Awaiting — the LGU completes their checklist and submits.' }}</div>
+                      <div class="font-semibold">Submitted for validation</div>
+                      <div class="text-muted">{{ r.lguSubmittedForValidation ? fmtLog(r.lguSubmittedForValidation) : 'Waiting for the LGU to finish and submit.' }}</div>
                     </div>
                   </div>
                   @if (r.checklist) {
                     <div class="border-t border-line pt-3">
-                      <div class="a-label mb-2">Onboarding checklist submitted by {{ r.municipality }}</div>
+                      <div class="a-label mb-2">Checklist submitted by {{ r.municipality }}</div>
                       <ul class="grid gap-1.5 sm:grid-cols-2">
                         @for (c of r.checklist; track c.label) {
                           <li class="flex items-center gap-2 text-sm">
-                            <span [class]="'grid h-4 w-4 shrink-0 place-items-center rounded-full ' + (c.done ? 'bg-navy text-white' : 'border border-line bg-mist text-muted')">
+                            <span [class]="'grid h-4 w-4 shrink-0 place-items-center rounded-full ' + (c.done ? 'bg-civic text-white' : 'border border-line bg-mist text-muted')">
                               @if (c.done) {
                                 <app-icon name="check" className="h-2.5 w-2.5" />
                               }
                             </span>
-                            <span [class]="c.done ? 'text-navy' : 'text-muted'">{{ c.label }}</span>
+                            <span [class]="c.done ? '' : 'text-muted'">{{ c.label }}</span>
                           </li>
                         }
                       </ul>
                     </div>
                   }
                 </div>
-                @if (r.lguSubmittedForValidation) {
-                  <div class="flex items-center gap-2 border-t border-line bg-white px-4 py-2.5 text-sm font-semibold text-navy">
-                    <app-icon name="check" className="h-4 w-4" />
-                    {{ r.municipality }} is ready to advance to Validation.
-                  </div>
-                }
               </div>
 
-              <!-- Advance -->
-              <div class="mt-4 flex flex-wrap gap-2.5">
-                <button class="a-btn-navy" (click)="sendToValidation(r)" [disabled]="!r.lguSubmittedForValidation">
-                  Advance to Validation stage <app-icon name="chevronRight" className="h-4 w-4" />
+              <div class="mt-4 flex flex-wrap items-center gap-3">
+                <button class="a-btn-primary" (click)="sendToValidation(r)" [disabled]="!r.lguSubmittedForValidation">
+                  Advance to Validation <app-icon name="chevronRight" className="h-4 w-4" />
                 </button>
+                @if (!r.lguSubmittedForValidation) {
+                  <span class="text-sm text-muted">Available once the LGU submits.</span>
+                }
               </div>
 
               <!-- Messages -->
               <div class="mt-6">
-                <div class="a-label">Messages to LGU</div>
+                <h3 class="text-sm font-semibold">Messages to the LGU</h3>
                 <div class="a-scroll mt-2 max-h-56 space-y-2 overflow-y-auto pr-1">
                   @if (r.log.length === 0) {
-                    <div class="rounded-lg bg-mist px-3 py-2 text-xs text-muted">No messages yet.</div>
+                    <div class="rounded-lg bg-mist px-3 py-2 text-sm text-muted">No messages yet.</div>
                   } @else {
                     @for (e of r.log; track $index) {
                       <div class="rounded-lg bg-mist px-3 py-2">
-                        <div class="text-[10px] text-muted">{{ fmtLog(e.at) }}</div>
-                        <div class="whitespace-pre-line text-sm text-navy">{{ e.text }}</div>
+                        <div class="text-xs text-muted">{{ fmtLog(e.at) }}</div>
+                        <div class="whitespace-pre-line text-sm">{{ e.text }}</div>
                       </div>
                     }
                   }
                 </div>
                 <div class="mt-3 flex flex-wrap gap-2">
                   @for (t of CHAT_TEMPLATES; track t.label) {
-                    <button (click)="setChatFromTemplate(t.text(r.municipality))" class="rounded-full border border-line bg-white px-3 py-1 text-xs text-muted transition hover:border-gold/60 hover:text-navy">
+                    <button (click)="setChatFromTemplate(t.text(r.municipality))" class="rounded-full border border-line bg-white px-3 py-1 text-xs font-medium text-muted transition hover:border-civic/40 hover:bg-civic-soft hover:text-civic">
                       {{ t.label }}
                     </button>
                   }
                 </div>
                 <div class="mt-2 flex items-end gap-2">
-                  <textarea rows="3" [value]="chatDraft()" (input)="chatDraft.set($any($event.target).value)" placeholder="Write a message to the LGU…" class="a-input flex-1 resize-y"></textarea>
-                  <button class="a-btn-navy" (click)="sendChat(r)" [disabled]="!chatDraft().trim()">
+                  <label class="sr-only" for="chat-body">Message to the LGU</label>
+                  <textarea id="chat-body" rows="3" [value]="chatDraft()" (input)="chatDraft.set($any($event.target).value)" placeholder="Write a message to the LGU…" class="a-input flex-1 resize-y"></textarea>
+                  <button class="a-btn-primary" (click)="sendChat(r)" [disabled]="!chatDraft().trim()">
                     <app-icon name="send" className="h-4 w-4" /> Send
                   </button>
                 </div>

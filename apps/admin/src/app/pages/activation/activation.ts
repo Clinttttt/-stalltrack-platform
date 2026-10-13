@@ -7,6 +7,7 @@ import { headUsernameFor, mapRequestToCommand } from '../../core/activation.mapp
 import { parseWorkspaceConfig, toReviewConfig, WorkspaceConfig } from '../../core/onboarding-config';
 import { DeclaredOperationRow } from '../../core/onboarding-operations';
 import { installStageFreshness } from '../../core/stage-freshness';
+import { PrivacyService } from '../../shared/privacy/privacy.service';
 
 const inScope = (r: RequestRecord): boolean => r.status === STATUS.APPROVED && r.stage === 'Activation';
 
@@ -35,6 +36,7 @@ export class Activation {
   private readonly api = inject(AssessmentApi);
   private readonly activationApi = inject(ActivationApi);
   private readonly destroyRef = inject(DestroyRef);
+  readonly privacy = inject(PrivacyService);
 
   readonly requests = signal<RequestRecord[]>([]);
   readonly loading = signal(true);
@@ -99,9 +101,24 @@ export class Activation {
     return (users.find((u) => /head|admin/i.test(u.role)) || users[0])?.email || '';
   });
 
+  /** The one-time Head link is a live credential: hidden until asked for, for one municipality at a time. */
+  readonly linkRevealed = computed(() => this.privacy.isRevealed('link:' + (this.selected()?.id ?? '')));
+
+  maskedLink(link: string): string {
+    return link.replace(/[^/]+$/, '••••••••');
+  }
+
+  toggleLink(): void {
+    const id = this.selected()?.id;
+    if (!id) return;
+    if (this.linkRevealed()) this.privacy.hide();
+    else this.privacy.reveal('link:' + id);
+  }
+
   constructor() {
     void this.refresh();
     installStageFreshness(this.destroyRef, () => this.refresh(false));
+    this.destroyRef.onDestroy(() => this.privacy.hide());
   }
 
   async refresh(showLoading = true): Promise<void> {
@@ -144,6 +161,7 @@ export class Activation {
   }
 
   select(id: string): void {
+    this.privacy.hide();
     this.selectedId.set(id);
     this.composing.set(false);
     this.activateError.set('');

@@ -1,72 +1,61 @@
 <div class="flex h-full flex-col">
-  <!-- Hero: mirrors the LGU portal's dark navy summary band, in platform-operator context. The counts that
-       used to sit in four separate white tiles now read as one authoritative header row. -->
-  <div class="mb-4 shrink-0 overflow-hidden rounded-2xl bg-navy text-white shadow-soft">
+  <!-- Summary band -->
+  <div class="a-hero mb-4 shrink-0">
     <div class="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:gap-6">
       <div class="flex items-center gap-3.5">
-        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/10 text-gold">
+        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-white/15" aria-hidden="true">
           <app-icon name="power" className="h-5 w-5" />
         </span>
         <div class="leading-tight">
-          <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">StallTrack Platform · CARCANMADCARLAN</div>
-          <div class="font-display text-xl font-bold">Activation</div>
-          <div class="text-xs text-white/60">Provision an approved LGU and issue its Head account</div>
+          <h1 class="font-display text-xl font-bold">Activation</h1>
+          <p class="a-hero-muted text-sm">Take an approved municipality live and issue its Head account</p>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 lg:ml-auto lg:gap-x-8">
+      <dl class="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 lg:ml-auto lg:gap-x-8">
         @for (s of stats(); track s.label) {
-          <div class="lg:border-l lg:border-white/10 lg:pl-6 lg:first:border-0 lg:first:pl-0">
-            <div class="font-display text-2xl font-bold leading-none">{{ s.value }}</div>
-            <div class="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/55">{{ s.label }}</div>
+          <div class="lg:border-l lg:border-white/25 lg:pl-6 lg:first:border-0 lg:first:pl-0">
+            <dd class="font-display text-2xl font-bold leading-none">{{ s.value }}</dd>
+            <dt class="a-hero-muted mt-1 text-xs">{{ s.label }}</dt>
           </div>
         }
-      </div>
+      </dl>
     </div>
   </div>
 
   <div class="flex flex-col gap-5 lg:min-h-0 lg:flex-1 lg:flex-row">
-    <!-- List -->
-    <aside class="a-card flex flex-col overflow-hidden lg:min-h-0 lg:w-[20rem] lg:shrink-0 xl:w-[22rem]">
-      <div class="border-b border-line bg-mist/60 px-4 py-3">
-        <div class="text-[11px] font-bold uppercase tracking-[0.1em] text-muted">Activation queue</div>
-      </div>
+    <!-- Queue and history -->
+    <aside class="a-card flex flex-col overflow-hidden lg:min-h-0 lg:w-[20rem] lg:shrink-0 xl:w-[22rem]" aria-label="Activation queue and history">
+      <div class="border-b border-line px-4 py-3 text-sm font-semibold">Activation queue</div>
       <div class="a-scroll max-h-[22rem] overflow-y-auto lg:max-h-none lg:flex-1">
         @if (scoped().length === 0) {
-          <div class="px-4 py-10 text-center text-sm text-muted">No municipalities are ready for activation.</div>
+          <div class="px-4 py-10 text-center text-sm text-muted">No municipality is ready for activation.</div>
         } @else {
           @for (r of scoped(); track r.id) {
             <button
               (click)="select(r.id)"
-              [class]="'block w-full border-b border-line px-4 py-3.5 text-left transition ' + (selected()?.id === r.id ? 'bg-white shadow-[inset_3px_0_0_#c8a84b]' : 'hover:bg-mist')"
+              [attr.aria-current]="selected()?.id === r.id ? 'true' : null"
+              [class]="'block w-full border-b border-line px-4 py-3.5 text-left transition ' + (selected()?.id === r.id ? 'bg-civic-soft shadow-[inset_3px_0_0_#1f5fbf]' : 'hover:bg-mist')"
             >
               <div class="flex items-center justify-between gap-2">
-                <span class="font-display text-base font-bold text-navy">{{ r.municipality }}</span>
-                <span [class]="'rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + (r.activated ? 'border-line bg-white text-navy' : 'border-amber/40 bg-white text-amber')">
-                  {{ r.activated ? 'Live' : 'Ready' }}
-                </span>
+                <span class="font-display text-base font-bold">{{ r.municipality }}</span>
+                <span [class]="r.activated ? 'a-chip-success' : 'a-chip-warn'">{{ r.activated ? 'Live' : 'Ready' }}</span>
               </div>
-              <!-- The focal person, not the requesting office. That office is now the municipality's full address, which wrapped
-                   to three lines in this column and repeated the name already above it. -->
-              <div class="mt-0.5 truncate text-xs text-muted">{{ r.focalPerson }}</div>
+              <div class="mt-0.5 truncate text-sm text-muted">{{ r.focalPerson }}</div>
             </button>
           }
         }
       </div>
-      <div class="border-t border-line bg-mist/60 px-4 py-3">
-        <div class="text-[11px] font-bold uppercase tracking-[0.1em] text-muted">Activation history</div>
-      </div>
+      <div class="border-y border-line bg-mist px-4 py-2.5 text-sm font-semibold">Activation history</div>
       <div class="a-scroll max-h-48 overflow-y-auto">
         @if (completedHistory().length === 0) {
-          <div class="px-4 py-5 text-center text-xs text-muted">No completed activations yet.</div>
+          <div class="px-4 py-5 text-center text-sm text-muted">No completed activations yet.</div>
         } @else {
           @for (r of completedHistory(); track r.id) {
             <div class="border-t border-line px-4 py-3 first:border-t-0">
               <div class="flex items-center justify-between gap-2">
-                <span class="font-display text-sm font-bold text-navy">{{ r.municipality }}</span>
-                <span class="rounded-full border border-line bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-navy">
-                  {{ r.activated ? 'Active' : 'Completed' }}
-                </span>
+                <span class="font-display text-sm font-bold">{{ r.municipality }}</span>
+                <span class="a-chip-success">{{ r.activated ? 'Active' : 'Completed' }}</span>
               </div>
               <div class="mt-0.5 truncate text-xs text-muted">{{ r.province }}</div>
             </div>
@@ -75,8 +64,8 @@
       </div>
     </aside>
 
-    <!-- Detail -->
-    <section class="a-card a-scroll p-6 sm:p-7 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+    <!-- Selected municipality -->
+    <section class="a-card a-scroll p-5 sm:p-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto" aria-live="polite">
       @if (!selected()) {
         <div class="flex min-h-[18rem] flex-col items-center justify-center gap-3 text-center text-muted">
           <app-icon name="power" className="h-10 w-10 opacity-40" />
@@ -84,159 +73,145 @@
         </div>
       } @else if (selected(); as r) {
         <div>
-          <div class="flex items-start justify-between gap-4 border-b border-line pb-4">
+          <div class="flex flex-wrap items-start justify-between gap-3 border-b border-line pb-4">
             <div>
-              <div class="font-display text-2xl font-bold text-navy">{{ r.municipality }}</div>
-              <div class="text-sm text-muted">{{ r.province }} · {{ r.activated ? 'Activated' : 'Ready to activate' }}</div>
+              <h2 class="font-display text-2xl font-bold">{{ r.municipality }}</h2>
+              <p class="text-sm text-muted">{{ r.province }}</p>
             </div>
-            <span [class]="'rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ' + (r.activated ? 'border-line bg-white text-navy' : 'border-amber/40 bg-white text-amber')">
-              {{ r.activated ? 'Live' : 'Ready' }}
-            </span>
+            <span [class]="r.activated ? 'a-chip-success' : 'a-chip-warn'">{{ r.activated ? 'Live' : 'Ready to activate' }}</span>
           </div>
 
           <!-- Accounts -->
-          <div class="mt-6">
-            <div class="a-label mb-2">Accounts to be provisioned</div>
-            <div class="overflow-hidden rounded-xl border border-line">
-              @for (u of users(); track u.email; let i = $index) {
-                <div [class]="'flex items-center justify-between gap-3 px-4 py-2.5 text-sm ' + (i > 0 ? 'border-t border-line' : '')">
-                  <div>
-                    <div class="font-semibold text-navy">{{ u.name }}</div>
-                    <div class="text-xs text-muted">{{ u.email }}</div>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span class="text-xs font-medium text-muted">{{ u.role }}</span>
-                    @if (r.activated) {
-                      <!-- The console cannot see whether the Head has since opened their link, so it states
-                           only what it knows: the invitation was sent. "Activation pending" was shown
-                           unconditionally and kept claiming pending long after the Head had signed in. -->
-                      <span class="rounded-full bg-mist px-2 py-0.5 text-[10px] font-bold uppercase text-muted">Invitation sent</span>
-                    }
-                  </div>
+          <h3 class="mt-5 text-sm font-semibold">Accounts to create</h3>
+          <div class="mt-2 overflow-hidden rounded-lg border border-line">
+            @for (u of users(); track u.email; let i = $index) {
+              <div [class]="'flex items-center justify-between gap-3 px-4 py-2.5 text-sm ' + (i > 0 ? 'border-t border-line' : '')">
+                <div class="min-w-0">
+                  <div class="font-semibold">{{ u.name }}</div>
+                  <div class="truncate text-xs text-muted">{{ u.email }}</div>
                 </div>
-              }
-            </div>
+                <div class="flex shrink-0 items-center gap-2">
+                  <span class="text-xs text-muted">{{ u.role }}</span>
+                  @if (r.activated) {
+                    <!-- The console cannot see whether the Head has opened their link since, so it states only what it knows. -->
+                    <span class="a-chip-neutral">Invitation sent</span>
+                  }
+                </div>
+              </div>
+            }
           </div>
 
           @if (!r.activated) {
             @if (composing()) {
-              <div class="mt-6 overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
-                <div class="flex items-center gap-3 bg-navy px-5 py-3.5 text-white">
-                  <img src="/stalltrack-logo.png" alt="StallTrack" class="h-10 w-10 shrink-0 object-contain" />
-                  <div class="leading-tight">
-                    <div class="font-display text-base font-bold">StallTrack Platform</div>
-                    <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Official onboarding correspondence</div>
-                  </div>
-                  <span class="ml-auto rounded-full border border-white/25 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-gold">Activation</span>
+              <div class="mt-5 overflow-hidden rounded-xl border border-line bg-white">
+                <div class="flex items-center justify-between gap-3 border-b border-line bg-mist px-5 py-3">
+                  <span class="text-sm font-semibold">Activation message to the Head</span>
+                  <span class="a-chip-info">Activation</span>
                 </div>
                 <div class="space-y-1 border-b border-line px-5 py-3 text-sm">
-                  <div class="flex gap-3"><span class="w-16 shrink-0 text-muted">To</span><span class="font-semibold text-navy">{{ headEmail() }}</span></div>
-                  <div class="flex gap-3"><span class="w-16 shrink-0 text-muted">Subject</span><span class="text-navy">{{ r.municipality }} — Your StallTrack portal is live</span></div>
-                  <div class="flex gap-3"><span class="w-16 shrink-0 text-muted">Signs in as</span><span class="text-navy">the Head chooses their own username on the activation link</span></div>
+                  <div class="flex gap-3"><span class="w-16 shrink-0 text-muted">To</span><span class="font-semibold">{{ headEmail() }}</span></div>
+                  <div class="flex gap-3"><span class="w-16 shrink-0 text-muted">Subject</span><span>{{ r.municipality }} — Your StallTrack portal is live</span></div>
+                  <div class="flex gap-3"><span class="w-16 shrink-0 text-muted">Sign-in</span><span>The Head chooses their own username on the activation link.</span></div>
                 </div>
                 <div class="px-5 py-4">
-                  <div class="a-label mb-1.5">Message body</div>
-                  <textarea rows="7" [value]="draft()" (input)="draft.set($any($event.target).value)" class="a-input resize-y font-sans leading-relaxed"></textarea>
-                  <div class="mt-3">
-                    <div class="flex items-start gap-2 rounded-lg border border-line bg-mist/60 px-3 py-2 text-xs text-muted">
-                      <app-icon name="key" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold" />
-                      <span>A secure, one-time activation link is generated by the server when you send — it will appear here and can be copied to the Head.</span>
-                    </div>
-                    @if (declaredOperations().length) {
-                      <div class="mt-2 rounded-lg border border-line bg-white px-3 py-2 text-xs text-navy">
-                        <div class="mb-1 font-semibold">Operation setup required after activation</div>
-                        <ul class="list-disc space-y-0.5 pl-4">
-                          @for (op of declaredOperations(); track op.code) {
-                            <li>{{ op.label }}@if (op.localName) { — “{{ op.localName }}” }</li>
-                          }
-                        </ul>
-                        <div class="mt-1 text-muted">Recorded as the municipality's operation list: only these are listed in its Head Portal, under the names shown. They do not block activation, and nothing is enabled, assigned or priced by it.</div>
-                      </div>
-                    }
-                    @if (warnings().length) {
-                      <div class="mt-2 rounded-lg border border-amber/40 bg-amber-bg/60 px-3 py-2 text-xs text-navy">
-                        <div class="mb-1 font-semibold text-amber">Please review before activating:</div>
-                        <ul class="list-disc space-y-0.5 pl-4">
-                          @for (w of warnings(); track w) {
-                            <li>{{ w }}</li>
-                          }
-                        </ul>
-                      </div>
-                    }
-                    @if (mappingErrors().length) {
-                      <div class="mt-3 rounded-xl border border-red/40 bg-red-bg p-3 text-xs text-red">
-                        <div class="font-bold">Review required before activation</div>
-                        @for (message of mappingErrors(); track message) {
-                          <div class="mt-1">{{ message }}</div>
+                  <label class="a-label mb-1.5 block" for="activation-body">Message</label>
+                  <textarea id="activation-body" rows="7" [value]="draft()" (input)="draft.set($any($event.target).value)" class="a-input resize-y leading-relaxed"></textarea>
+                  <p class="a-note mt-3 flex items-start gap-2 text-xs">
+                    <app-icon name="key" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-civic" />
+                    <span>The server generates a one-time activation link when you send. It appears here afterwards.</span>
+                  </p>
+
+                  @if (declaredOperations().length) {
+                    <div class="mt-3 rounded-lg border border-line px-3.5 py-3 text-sm">
+                      <div class="font-semibold">Declared operations</div>
+                      <ul class="mt-1.5 grid gap-x-6 gap-y-0.5 sm:grid-cols-2">
+                        @for (op of declaredOperations(); track op.code) {
+                          <li>{{ op.label }}@if (op.localName) { <span class="text-muted"> — “{{ op.localName }}”</span> }</li>
                         }
-                      </div>
-                    }
-                    @if (activateError()) {
-                      <div class="mt-2 rounded-lg border border-red/40 bg-red-bg px-3 py-2 text-xs font-medium text-red">{{ activateError() }}</div>
-                    }
-                  </div>
+                      </ul>
+                      <p class="mt-2 text-xs text-muted">
+                        These become the municipality's operation list. They do not block activation, and nothing is enabled, assigned
+                        or priced by it; the Head sets each up in the Head Portal.
+                      </p>
+                    </div>
+                  }
+                  @if (warnings().length) {
+                    <div class="a-note-warn mt-3 text-xs">
+                      <div class="mb-1 font-semibold">Please review before activating</div>
+                      <ul class="list-disc space-y-0.5 pl-4">
+                        @for (w of warnings(); track w) {
+                          <li>{{ w }}</li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                  @if (mappingErrors().length) {
+                    <div class="a-note-danger mt-3 text-xs" role="alert">
+                      <div class="font-semibold">Review required before activation</div>
+                      @for (message of mappingErrors(); track message) {
+                        <div class="mt-1">{{ message }}</div>
+                      }
+                    </div>
+                  }
+                  @if (activateError()) {
+                    <div class="a-note-danger mt-3 text-xs" role="alert">{{ activateError() }}</div>
+                  }
                 </div>
-                <div class="flex flex-wrap gap-2 border-t border-line bg-mist/50 px-5 py-3.5">
-                  <button class="a-btn-gold" (click)="confirmActivate()" [disabled]="!draft().trim() || activating() || mappingErrors().length > 0">
-                    <app-icon name="power" className="h-4 w-4" /> {{ activating() ? 'Activating…' : 'Send & activate ' + r.municipality }}
+                <div class="flex flex-wrap gap-2 border-t border-line bg-mist px-5 py-3.5">
+                  <button class="a-btn-primary" (click)="confirmActivate()" [disabled]="!draft().trim() || activating() || mappingErrors().length > 0">
+                    <app-icon name="power" className="h-4 w-4" /> {{ activating() ? 'Activating…' : 'Send and activate ' + r.municipality }}
                   </button>
                   <button class="a-btn-ghost" (click)="cancelComposing()" [disabled]="activating()">Cancel</button>
                 </div>
               </div>
             } @else {
-              <div class="mt-6 flex items-start gap-2 rounded-xl border border-line bg-mist px-3.5 py-2.5 text-sm text-muted">
-                <app-icon name="shield" className="mt-0.5 h-4 w-4 shrink-0 text-navy" />
+              <p class="a-note mt-5 flex items-start gap-2.5">
+                <app-icon name="shield" className="mt-0.5 h-4 w-4 shrink-0 text-civic" />
                 <span>
-                  Activation commits {{ r.municipality }}’s configuration under its own tenant, sets the portal live, and provisions
-                  the accounts above in an inactive state. The Head receives a secure link to set their password — no password is ever set here.
+                  Activation saves {{ r.municipality }}'s configuration under its own tenant, takes the portal live and creates the accounts
+                  above, inactive. The Head sets their own password through a secure link; none is ever set here.
                 </span>
-              </div>
-              <div class="mt-5 flex flex-wrap gap-2.5 border-t border-line pt-5">
-                <button class="a-btn-gold" (click)="beginActivate()">
-                  <app-icon name="power" className="h-4 w-4" /> Activate {{ r.municipality }} portal
+              </p>
+              <div class="mt-5 flex flex-wrap gap-2.5">
+                <button class="a-btn-primary" (click)="beginActivate()">
+                  <app-icon name="power" className="h-4 w-4" /> Activate {{ r.municipality }}
                 </button>
               </div>
             }
           } @else {
-            <div class="mt-6 overflow-hidden rounded-2xl border border-line">
-              <div class="flex items-center gap-2 border-b border-line bg-white px-4 py-3">
-                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-navy/25 text-navy">
+            <div class="mt-5 overflow-hidden rounded-xl border border-line">
+              <div class="flex items-center gap-2 border-b border-line px-4 py-3">
+                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-green-bg text-green" aria-hidden="true">
                   <app-icon name="check" className="h-3.5 w-3.5" />
                 </span>
-                <span class="font-display text-lg font-bold text-navy">{{ r.municipality }} is live.</span>
-                <span class="ml-auto rounded-full border border-line bg-white px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-navy">Active</span>
+                <span class="font-display text-lg font-bold">{{ r.municipality }} is live</span>
               </div>
               <div class="space-y-4 p-4">
-                <p class="rounded-lg border border-line bg-mist/50 px-3 py-2 text-xs text-muted" role="status">
-                  Activation is complete. {{ r.municipality }}'s request has moved from this queue to <strong>Activation history</strong>;
-                  it leaves the queue the next time the list refreshes. The Head account stays inactive until the Head sets a password through the link below.
+                <p class="a-note text-sm" role="status">
+                  Activation is complete and the request moved to Activation history. The Head account stays inactive until the Head sets
+                  a password through the link below.
                 </p>
                 <div>
-                  <div class="a-label mb-1.5">
-                    <app-icon name="key" className="mr-1 inline h-3.5 w-3.5 text-gold" />
-                    Head account-activation link (emailed to the Head)
-                  </div>
-                  <div class="flex items-center gap-2">
-                    @if (r.headActivationLink) {
-                      <code class="flex-1 break-all rounded-lg bg-navy px-3 py-2 text-xs text-gold-light">{{ r.headActivationLink }}</code>
-                    } @else {
-                      <span class="flex-1 rounded-lg border border-line bg-mist/50 px-3 py-2 text-xs text-muted">No link was returned by the API.</span>
-                    }
-                    <button class="a-btn-ghost !px-3 !py-2" (click)="copyLink()" [disabled]="!r.headActivationLink">
-                      <app-icon name="copy" className="h-4 w-4" /> {{ copied() ? 'Copied' : 'Copy' }}
-                    </button>
-                  </div>
+                  <div class="a-label mb-1.5">Head activation link</div>
+                  @if (r.headActivationLink) {
+                    <div class="flex flex-wrap items-center gap-2">
+                      <code class="min-w-0 flex-1 break-all rounded-lg border border-line bg-mist px-3 py-2 text-xs" aria-label="Head activation link">{{ linkRevealed() ? r.headActivationLink : maskedLink(r.headActivationLink) }}</code>
+                      <button class="a-btn-ghost !px-3 !py-2" type="button" (click)="toggleLink()" [disabled]="privacy.privacyMode() && !linkRevealed()">{{ linkRevealed() ? 'Hide' : 'Show' }}</button>
+                      <button class="a-btn-primary !px-3 !py-2" type="button" (click)="copyLink()">
+                        <app-icon name="copy" className="h-4 w-4" /> {{ copied() ? 'Copied' : 'Copy' }}
+                      </button>
+                    </div>
+                    <p class="mt-1.5 text-xs text-muted">One-time link. It is hidden until you show it; Copy works either way.</p>
+                  } @else {
+                    <div class="rounded-lg border border-line bg-mist px-3 py-2 text-sm text-muted">No link was returned by the API.</div>
+                  }
                 </div>
                 @if (r.headActivationMessage) {
-                  <div class="rounded-xl border border-line bg-mist/50 px-4 py-3">
+                  <div class="rounded-lg border border-line px-4 py-3">
                     <div class="a-label mb-1.5">Message sent to the Head</div>
-                    <p class="whitespace-pre-line text-sm text-navy">{{ r.headActivationMessage }}</p>
+                    <p class="whitespace-pre-line text-sm">{{ r.headActivationMessage }}</p>
                   </div>
                 }
-                <p class="text-sm leading-relaxed text-muted">
-                  The Head opens this link to set their password and sign in for the first time, then invites and activates their own
-                  staff (admins and collectors). {{ r.municipality }}’s users see only {{ r.municipality }}’s data.
-                </p>
               </div>
             </div>
           }
