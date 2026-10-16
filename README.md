@@ -10,11 +10,19 @@
 
 ## Run tasks
 
-To run the dev server for your app, use:
+To run the local Landing frontend against the **already-running shared EEMO API** (in a separate terminal), use:
 
-```sh
-npx nx serve landing
+```powershell
+npx nx serve landing --host=127.0.0.1 --port=8081
 ```
+
+For the Platform Operator frontend, use another terminal:
+
+```powershell
+npx nx serve admin --host=127.0.0.1 --port=5173
+```
+
+Both frontend development configurations target `http://localhost:5117`, supplied by the existing `C:\dev\stalltrack\eemo\EEMOCantilanSDS.Api` process. **Do not start a separate API** for these frontends.
 
 To create a production bundle:
 
