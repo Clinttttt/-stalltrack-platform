@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { API_BASE_URL } from './api.config';
+import { API_BASE_URL, PORTAL_LOGIN_URL } from './api.config';
 import { MunicipalityService } from './municipality.service';
 
 describe('MunicipalityService', () => {
@@ -33,8 +33,29 @@ describe('MunicipalityService', () => {
     const carmen = service.getByCode('carmen');
     expect(carmen?.status).toBe('Active');
     expect(carmen?.active).toBe(true);
-    expect(carmen?.href).toBe('https://console.stalltrack.site/login?lgu=carmen');
+    expect(carmen?.href).toBe(`${PORTAL_LOGIN_URL}?lgu=carmen`);
     expect(carmen?.image).toBe('/carcanmadcarlan/backgrounds/carmen-reference.png');
+  });
+
+  it('honors the shared API when the older build snapshot incorrectly marks LGUs active', async () => {
+    const service = TestBed.inject(MunicipalityService);
+
+    // This snapshot can be older than the local database; it must never override a live status.
+    expect(service.getByCode('carrascal')?.status).toBe('Active');
+    expect(service.getByCode('madrid')?.status).toBe('Active');
+
+    http.expectOne(`${API_BASE_URL}/api/municipalities`).flush([
+      { code: 'CANTILAN', name: 'Cantilan', status: 'Active', isActive: true },
+      { code: 'CARRASCAL', name: 'Carrascal', status: 'Upcoming', isActive: false },
+      { code: 'MADRID', name: 'Madrid', status: 'Upcoming', isActive: false },
+    ]);
+    await vi.waitFor(() => expect(service.resolving()).toBe(false));
+
+    expect(service.getByCode('cantilan')?.status).toBe('Active');
+    expect(service.getByCode('carrascal')?.status).toBe('Upcoming');
+    expect(service.getByCode('madrid')?.status).toBe('Upcoming');
+    expect(service.getByCode('carrascal')?.href).toBeUndefined();
+    expect(service.getByCode('madrid')?.href).toBeUndefined();
   });
 
   it('keeps the committed snapshot usable when the live registry request fails', async () => {

@@ -1,4 +1,5 @@
 import type { Municipality, MunicipalityStatus } from './municipality.model';
+import { PORTAL_LOGIN_URL } from './api.config';
 import registryJson from './municipalities.registry.json';
 
 // The build-time registry snapshot is refreshed by tools/sync-municipalities.mjs from GET /api/municipalities.
@@ -32,8 +33,8 @@ const presentation: Municipality[] = [
   { code: 'lanuza', name: 'Lanuza', status: 'Upcoming', image: '/carcanmadcarlan/backgrounds/lanuza-reference.png' },
 ];
 
-// Where an active municipality's card sends the user — the portal login, scoped to that LGU via ?lgu=.
-const PORTAL_LOGIN_URL = 'https://console.stalltrack.site/login';
+// Active cards use the environment-specific Head Portal login, scoped to the LGU via ?lgu=.
+// In local development this stays on the same local StallTrack installation.
 
 function applyRegistry(entry: Municipality, reg: RegistryEntry | undefined): Municipality {
   if (!reg) return entry;
