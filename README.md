@@ -1,5 +1,7 @@
 # StalltrackPlatform
 
+**Local StallTrack development:** Platform Operator and Landing use the single existing EEMO API at `C:\dev\stalltrack\eemo\EEMOCantilanSDS.Api`, not separate backends. See [the shared local API and startup guide](docs/LOCAL_DEVELOPMENT_SHARED_API.md) before running either frontend.
+
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 
 ✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
