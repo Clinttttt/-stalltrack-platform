@@ -62,11 +62,29 @@ Read `references/patterns.md` for exact specs (tokens, markup, classes) and `ref
 - Put tokens, credentials or real personal data in screenshots, fixtures or logs.
 - Hard-code localhost, a tenant name, or an amount in markup.
 
+## The shared kit: `@stalltrack/ui` (libs/ui)
+
+Import from `@stalltrack/ui`; never rebuild these per page. All are standalone, OnPush, signal-based and tested (`nx test ui`).
+
+| Need | Component | Key inputs |
+|---|---|---|
+| Icon (one set, 1.8 stroke) | `<ui-icon name className>` (`<app-icon>` still works in Admin) | `name` |
+| Page hero | `<ui-hero eyebrow title icon compact>` + `<ui-hero-figure value label note>`; project a `[meta]` line | `title` required |
+| OR / CT chip | `<ui-instrument-chip instrument="OR"|"CT" showName context>` | |
+| Hover info instead of prose | `<ui-info-tip text label side>` | |
+| 2-4 views, one table at a time | `<ui-segmented [options] [(value)] ariaLabel queryParam>` | options `{value,label,count?}` |
+| Choice of five or more | `<ui-select [options] [(value)] caption ariaLabel placeholder block disabled>` | strings or `{value,label}` |
+| Loading | `<ui-skeleton variant="bar|lines|hero|cards|table|list" rows>` | |
+| Breadcrumb | `<ui-breadcrumb [items]>` | items `{label,link?}`, last = current page |
+| Empty state | `<ui-empty-state icon text>` + projected action | |
+
+Tailwind needs the kit in its content globs (already set in both apps) and the `civic-panel`, `tint`, `skeleton` tokens plus the `ui-rise` / `ui-pop` / `ui-shimmer` animations from `libs/brand/tailwind-platform-preset.js`.
+
 ## Where the repo currently disagrees with this skill
 
-Fix these opportunistically when you touch the file; do not start a repo-wide sweep unprompted.
-- Heroes and brand bands use `bg-civic` (the button blue) where the Head Portal uses the deeper **civic panel**; add the token and use it for identity bands.
-- Landing has ~60 inline SVGs with seven different stroke weights; Admin has one icon component. Converge on one set.
+The kit exists but **existing pages have not been moved onto it yet**. Fix these when you touch a file; do not start a repo-wide sweep unprompted (a retrofit is its own approved slice).
+- Heroes and brand bands in pages still use `bg-civic` where the kit uses `bg-civic-panel`.
+- Landing has ~60 inline SVGs with several stroke weights; replace with `<ui-icon>` as pages are touched. Admin already uses the kit icon set.
 - Component class names differ between apps (`a-btn-*` in Admin, `btn-*` in Landing) for the same things.
-- No InfoTip, segmented toggle, house dropdown (Landing has `polished-select`), skeleton, breadcrumb or shared hero exist yet; `Loading…` text placeholders remain.
+- Pages still use `polished-select` (Landing), `Loading…` text, and stacked tables where the kit now offers `ui-select`, `ui-skeleton` and `ui-segmented`.
 - 85 `bg-white` uses; check each is a surface, not a page.

@@ -69,3 +69,28 @@ describe('platform theme: the palette that replaces it', () => {
     expect(brand).toContain("navy: { DEFAULT: '#0d2137'");
   });
 });
+
+describe('platform theme: the shared UI kit', () => {
+  const files = sources(join(root(), 'libs', 'ui', 'src'));
+
+  it('has sources to check', () => {
+    expect(files.length).toBeGreaterThan(8);
+  });
+
+  it('contains none of the retired class names', () => {
+    const offenders: string[] = [];
+    for (const f of files) {
+      const s = readFileSync(f, 'utf8');
+      for (const re of RETIRED) {
+        const m = s.match(re);
+        if (m) offenders.push(`${f.replace(root(), '')}: ${m[0]}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('never renders a native <select>: the house dropdown is the only one', () => {
+    const offenders = files.filter((f) => /<select[\s>]/.test(readFileSync(f, 'utf8')));
+    expect(offenders).toEqual([]);
+  });
+});

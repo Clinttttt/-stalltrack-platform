@@ -1,0 +1,21 @@
+{
+  "name": "ui",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "prefix": "ui",
+  "sourceRoot": "libs/ui/src",
+  "tags": [],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@angular/build:unit-test",
+      "options": {
+        "watch": false,
+        "buildTarget": "landing:build:development",
+        "tsConfig": "libs/ui/tsconfig.spec.json"
+      }
+    }
+  }
+}

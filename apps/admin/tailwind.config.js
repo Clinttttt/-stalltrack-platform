@@ -8,6 +8,8 @@ module.exports = {
   presets: [brand, platform],
   content: [
     join(__dirname, 'src/**/*.{html,ts}'),
+    // The shared UI kit is compiled into each app, so Tailwind must see the classes used in its templates.
+    join(__dirname, '../../libs/ui/src/**/*.{html,ts}'),
     ...createGlobPatternsForDependencies(__dirname),
   ],
 };
