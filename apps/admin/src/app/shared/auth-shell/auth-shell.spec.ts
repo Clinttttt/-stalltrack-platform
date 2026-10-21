@@ -37,7 +37,7 @@ describe('Console authentication screens', () => {
     const aside = out.slice(out.indexOf('<aside'), out.indexOf('</aside>'));
 
     expect(aside.match(/<h2/g)?.length).toBe(1);
-    expect(aside.match(/<p/g)?.length).toBe(2); // the sentence and the audit notice
+    expect(aside.match(/<p[\s>]/g)?.length).toBe(2); // the sentence and the audit notice
     expect(aside).not.toContain('<ul');
     expect(aside).not.toMatch(/\d{2,}%|\d+\+/);
   });

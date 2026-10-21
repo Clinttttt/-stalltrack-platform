@@ -1,5 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, input, output, signal } from '@angular/core';
+import { UiInfoTip } from '@stalltrack/ui';
 import { PolishedSelect } from '../polished-select/polished-select';
 import {
   MAX_LOCAL_NAME_LENGTH,
@@ -129,6 +130,12 @@ interface Facility {
    * Empty means the rent goal, which is what every ordinance this platform was built against states.
    */
   monthBasis: string;
+  /**
+   * Public Market only: how the LGU rents its stalls. `monthly` is STANDARD MONTHLY RENTAL - one monthly obligation per stall that
+   * can be paid in full or in installments, like a commercial center, with no daily charge. Empty or `daily` is the daily-collected
+   * market (rent collected per day, or by the days of the month). Stated by the LGU, never inferred from a rate or a name.
+   */
+  rentalModel: string;
   rateUnit: string;
   unitLabel: string;
   units: string;
@@ -177,7 +184,7 @@ const SECTION_NAME_PLACEHOLDER: Record<MarketSectionKind, string> = {
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const CATALOG: CatalogItem[] = [
-  { key: 'public_market', label: 'Public Market — daily stalls', type: 'Daily stall', unitLabel: 'stalls', archetype: 'DailyStall' },
+  { key: 'public_market', label: 'Public Market — stall rental', type: 'Daily stall', unitLabel: 'stalls', archetype: 'DailyStall' },
   { key: 'commercial', label: 'Commercial Center / spaces — monthly rental', type: 'Monthly rental', unitLabel: 'spaces', archetype: 'MonthlyRental' },
   { key: 'barbecue', label: 'Barbecue / food stalls', type: 'Monthly rental', unitLabel: 'stalls', archetype: 'MonthlyRental' },
   { key: 'iceplant', label: 'Iceplant / cold storage', type: 'Monthly rental', unitLabel: 'units', archetype: 'MonthlyRental' },
@@ -252,6 +259,7 @@ function facilityFrom(c: CatalogItem): Facility {
     rateAmount: '',
     monthlyRent: '',
     monthBasis: 'RentGoal',
+    rentalModel: 'daily',
     rateUnit: RATE_UNIT_FOR[c.type] || 'per month',
     unitLabel: c.unitLabel,
     units: '',
@@ -335,7 +343,7 @@ function migrateLegacySlaughterhouse(items: RateItem[]): SlaughterhouseConfig {
 @Component({
   selector: 'app-onboarding-workspace',
   standalone: true,
-  imports: [PolishedSelect, NgTemplateOutlet],
+  imports: [PolishedSelect, NgTemplateOutlet, UiInfoTip],
   templateUrl: './onboarding-workspace.html',
 })
 export class OnboardingWorkspace {
@@ -458,6 +466,8 @@ export class OnboardingWorkspace {
       // An area of the market's own is filed under its name, so an unnamed one holds the facility open rather than
       // being quietly dropped on the way to the platform.
       if (f.sections.some((s) => this.needsOwnName(s))) return false;
+      // A market rented by the month prices no area here: each stall's rent is set in the portal after activation.
+      if (f.rentalModel === 'monthly') return true;
       return f.sections.some((s) => (s.rate || '').trim());
     }
     // Rent for a monthly rental is set per space after activation, so a name is all that is needed here.
@@ -477,6 +487,7 @@ export class OnboardingWorkspace {
       const n = Number(Boolean(s.hogAmount)) + 2 * Number(Boolean(s.largeAnimalAmount)) + s.customAnimals.filter((r) => r.amount).length;
       return n ? `${n} animal type(s)` : '';
     }
+    if (f.type === 'Daily stall' && f.rentalModel === 'monthly') return 'monthly rent set per stall';
     if (f.type === 'Daily stall') {
       const priced = f.sections.filter((s) => (s.rate || '').trim());
       if (!priced.length) return '';

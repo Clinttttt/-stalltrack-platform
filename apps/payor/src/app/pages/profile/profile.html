@@ -1,6 +1,6 @@
 <app-payor-layout>
   <div class="pt-5">
-    <h1 class="font-display text-xl text-navy">Profile</h1>
+    <h1 class="font-display text-xl text-civic-deep">Profile</h1>
     <p class="mt-0.5 text-xs text-muted">As your office records it</p>
   </div>
 
@@ -11,11 +11,11 @@
     <section class="mt-4 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
       <div class="flex items-baseline justify-between gap-4 px-4 py-3.5">
         <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Name</p>
-        <p class="min-w-0 truncate text-sm font-semibold text-navy">{{ fullName() || '—' }}</p>
+        <p class="min-w-0 truncate text-sm font-semibold text-civic-deep">{{ fullName() || '—' }}</p>
       </div>
       <div class="flex items-baseline justify-between gap-4 px-4 py-3.5">
         <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Mobile</p>
-        <p class="text-sm font-semibold text-navy">{{ contactNumber() || '—' }}</p>
+        <p class="text-sm font-semibold text-civic-deep">{{ contactNumber() || '—' }}</p>
       </div>
     </section>
 
@@ -27,7 +27,7 @@
       <section class="mt-1.5 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
         @for (account of accounts(); track account.stallId) {
           <div class="px-4 py-3.5">
-            <p class="truncate text-sm font-semibold text-navy">{{ where(account) }}</p>
+            <p class="truncate text-sm font-semibold text-civic-deep">{{ where(account) }}</p>
             <p class="mt-0.5 truncate text-xs text-muted">{{ account.occupant }}</p>
           </div>
         }
@@ -38,7 +38,7 @@
       </p>
     }
 
-    <button class="mt-6 w-full rounded-xl border border-line px-4 py-3 text-sm font-semibold text-navy disabled:opacity-40"
+    <button class="mt-6 w-full rounded-xl border border-line px-4 py-3 text-sm font-semibold text-civic-deep disabled:opacity-40"
             type="button" [disabled]="signingOut()" (click)="signOut()">
       {{ signingOut() ? 'Signing out…' : 'Sign out' }}
     </button>

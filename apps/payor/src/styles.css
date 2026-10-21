@@ -20,3 +20,46 @@ body {
     @apply mx-auto flex min-h-dvh w-full max-w-md flex-col;
   }
 }
+
+/* One visible focus ring for every control; fields show focus on themselves instead. */
+:where(a, button, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid theme('colors.civic.DEFAULT');
+  outline-offset: 2px;
+}
+input:focus-visible {
+  outline: none;
+}
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 40px theme('colors.tint.DEFAULT') inset;
+  -webkit-text-fill-color: theme('colors.ink');
+}
+
+@layer components {
+  /* The Platform's light identity surface (as on the console sign-in): pale civic paper with the courthouse drawing fading in
+     from the right, washed on the left so navy type keeps its contrast. */
+  .p-paper {
+    @apply relative isolate overflow-hidden border-b border-tint-line bg-tint text-civic-deep;
+  }
+  .p-paper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(90deg, theme('colors.tint.DEFAULT') 35%, theme('colors.tint.DEFAULT / 75%') 65%, theme('colors.tint.DEFAULT / 30%')),
+      url('/brand/courthouse.png') right 70% / cover no-repeat;
+  }
+  .p-eyebrow {
+    @apply flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted;
+  }
+  .p-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/70;
+  }
+  /* Fields: tinted, 48px, one soft focus halo - never a second box inside the first. */
+  .p-input {
+    @apply h-12 w-full rounded-lg border border-tint-line bg-tint px-4 text-base text-ink outline-none transition duration-150 placeholder:text-muted/60 hover:border-civic/30 focus:border-civic/60 focus:bg-white focus:shadow-[0_0_0_4px_theme(colors.civic.DEFAULT/0.10)] disabled:opacity-60;
+  }
+  .p-btn {
+    @apply relative inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-civic-panel px-5 text-base font-semibold text-white shadow-soft transition hover:bg-civic-deep disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}

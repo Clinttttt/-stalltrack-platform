@@ -42,8 +42,9 @@ body {
   .a-btn {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
   }
+  /* The primary action is the deep civic panel blue, not the bright link blue: weight without shouting. */
   .a-btn-primary {
-    @apply a-btn bg-civic text-white hover:bg-civic-hover;
+    @apply a-btn bg-civic-panel text-white shadow-soft hover:bg-civic-deep;
   }
   .a-btn-ghost {
     @apply a-btn border border-line bg-white text-ink hover:border-civic/40 hover:bg-civic-soft;
@@ -63,6 +64,30 @@ body {
   /* An input with a leading icon: the wrapper shows focus. */
   .a-field {
     @apply flex items-center gap-2 rounded-lg border border-line bg-white px-3 transition focus-within:border-civic focus-within:ring-2 focus-within:ring-civic/20;
+  }
+
+  /* Signed-out screens (sign in, setup, password recovery): small tracked labels, tinted 48px fields. */
+  .auth-eyebrow {
+    @apply flex items-center gap-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted;
+  }
+  .auth-title {
+    @apply mt-3 font-display text-4xl font-bold tracking-tight text-civic-deep sm:text-5xl;
+  }
+  .auth-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/70;
+  }
+  .auth-field {
+    @apply flex h-12 items-center gap-3 rounded-lg border border-tint-line bg-tint px-4 transition duration-150 hover:border-civic/30 focus-within:border-civic/60 focus-within:bg-white focus-within:shadow-[0_0_0_4px_theme(colors.civic.DEFAULT/0.10)];
+  }
+  /* A field with a leading icon shows focus on its wrapper; the bare input inside must not draw a second box. */
+  .auth-field input:focus-visible,
+  .a-field input:focus-visible {
+    outline: none;
+  }
+  /* Saved-credential autofill keeps the field's own tint instead of the browser's yellow/blue fill. */
+  .auth-field input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 40px theme('colors.tint.DEFAULT') inset;
+    -webkit-text-fill-color: theme('colors.ink');
   }
 
   /* Status chips: sentence case, colour AND words (never colour alone). */
@@ -97,11 +122,24 @@ body {
   }
 
   /* The main blue band at the top of an operator page. */
+  /* The page band: the sign-in screen's language carried inside - pale civic paper, a deep civic rule on the left, navy serif
+     title and figures. Not a solid blue slab. */
   .a-hero {
-    @apply rounded-xl bg-civic text-white shadow-soft;
+    @apply relative isolate overflow-hidden rounded-xl border border-tint-line bg-tint text-civic-deep shadow-soft;
+  }
+  .a-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: theme('colors.civic.panel');
   }
   .a-hero-muted {
-    @apply text-white/85;
+    @apply text-muted;
+  }
+  /* The icon tile and figure dividers inside the band. */
+  .a-hero-tile {
+    @apply grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-tint-line bg-white text-civic-panel shadow-soft;
   }
 
   /* A sensitive value that is hidden: it carries only a same-width placeholder, never the real text. */

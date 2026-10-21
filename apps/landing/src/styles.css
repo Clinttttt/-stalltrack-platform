@@ -62,18 +62,55 @@ body {
     @apply inline-block text-xs font-semibold leading-snug text-civic;
   }
   /* Primary action on a white or light surface. */
+  /* Primary action on a white or light surface: the deep civic panel blue, not the bright link blue. */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-civic px-5 py-3 text-sm font-semibold text-white transition hover:bg-civic-hover disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-civic-panel px-5 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-civic-deep disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white px-5 py-3 text-sm font-semibold text-ink transition hover:border-civic/40 hover:bg-civic-soft;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white px-5 py-3 text-sm font-semibold text-ink transition hover:border-civic/40 hover:bg-tint;
   }
-  /* The same two actions on a civic-blue band: white fill, and a white outline. */
+  /* The same two actions on a civic band: white fill, and a white outline. */
   .btn-light {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-civic transition hover:bg-civic-soft;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-civic-deep shadow-soft transition hover:bg-tint;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/50 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/40 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/70 hover:bg-white/10;
+  }
+
+  /* An identity band: the deep civic panel with the courthouse line drawing faintly behind it (the sign-in screen's motif),
+     instead of a flat bright-blue slab. White text at 100 / 90 / 80 % keeps AA contrast on it. */
+  .civic-band {
+    @apply relative isolate overflow-hidden bg-civic-deep text-white;
+  }
+  .civic-band::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: url('/brand/courthouse.png') right bottom / cover no-repeat;
+    opacity: 0.09;
+  }
+  .civic-band::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: -1;
+    height: 1px;
+    background: theme('colors.white / 18%');
+  }
+  /* The light identity surface, as on the console sign-in: pale civic paper with the courthouse drawing fading in from the
+     right, washed on the left so navy type keeps its contrast. */
+  .civic-paper {
+    @apply relative isolate overflow-hidden bg-tint text-ink;
+  }
+  .civic-paper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(90deg, theme('colors.tint.DEFAULT') 30%, theme('colors.tint.DEFAULT / 80%') 60%, theme('colors.tint.DEFAULT / 35%')),
+      url('/brand/courthouse.png') right bottom / cover no-repeat;
   }
   .nav-link {
     @apply text-sm font-medium text-ink/75 transition hover:text-ink;

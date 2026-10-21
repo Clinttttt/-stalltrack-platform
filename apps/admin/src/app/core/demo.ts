@@ -110,6 +110,12 @@ export interface Facility {
    * no monthly rent to state, and `monthlyRent` is ignored for it.
    */
   monthBasis?: 'RentGoal' | 'PureDays';
+  /**
+   * Public Market only: how the LGU rents its stalls. `monthly` is STANDARD MONTHLY RENTAL - one monthly obligation per stall,
+   * paid in full or in installments, like TCC/NCC, with no daily charge. Absent or `daily` is the daily-collected market every
+   * office onboarded before this existed has. Stated by the LGU and read verbatim; never inferred from a rate or a name.
+   */
+  rentalModel?: 'daily' | 'monthly';
   rateUnit: string;
   unitLabel: string;
   units: string;
