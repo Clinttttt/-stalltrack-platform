@@ -13,17 +13,13 @@
 } @else {
   <div>
     <!-- Progress: the three sections an office completes before it can submit -->
-    <nav class="sticky top-16 z-20 -mx-1 mb-6 rounded-xl border border-line bg-white/95 px-4 py-3 shadow-soft backdrop-blur" aria-label="Configuration progress">
-      <div class="flex items-center justify-between gap-4">
-        <span class="text-sm font-semibold text-ink">Configuration</span>
-        <span class="text-sm text-muted" aria-live="polite">{{ doneCount() }} of {{ sectionFlags().length }} sections ready</span>
-      </div>
-      <ol class="mt-2.5 grid gap-2 sm:grid-cols-3">
+    <nav class="sticky top-16 z-20 mb-5 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-line bg-white p-2 shadow-soft" aria-label="Configuration progress">
+      <ol class="grid min-w-0 flex-1 grid-cols-3 gap-1.5">
         @for (st of steps(); track st.id; let i = $index) {
           <li>
             <button type="button" (click)="jumpTo(st.id)"
-              class="flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 text-left text-sm transition"
-              [class]="st.done ? 'border-civic-line bg-civic-soft text-civic' : 'border-line bg-white text-ink/80 hover:border-civic/40 hover:bg-mist'">
+              class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition"
+              [class]="st.done ? 'bg-civic-soft text-civic' : 'text-ink/80 hover:bg-mist'">
               <span class="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[11px] font-bold"
                 [class]="st.done ? 'bg-civic text-white' : 'border border-muted text-muted'">
                 @if (st.done) {
@@ -32,39 +28,32 @@
                   {{ i + 1 }}
                 }
               </span>
-              <span class="font-medium">{{ st.label }}</span>
+              <span class="truncate font-medium max-sm:sr-only">{{ st.label }}</span>
               <span class="sr-only">{{ st.done ? ' — ready' : ' — not ready yet' }}</span>
             </button>
           </li>
         }
       </ol>
+      <span class="shrink-0 px-2 text-xs font-semibold text-muted" aria-live="polite">{{ doneCount() }} of {{ sectionFlags().length }} sections ready</span>
     </nav>
 
     <div class="space-y-5">
       <!-- ── Head account ─────────────────────────────────────────────────── -->
       <div id="sec-head" class="scroll-mt-40 rounded-xl border border-line bg-white p-5 shadow-soft sm:p-6">
-        <div class="flex items-start gap-3">
-          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" [class]="adminDone() ? 'bg-green/10 text-green' : 'bg-civic-soft text-civic'">
+        <header class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line pb-4">
+          <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold" [class]="adminDone() ? 'bg-green text-white' : 'bg-civic-soft text-civic'">
             @if (adminDone()) {
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg>
             } @else {
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+              1
             }
           </span>
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2">
-              <h3 class="font-display text-xl font-bold text-ink">Head account</h3>
-              @if (adminDone()) {
-                <span class="rounded-full bg-green-bg px-2.5 py-0.5 text-xs font-semibold text-green">Ready</span>
-              }
-            </div>
-            <!-- "Head" is the platform's own name for this role, not a synonym invented here: the portal signs them into a
-                 "Head Portal" and the domain refers to the Head throughout. Calling them the administrator on this page and the
-                 Head everywhere after activation left an office with two words for one person - and worse, the note below says
-                 they go on to create "admins", so "administrator" was the word for both the owner and their staff. -->
-            <p class="mt-0.5 text-sm text-muted">The Head owns the portal and receives the registration link after activation.</p>
-          </div>
-        </div>
+          <h3 class="font-display text-xl font-bold text-ink">Head account</h3>
+            <ui-info-tip [text]="'The Head owns the portal and receives the registration link after activation.'" label="About Head account" />
+          @if (adminDone()) {
+            <span class="rounded-full bg-green-bg px-2.5 py-0.5 text-xs font-semibold text-green">Ready</span>
+          }
+        </header>
         <div class="mt-5">
           <div class="grid gap-4 sm:grid-cols-2">
             <div>
@@ -78,7 +67,7 @@
             <div class="sm:col-span-2">
               <label [class]="LABEL">Official email</label>
               <input [class]="INPUT" type="email" [value]="admin().email" (input)="setAdmin('email', $any($event.target).value)" placeholder="e.g. treasury@lgu.gov.ph" />
-              <p class="mt-1 text-[11px] leading-snug text-muted/80">The registration link is sent here after activation.</p>
+              <p class="mt-1.5 text-xs text-muted">The registration link is sent here after activation.</p>
             </div>
           </div>
         </div>
@@ -86,30 +75,25 @@
 
       <!-- ── Branding ─────────────────────────────────────────────────────── -->
       <div id="sec-branding" class="scroll-mt-40 rounded-xl border border-line bg-white p-5 shadow-soft sm:p-6">
-        <div class="flex items-start gap-3">
-          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" [class]="brandingDone() ? 'bg-green/10 text-green' : 'bg-civic-soft text-civic'">
+        <header class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line pb-4">
+          <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold" [class]="brandingDone() ? 'bg-green text-white' : 'bg-civic-soft text-civic'">
             @if (brandingDone()) {
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg>
             } @else {
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" /><path d="M8 7h8M8 11h8M8 15h5" /></svg>
+              2
             }
           </span>
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2">
-              <h3 class="font-display text-xl font-bold text-ink">Branding &amp; receipts</h3>
-              @if (brandingDone()) {
-                <span class="rounded-full bg-green-bg px-2.5 py-0.5 text-xs font-semibold text-green">Ready</span>
-              }
-            </div>
-            <p class="mt-0.5 text-sm text-muted">How reports and Official Receipts are headed.</p>
-          </div>
-        </div>
+          <h3 class="font-display text-xl font-bold text-ink">Branding &amp; receipts</h3>
+            <ui-info-tip [text]="'How reports and Official Receipts are headed.'" label="About Branding &amp; receipts" />
+          @if (brandingDone()) {
+            <span class="rounded-full bg-green-bg px-2.5 py-0.5 text-xs font-semibold text-green">Ready</span>
+          }
+        </header>
         <div class="mt-5">
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="sm:col-span-2">
               <label [class]="LABEL">Office name (report header)</label>
               <input [class]="INPUT" [value]="branding().officeName" (input)="setBranding('officeName', $any($event.target).value)" placeholder="e.g. Local Economic Enterprise Office" />
-              <p class="mt-1 text-[11px] leading-snug text-muted/80">Appears as the header on reports and receipts.</p>
             </div>
             <div class="sm:col-span-2">
               <label [class]="LABEL">Logo / seal <span class="font-normal normal-case text-muted/70">(optional)</span></label>
@@ -127,7 +111,7 @@
                   <span class="max-w-[12rem] truncate text-xs text-muted">{{ branding().logoName }}</span>
                 }
               </div>
-              <p class="mt-1 text-[11px] leading-snug text-muted/80">PNG, JPG, or SVG of your municipal seal/logo (under 200&nbsp;KB) — appears in the portal, reports, and receipts.</p>
+              <p class="mt-1.5 text-xs text-muted">PNG, JPG or SVG, under 200&nbsp;KB.</p>
               @if (logoError()) {
                 <p class="mt-1 text-[11px] font-medium leading-snug text-red">{{ logoError() }}</p>
               }
@@ -161,7 +145,6 @@
                   <div>
                     <label [class]="LABEL">Facility name</label>
                     <input [class]="INPUT" [value]="f.name" (input)="setFacility(f.id, 'name', $any($event.target).value)" placeholder="e.g. New Public Market" />
-                    <p class="mt-1 text-[11px] leading-snug text-muted/80">The facility&rsquo;s official name as it appears on records. Its billing model is fixed by facility type.</p>
                   </div>
 
                   @if (showBaseRate(f)) {
@@ -184,9 +167,8 @@
                   }
 
                   <div>
-                    <label [class]="LABEL">Ordinance reference <span class="font-normal normal-case text-muted/70">(optional)</span></label>
+                    <label [class]="LABEL">Ordinance reference <span class="font-normal normal-case text-muted/70">(optional)</span> <ui-info-tip text="The ordinance or revenue code that authorizes this fee, for audit and receipts." label="About the ordinance reference" /></label>
                     <input [class]="INPUT" [value]="f.ordinance" (input)="setFacility(f.id, 'ordinance', $any($event.target).value)" placeholder="e.g. Municipal Ordinance No. 2019-05" />
-                    <p class="mt-1 text-[11px] leading-snug text-muted/80">The ordinance or revenue code that authorizes this fee (for audit &amp; receipts).</p>
                   </div>
                   <div class="sm:col-span-2">
                     <label [class]="LABEL">Notes <span class="font-normal normal-case text-muted/70">(optional)</span></label>
@@ -282,6 +264,40 @@
                     </div>
                   </div>
                 } @else if (f.type === 'Daily stall') {
+                  <!-- How the market's stalls are RENTED. This is the LGU's own statement and decides everything below: standard
+                       monthly rental (one monthly obligation per stall, full or partial payments, no daily charge) or the daily-collected
+                       market. It is never inferred from a rate or a name, and it cannot be changed once the market is live. -->
+                  <div class="mt-5 border-t border-line pt-4">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-semibold text-muted">How stalls are rented</span>
+                    </div>
+                    <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                      <label class="flex cursor-pointer items-start gap-3 rounded-lg border bg-white p-3"
+                             [class.border-civic]="f.rentalModel === 'monthly'"
+                             [class.border-line]="f.rentalModel !== 'monthly'">
+                        <input type="radio" [name]="'rental-' + f.id" class="mt-0.5 accent-civic"
+                               [checked]="f.rentalModel === 'monthly'"
+                               (change)="setFacility(f.id, 'rentalModel', 'monthly')" />
+                        <span>
+                          <span class="block text-sm font-semibold text-ink">Monthly stall rental</span>
+                          <span class="block text-xs text-muted">One rent per stall each month, paid in full or in partial payments, like a commercial center. No daily collection.</span>
+                        </span>
+                      </label>
+                      <label class="flex cursor-pointer items-start gap-3 rounded-lg border bg-white p-3"
+                             [class.border-civic]="f.rentalModel !== 'monthly'"
+                             [class.border-line]="f.rentalModel === 'monthly'">
+                        <input type="radio" [name]="'rental-' + f.id" class="mt-0.5 accent-civic"
+                               [checked]="f.rentalModel !== 'monthly'"
+                               (change)="setFacility(f.id, 'rentalModel', 'daily')" />
+                        <span>
+                          <span class="block text-sm font-semibold text-ink">Daily collection</span>
+                          <span class="block text-xs text-muted">Stalls pay each market day: a monthly rent paid in daily installments, or charges by the days of the month.</span>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  @if (f.rentalModel !== 'monthly') {
                   <!-- How a MONTH is measured, which decides whether a monthly amount exists at all. A market is
                        collected per day either way; what a month owes is the ordinance's decision. Both answers are
                        stated in the office's own figures, because the difference only becomes plain in the numbers. -->
@@ -331,6 +347,7 @@
                       </div>
                     }
                   </div>
+                  }
 
                   <!-- Market areas / sections (e.g. Fish, Meat, Vegetables) + per-section base rate & fees -->
                   <div class="mt-5 border-t border-line pt-4">
@@ -338,10 +355,17 @@
                       <svg viewBox="0 0 24 24" class="h-4 w-4 text-civic" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
                       <span class="text-xs font-semibold text-muted">Market areas / sections</span>
                     </div>
-                    <p class="mt-1 text-xs text-muted">
-                      Name each area in your own language and state its daily rate. An area left blank takes the first
-                      rate entered. The fish area carries a per-kilo weighing fee.
-                    </p>
+                    @if (f.rentalModel === 'monthly') {
+                      <p class="mt-1 text-xs text-muted">
+                        Name each area in your own language. No rate is entered here: each stall's monthly rent is set in your portal
+                        after activation. The fish area carries a per-kilo weighing fee.
+                      </p>
+                    } @else {
+                      <p class="mt-1 text-xs text-muted">
+                        Name each area in your own language and state its daily rate. An area left blank takes the first
+                        rate entered. The fish area carries a per-kilo weighing fee.
+                      </p>
+                    }
                     <div class="mt-3 space-y-2">
                       @for (s of f.sections; track s.id) {
                         <div class="rounded-lg border border-line bg-white p-3">
@@ -357,6 +381,7 @@
                                 <p class="mt-1 text-[11px] leading-snug text-amber">Required.</p>
                               }
                             </div>
+                            @if (f.rentalModel !== 'monthly') {
                             <div>
                               <label [class]="LABEL">Base rate</label>
                               <div class="relative">
@@ -364,6 +389,7 @@
                                 <input type="number" min="0" [value]="s.rate" (input)="setSection(f.id, s.id, 'rate', $any($event.target).value)" placeholder="30" [class]="MONEY_INPUT" />
                               </div>
                             </div>
+                            }
                             <button type="button" (click)="removeSection(f.id, s.id)" class="mb-0.5 inline-flex items-center justify-center rounded-lg border border-line px-2.5 py-2.5 text-muted transition hover:border-red/40 hover:text-red">
                               <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
                             </button>
@@ -435,28 +461,24 @@
 
       <!-- ── Facilities and revenue operations, grouped as the official Monthly Income statement groups them ──── -->
       <div id="sec-ops" class="scroll-mt-40 rounded-xl border border-line bg-white p-5 shadow-soft sm:p-6">
-        <div class="flex items-start gap-3">
-          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" [class]="facilitiesDone() ? 'bg-green/10 text-green' : 'bg-civic-soft text-civic'">
+        <header class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line pb-4">
+          <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold" [class]="facilitiesDone() ? 'bg-green text-white' : 'bg-civic-soft text-civic'">
             @if (facilitiesDone()) {
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg>
             } @else {
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10" /></svg>
+              3
             }
           </span>
-          <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <h3 class="font-display text-xl font-bold text-ink">Facilities &amp; revenue operations</h3>
-              @if (facilitiesDone()) {
-                <span class="rounded-full bg-green-bg px-2.5 py-0.5 text-xs font-semibold text-green">Ready</span>
-              }
-              <span class="ml-auto flex gap-2">
-                <span class="rounded-full bg-mist px-2.5 py-0.5 text-[11px] font-bold text-muted">{{ doneFacilities() }}/{{ facilities().length }} facilities</span>
-                <span class="rounded-full bg-mist px-2.5 py-0.5 text-[11px] font-bold text-muted">{{ selectedOperationCount() }} operations</span>
-              </span>
-            </div>
-            <p class="mt-0.5 text-sm text-muted">Add the facilities you operate and choose the collections you manage. Choosing records your intent and your own name for it; rates, payors and Collectors are set up in the Head Portal after activation.</p>
-          </div>
-        </div>
+          <h3 class="font-display text-xl font-bold text-ink">Facilities &amp; operations</h3>
+          @if (facilitiesDone()) {
+            <span class="rounded-full bg-green-bg px-2.5 py-0.5 text-xs font-semibold text-green">Ready</span>
+          }
+          <span class="ml-auto flex gap-2">
+            <span class="rounded-full bg-mist px-2.5 py-0.5 text-xs font-semibold text-muted">{{ doneFacilities() }}/{{ facilities().length }} facilities</span>
+            <span class="rounded-full bg-mist px-2.5 py-0.5 text-xs font-semibold text-muted">{{ selectedOperationCount() }} operations</span>
+          </span>
+        </header>
+        <p class="mt-3 text-sm text-muted">Rates, payors and Collectors are set up in the Head Portal after activation.</p>
 
         @if (unfinishedFacility()) {
           <p class="mt-4 rounded-xl border border-amber/40 bg-amber-bg/50 px-3.5 py-2 text-xs text-ink" role="status">Finish {{ unfinishedFacilityLabel() }} before adding another facility.</p>
@@ -465,8 +487,10 @@
         <div class="mt-5 space-y-6">
           @for (g of revenueGroups; track g.key) {
             <section [attr.aria-labelledby]="'rg-' + g.key" [attr.data-group]="g.key">
-              <h4 [id]="'rg-' + g.key" class="border-b border-line pb-1.5 font-display text-base font-bold text-ink">{{ g.label }}</h4>
-              <p class="mt-1.5 text-xs text-muted">{{ g.hint }}</p>
+              <div class="flex items-center gap-2 border-b border-line pb-2">
+                <h4 [id]="'rg-' + g.key" class="font-display text-base font-bold text-ink">{{ g.label }}</h4>
+                <ui-info-tip [text]="g.hint" [label]="'About ' + g.label" />
+              </div>
 
               @if (facilitiesInGroup(g.key).length) {
                 <div class="mt-3 space-y-3">
@@ -476,39 +500,53 @@
                 </div>
               }
 
+              <!-- Facility types to add: one aligned card grid, the same in every group. -->
               @if (catalogInGroup(g.key).length) {
-                <div class="mt-3 flex flex-wrap gap-2">
+                <div class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
                   @for (c of catalogInGroup(g.key); track c.key) {
                     <button type="button" (click)="addFromCatalog(c)" [disabled]="isCatalogUsed(c) || !!unfinishedFacility()" [attr.data-add-facility]="c.key"
-                      class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-ink/80 transition hover:border-civic/50 hover:text-ink disabled:cursor-not-allowed disabled:opacity-50">
-                      <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg>
-                      {{ isCatalogUsed(c) ? (c.key === 'other' ? 'Limit of 5 reached' : catalogName(c) + ' added') : 'Add ' + catalogName(c) }}
+                      class="group flex min-h-[3.25rem] items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left text-sm font-semibold transition disabled:cursor-not-allowed"
+                      [class]="isCatalogUsed(c) ? 'border-civic-line bg-civic-soft text-civic' : 'border-dashed border-line bg-white text-ink/85 hover:border-civic/50 hover:bg-tint disabled:opacity-50'">
+                      <span class="grid h-6 w-6 shrink-0 place-items-center rounded-md" [class]="isCatalogUsed(c) ? 'bg-civic text-white' : 'bg-mist text-civic group-hover:bg-civic-soft'">
+                        @if (isCatalogUsed(c) && c.key !== 'other') {
+                          <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7" /></svg>
+                        } @else {
+                          <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                        }
+                      </span>
+                      <span class="min-w-0 leading-snug">{{ isCatalogUsed(c) ? (c.key === 'other' ? 'Limit of 5 reached' : catalogName(c) + ' added') : 'Add ' + catalogName(c) }}</span>
                     </button>
                   }
                 </div>
                 @if (g.key === 'rent') {
-                  <p class="mt-2 text-[11px] leading-snug text-muted/80">A rental facility of your own (for example a second commercial center) is filed as a monthly-rental facility. Its place on the official statement is still awaiting an approved grouping, so it is kept under its own name. You can have up to 5 of these in total, including any added later in the Head Portal.</p>
+                  <p class="mt-2 flex items-center gap-1.5 text-xs text-muted">
+                    Up to 5 rental facilities of your own, including any added later in the Head Portal.
+                    <ui-info-tip text="A rental facility of your own (for example a second commercial center) is filed as a monthly-rental facility. Its place on the official statement is still awaiting an approved grouping, so it is kept under its own name." label="About your own rental facilities" />
+                  </p>
                 }
               }
 
+              <!-- Revenue operations: a card per operation (4 / 2 / 1 columns). The checkbox stays the control. -->
               @if (lockedOperations() === null && operationsInGroup(g.key).length) {
-                <div class="mt-3 divide-y divide-line rounded-xl border border-line">
+                <div class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4 items-start">
                   @for (op of operationsInGroup(g.key); track op.code) {
-                    <div class="px-3.5 py-2.5">
-                      <label class="flex cursor-pointer items-start gap-3" [attr.title]="op.hint">
-                        <input type="checkbox" class="mt-1 h-4 w-4 shrink-0 accent-civic" [checked]="isOperationSelected(op.code)" (change)="toggleOperation(op.code)" [attr.data-operation]="op.code" />
-                        <span class="min-w-0">
-                          <span class="block text-sm font-semibold text-ink">{{ op.label }}</span>
-                          <span class="sr-only">{{ op.hint }}</span>
+                    <div class="rounded-lg border transition" [class]="isOperationSelected(op.code) ? 'border-civic bg-civic-soft/60 shadow-soft' : 'border-line bg-white hover:border-civic/50'">
+                      <label class="flex min-h-[3.25rem] cursor-pointer items-center gap-2.5 px-3 py-2.5" [attr.title]="op.hint">
+                        <input type="checkbox" class="peer sr-only" [checked]="isOperationSelected(op.code)" (change)="toggleOperation(op.code)" [attr.data-operation]="op.code" />
+                        <span class="grid h-5 w-5 shrink-0 place-items-center rounded-md border transition peer-focus-visible:ring-2 peer-focus-visible:ring-civic peer-focus-visible:ring-offset-1"
+                          [class]="isOperationSelected(op.code) ? 'border-civic bg-civic text-white' : 'border-muted/60 bg-white text-transparent'" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg>
                         </span>
+                        <span class="min-w-0 text-sm font-semibold leading-snug text-ink">{{ op.label }}</span>
+                        <span class="sr-only">{{ op.hint }}</span>
                       </label>
                       @if (isOperationSelected(op.code)) {
-                        <div class="ml-7 mt-2 max-w-md">
-                          <label [class]="LABEL" [attr.for]="'op-name-' + op.code">Your name for it <span class="font-normal text-muted">(optional)</span></label>
-                          <input [id]="'op-name-' + op.code" [class]="INPUT" [value]="operationName(op.code)" [attr.maxlength]="maxLocalName"
+                        <div class="border-t border-civic-line px-3 pb-3 pt-2.5">
+                          <label class="mb-1 block text-xs font-medium text-ink/80" [attr.for]="'op-name-' + op.code">Your name for it <span class="font-normal text-muted">(optional)</span></label>
+                          <input [id]="'op-name-' + op.code" [class]="INPUT + ' !py-2'" [value]="operationName(op.code)" [attr.maxlength]="maxLocalName"
                             (input)="setOperationName(op.code, $any($event.target).value)" [placeholder]="op.label" />
                           @if (operationProblem(op.code)) {
-                            <p class="mt-1 text-[11px] font-medium leading-snug text-red">{{ operationProblem(op.code) }}</p>
+                            <p class="mt-1 text-xs font-medium leading-snug text-red">{{ operationProblem(op.code) }}</p>
                           }
                         </div>
                       }

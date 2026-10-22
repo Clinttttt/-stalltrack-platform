@@ -19,26 +19,26 @@
     </header>
 
     <main class="flex-1">
-      <!-- Identity and stage -->
-      <section class="bg-civic text-white">
-        <div class="mx-auto w-full max-w-6xl px-5 pb-7 pt-8 sm:px-8 sm:pt-10">
-          <div class="flex items-center justify-between gap-6">
-            <div class="min-w-0">
-              <p class="text-sm font-medium text-white/85">{{ PROVINCE }}</p>
-              <h1 class="mt-1 font-display text-3xl font-bold leading-tight sm:text-4xl">Onboarding · {{ m.name }}</h1>
-              <p class="mt-2 text-sm text-white/90" role="status">
-                {{ submitted() ? 'Submitted for validation. The platform team is reviewing it.' : 'Complete the three sections below, then submit for validation.' }}
-              </p>
-            </div>
-            <img [src]="m.image" [alt]="m.name + ', ' + PROVINCE" loading="eager" class="hidden h-24 w-36 shrink-0 rounded-lg border border-white/30 object-cover sm:block" />
+      <!-- Identity and stage: a compact municipal header. The municipality's own photograph sits on the right and fades into
+           the civic panel (a fade of the photograph itself, not a brand gradient), dimmed so the white type keeps its contrast. -->
+      <section class="relative overflow-hidden bg-civic-panel text-white">
+        <img [src]="m.image" [alt]="m.name + ', ' + PROVINCE" loading="eager"
+          class="absolute inset-y-0 right-0 h-full w-full object-cover opacity-40 [mask-image:linear-gradient(to_right,transparent,#000_75%)] sm:w-3/5 sm:opacity-55" />
+        <div class="relative mx-auto flex w-full max-w-6xl flex-wrap items-end justify-between gap-x-10 gap-y-5 px-5 py-6 sm:px-8 sm:py-7">
+          <div class="min-w-0">
+            <p class="text-xs font-semibold uppercase tracking-[0.08em] text-white/80">Onboarding · {{ PROVINCE }}</p>
+            <h1 class="mt-1.5 font-display text-3xl font-bold leading-tight sm:text-[2.25rem]">{{ m.name }}</h1>
+            <p class="mt-1.5 text-sm text-white/90" role="status">
+              {{ submitted() ? 'Submitted for validation. The platform team is reviewing it.' : 'Complete the three sections, then submit for validation.' }}
+            </p>
           </div>
 
           <!-- Where the municipality is in the platform's four stages -->
-          <ol class="mt-7 grid grid-cols-4 gap-2" aria-label="Rollout stage">
+          <ol class="grid w-full grid-cols-4 gap-2 sm:w-auto sm:min-w-[26rem]" aria-label="Rollout stage">
             @for (s of stages; track s; let i = $index) {
               <li [attr.aria-current]="stageCurrent(i) ? 'step' : null">
-                <div class="h-1.5 rounded-full" [class]="stageDone(i) || stageCurrent(i) ? 'bg-white' : 'bg-white/30'"></div>
-                <p class="mt-2 text-sm" [class]="stageCurrent(i) ? 'font-semibold' : stageDone(i) ? 'text-white/90' : 'text-white/70'">
+                <div class="h-1 rounded-full" [class]="stageDone(i) || stageCurrent(i) ? 'bg-white' : 'bg-white/30'"></div>
+                <p class="mt-1.5 text-xs" [class]="stageCurrent(i) ? 'font-semibold' : stageDone(i) ? 'text-white/90' : 'text-white/80'">
                   {{ s }}
                   <span class="sr-only">{{ stageCurrent(i) ? ' — current stage' : stageDone(i) ? ' — done' : ' — upcoming' }}</span>
                 </p>
@@ -49,7 +49,7 @@
       </section>
 
       <!-- Configuration workspace -->
-      <section class="py-8 sm:py-10">
+      <section class="py-6 sm:py-8">
         <div class="mx-auto w-full max-w-6xl px-5 sm:px-8">
           @if (actionError()) {
             <div class="mb-4 rounded-lg border border-[#e6c4c4] bg-red-bg px-4 py-3 text-sm font-medium text-red" role="alert">{{ actionError() }}</div>

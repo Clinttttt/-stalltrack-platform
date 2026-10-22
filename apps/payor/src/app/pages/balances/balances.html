@@ -1,6 +1,6 @@
 <app-payor-layout>
   <div class="pt-5">
-    <h1 class="font-display text-xl text-navy">Balances</h1>
+    <h1 class="font-display text-xl text-civic-deep">Balances</h1>
     <p class="mt-0.5 text-xs text-muted">
       {{ items().length }} {{ items().length === 1 ? 'item outstanding' : 'items outstanding' }}
     </p>
@@ -16,7 +16,7 @@
          states a total, rather than set in a coloured panel. -->
     <section class="mt-4 flex items-baseline justify-between border-b border-line pb-3">
       <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Total outstanding</p>
-      <p class="font-display text-2xl text-navy">{{ money(total()) }}</p>
+      <p class="font-display text-2xl text-civic-deep">{{ money(total()) }}</p>
     </section>
 
     <!-- A statement, not a stack of cards: one sheet, hairline between rows, the amount and its action on the right. -->
@@ -25,15 +25,15 @@
         @for (item of items(); track key(item)) {
           <article class="flex items-center justify-between gap-4 px-4 py-3.5">
             <div class="min-w-0">
-              <p class="truncate text-sm font-semibold text-navy">{{ label(item) }}</p>
+              <p class="truncate text-sm font-semibold text-civic-deep">{{ label(item) }}</p>
               <p class="mt-0.5 truncate text-xs text-muted">{{ where(item) }} · {{ month(item.period) }}</p>
             </div>
             <div class="flex shrink-0 items-center gap-3">
               <div class="text-right">
-                <p class="font-display text-base text-navy">{{ money(shown(item)) }}</p>
+                <p class="font-display text-base text-civic-deep">{{ money(shown(item)) }}</p>
                 <p class="text-[10px] text-muted">{{ caption(item) }}</p>
               </div>
-              <button class="rounded-lg bg-navy px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
+              <button class="rounded-lg bg-civic-panel shadow-soft transition hover:bg-civic-deep px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
                       type="button" [disabled]="paying() !== null" (click)="act(item)">
                 {{ paying() === key(item) ? 'Opening…' : item.kind === 'NpmFish' ? 'Declare' : 'Pay' }}
               </button>
@@ -65,15 +65,15 @@
     <section class="max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl bg-white p-5" (click)="$event.stopPropagation()">
       <div class="mx-auto mb-4 h-1 w-10 rounded-full bg-line"></div>
 
-      <h2 class="font-display text-xl text-navy">Fish days</h2>
+      <h2 class="font-display text-xl text-civic-deep">Fish days</h2>
       <p class="mt-0.5 text-xs text-muted">{{ where(fish) }} · {{ month(fish.period) }}</p>
 
       <div class="mt-5 flex items-baseline justify-between">
-        <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
+        <p class="p-label">
           Days owed <span class="font-normal normal-case tracking-normal">· kilos optional</span>
         </p>
         @if ((fish.uncollectedDays ?? []).length > 1) {
-          <button class="text-xs font-semibold text-navy" type="button" (click)="pickAll(fish)">Select all</button>
+          <button class="text-xs font-semibold text-civic-deep" type="button" (click)="pickAll(fish)">Select all</button>
         }
       </div>
       <div class="mt-1.5 divide-y divide-line overflow-hidden rounded-xl border border-line">
@@ -82,7 +82,7 @@
             <button class="flex min-w-0 flex-1 items-center gap-3 py-1 text-left" type="button"
                     [attr.aria-pressed]="isPicked(i)" (click)="pickThrough(i)">
               <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border"
-                    [class.border-navy]="isPicked(i)" [class.bg-navy]="isPicked(i)"
+                    [class.border-civic-panel]="isPicked(i)" [class.bg-civic-panel]="isPicked(i)"
                     [class.border-line]="!isPicked(i)">
                 @if (isPicked(i)) {
                   <svg class="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -92,7 +92,7 @@
                 }
               </span>
               <span class="truncate text-sm" [class.font-semibold]="isPicked(i)"
-                    [class.text-navy]="isPicked(i)" [class.text-ink]="!isPicked(i)">
+                    [class.text-civic-deep]="isPicked(i)" [class.text-ink]="!isPicked(i)">
                 {{ dayLabel(day) }}
               </span>
             </button>
@@ -101,7 +101,7 @@
                  being paid, so the sheet asks nothing about a day it is not settling. -->
             @if (isPicked(i)) {
               <span class="flex shrink-0 items-center gap-1.5">
-                <input class="w-20 rounded-lg border border-line px-2.5 py-1.5 text-right text-sm text-ink outline-none focus:border-navy"
+                <input class="w-20 rounded-lg border border-line px-2.5 py-1.5 text-right text-sm text-ink outline-none focus:border-civic/60 focus:ring-2 focus:ring-civic/15"
                        type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"
                        [attr.aria-label]="'Kilos sold on ' + dayLabel(day)"
                        [value]="kilosFor(day) ?? ''" (input)="setKilosFor(day, $event)" />
@@ -121,14 +121,14 @@
           <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Amount</p>
           <p class="mt-0.5 text-[11px] text-muted">{{ fishBreakdown(fish) }}</p>
         </div>
-        <p class="shrink-0 font-display text-2xl text-navy">{{ money(fishTotal()) }}</p>
+        <p class="shrink-0 font-display text-2xl text-civic-deep">{{ money(fishTotal()) }}</p>
       </div>
 
       @if (payError()) {
         <p class="mt-4 rounded-xl bg-red-bg px-4 py-3 text-sm text-red">{{ payError() }}</p>
       }
 
-      <button class="mt-4 w-full rounded-xl bg-navy px-4 py-3.5 text-base font-semibold text-white disabled:opacity-40"
+      <button class="mt-4 w-full rounded-lg bg-civic-panel shadow-soft transition hover:bg-civic-deep px-4 py-3.5 text-base font-semibold text-white disabled:opacity-40"
               type="button" [disabled]="paying() !== null || fishDays().length === 0" (click)="payFish(fish)">
         {{ paying() !== null ? 'Opening…' : 'Continue to payment' }}
       </button>

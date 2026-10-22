@@ -31,9 +31,36 @@ export class PlatformSetupService {
       return { ok: true };
     } catch (e: unknown) {
       const err = e as { status?: number; error?: unknown };
-      if (err?.status === 0) return { ok: false, error: 'Cannot reach the server. Please try again.' };
+      // A browser reports HTTP status 0 when Caddy blocks the CORS preflight, even if the API is healthy.
+      // The read-only status endpoint is intentionally reachable, so check it before claiming an outage.
+      if (err?.status === 0) {
+        try {
+          const status = await firstValueFrom(
+            this.http.get<{ isSetupRequired: boolean }>(`${API_BASE_URL}/api/platform-setup/status`),
+          );
+          if (status?.isSetupRequired) {
+            return {
+              ok: false,
+              error: 'The server is reachable, but first-time operator creation is blocked by the production setup gate. Ask the authorized deployment administrator to enable the one-time setup window.',
+            };
+          }
+          return {
+            ok: false,
+            error: 'The platform operator has already been configured. Please sign in.',
+            alreadySetUp: true,
+          };
+        } catch {
+          return { ok: false, error: 'Cannot reach the API. Check your connection and try again.' };
+        }
+      }
 
       const served = this.messageFrom(err?.error);
+      if (err?.status === 403) {
+        return {
+          ok: false,
+          error: served || 'Platform operator setup is disabled on this server. Contact the authorized deployment administrator.',
+        };
+      }
 
       // A 409 is the API saying an operator already exists. It used to be the only thing this branch could
       // say, and it said it for every 409 — including a duplicate e-mail address, which the database reports

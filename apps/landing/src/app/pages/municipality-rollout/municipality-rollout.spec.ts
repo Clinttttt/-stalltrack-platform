@@ -137,7 +137,7 @@ describe('MunicipalityRollout — activation requirements link', () => {
     ]);
     const fixture = render();
     const text = fixture.nativeElement.textContent;
-    const portal: HTMLAnchorElement | null = fixture.nativeElement.querySelector('a.btn-light');
+    const portal: HTMLAnchorElement | null = fixture.nativeElement.querySelector('a[href^="https://console.stalltrack.site"]');
 
     expect(text).toContain('Active Implementation');
     expect(text).toContain('Enter Portal');

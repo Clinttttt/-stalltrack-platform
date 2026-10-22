@@ -1,7 +1,7 @@
 <app-payor-layout>
   <div class="pt-5">
     <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">What you have paid</p>
-    <h1 class="mt-1 font-display text-xl text-navy">Payment history</h1>
+    <h1 class="mt-1 font-display text-xl text-civic-deep">Payment history</h1>
   </div>
 
   @if (loading()) {
@@ -19,7 +19,7 @@
           <div class="border-b border-line last:border-b-0">
             <div class="flex items-start justify-between gap-3 px-4 py-3">
               <div class="min-w-0">
-                <p class="text-sm font-semibold text-navy">{{ month.period }}</p>
+                <p class="text-sm font-semibold text-civic-deep">{{ month.period }}</p>
                 <p class="mt-0.5 truncate text-xs text-muted">
                   @if (month.orNumber) {
                     OR {{ month.orNumber }}
@@ -29,7 +29,7 @@
                 </p>
               </div>
               <div class="shrink-0 text-right">
-                <p class="font-display text-base text-navy">{{ money(shown(month)) }}</p>
+                <p class="font-display text-base text-civic-deep">{{ money(shown(month)) }}</p>
                 <p class="text-[10px] font-semibold uppercase tracking-wide"
                    [class]="statusClass(month)">
                   {{ month.isExcused ? 'Excused' : month.status }}
@@ -42,7 +42,7 @@
                 <button class="pb-1 text-[11px] text-muted" type="button"
                         (click)="toggle(entry.account.stallId, month.period)">
                   {{ month.days.length }} {{ month.days.length === 1 ? 'day' : 'days' }} collected
-                  <span class="font-semibold text-navy">
+                  <span class="font-semibold text-civic-deep">
                     {{ expanded(entry.account.stallId, month.period) ? 'Hide' : 'Show' }}
                   </span>
                 </button>
@@ -53,11 +53,11 @@
                          amount never shrinks. A fixed date column left a broad gap after every short date and a long
                          receipt-and-collector line then had nowhere to go. -->
                     <div class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-x-2.5 border-l-2 border-line py-1.5 pl-2.5 text-[11.5px]">
-                      <span class="whitespace-nowrap text-navy">{{ date(day.day) }}</span>
+                      <span class="whitespace-nowrap text-civic-deep">{{ date(day.day) }}</span>
                       <span class="truncate text-muted">
                         {{ day.orNumber ? 'OR ' + day.orNumber : 'awaiting OR' }}{{ day.recordedByName ? ' · ' + day.recordedByName : '' }}
                       </span>
-                      <span class="whitespace-nowrap font-semibold text-navy">{{ money(day.amount) }}</span>
+                      <span class="whitespace-nowrap font-semibold text-civic-deep">{{ money(day.amount) }}</span>
                     </div>
                   }
                 }

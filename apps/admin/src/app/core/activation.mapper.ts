@@ -237,7 +237,10 @@ export function mapRequestToCommand(
     // The facility's identity (FacilityCode) is stable and internal; its NAME is the office's own. The code comes from the
     // type the office chose in the workspace, never from the wording of its name, and is never swapped for another
     // facility's code to resolve a collision — that would file one office's market under another facility's identity.
-    const declaredArchetype = archetypeOf(f.type);
+    // A Public Market's rental model is the LGU's own explicit statement: standard monthly rental files the market as a monthly-rental
+    // facility under its own NPM identity. Nothing else (a rate, a name, the draft's type label) decides it.
+    const declaredArchetype: BillingArchetypeStr =
+      f.catalogKey === 'public_market' && f.rentalModel === 'monthly' ? 'MonthlyRental' : archetypeOf(f.type);
     let code: FacilityCodeStr | undefined;
     let custom = false;
 
@@ -268,7 +271,8 @@ export function mapRequestToCommand(
 
     // An office's own facility is a monthly-rental facility in a reserved custom slot. A standard facility whose archetype
     // contradicts its declared type is refused rather than re-coded.
-    if (code && !custom && declaredArchetype !== ARCHETYPE_OF_CODE[code]) {
+    const monthlyMarket = code === 'NPM' && declaredArchetype === 'MonthlyRental';
+    if (code && !custom && declaredArchetype !== ARCHETYPE_OF_CODE[code] && !monthlyMarket) {
       blockingErrors.push(
         `"${f.name}" is a ${code} facility but was declared with the billing type "${f.type}". Return the draft for LGU review.`,
       );
@@ -310,8 +314,10 @@ export function mapRequestToCommand(
 
     // A daily-stall market carries the LGU's own name for each collection area of its sheet. The LGU declared
     // which area each of its sections is, so its names travel to its portal verbatim.
-    const sections = archetype === 'DailyStall' ? withDeclaredAreas(f.sections || []) : [];
-    if (archetype === 'DailyStall' && hasUndeclaredAreas(f.sections || [])) {
+    // The market keeps its sections whichever way it is rented; only a daily market prices them.
+    const isMarket = code === 'NPM';
+    const sections = isMarket ? withDeclaredAreas(f.sections || []) : [];
+    if (isMarket && hasUndeclaredAreas(f.sections || [])) {
       warnings.push(
         `"${f.name}" was configured before onboarding asked which collection area each market section is; ` +
           `areas were assumed in the order they were entered (${sections
@@ -325,7 +331,7 @@ export function mapRequestToCommand(
     // filed under it from the first day. An area with no name is dropped, because there is nothing to register and
     // nothing to print on a sheet, and the operator is told which row went.
     const customAreas: string[] = [];
-    if (archetype === 'DailyStall') {
+    if (isMarket) {
       const seen = new Set<string>();
       for (const s of sections.filter((x) => isCustomArea(x.kind))) {
         const name = (s.name || '').trim();
@@ -353,7 +359,7 @@ export function mapRequestToCommand(
       // omitted where the office said nothing so the API applies the rent goal every existing office is on.
       monthBasis: archetype === 'DailyStall' ? monthBasisOf(f) : undefined,
       sectionLabels:
-        archetype === 'DailyStall'
+        isMarket
           ? {
               vegetable: sections.find((s) => s.kind === 'VegetableArea')?.name?.trim() || null,
               fish: sections.find((s) => s.kind === 'FishSection')?.name?.trim() || null,
@@ -458,6 +464,11 @@ export function mapRequestToCommand(
         warnings.push(
           `"${f.name}" stated a monthly rate of ${stated}. Rent is set for each space after activation, so this figure is not filed.`,
         );
+      }
+      // A Public Market rented by the month still weighs fish: the per-kilo weighing fee is its own source, filed as for a daily market.
+      if (monthlyMarket) {
+        const fishFee = (sections.find((s) => s.kind === 'FishSection')?.fees || [])[0];
+        if (fishFee) rates.push({ facilityCode: code, key: 'NpmFishPerKilo', amount: num(fishFee.amount) ?? 0 });
       }
     } else if (archetype === 'PerHead') {
       if (f.slaughterhouse) {

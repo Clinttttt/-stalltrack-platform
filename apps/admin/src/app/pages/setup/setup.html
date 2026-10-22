@@ -2,27 +2,27 @@
   @if (checking()) {
     <p class="text-sm text-muted">Checking setup status…</p>
   } @else if (done()) {
-    <h1 class="font-display text-3xl font-bold text-ink">Operator created</h1>
+    <h1 class="auth-title !mt-0 !text-4xl">Operator created</h1>
     <p class="mt-1.5 text-sm text-muted">You can now sign in to the console.</p>
     <button type="button" (click)="goToLogin()" class="a-btn-primary mt-6 w-full !py-3">Continue to sign in</button>
   } @else {
-    <h1 class="font-display text-3xl font-bold text-ink">Create the platform operator</h1>
+    <h1 class="auth-title !mt-0 !text-4xl">Create the platform operator</h1>
     <p class="mt-1.5 text-sm text-muted">
-      First-time setup. This account administers onboarding and is created once, with its own username and email address.
+      First-time setup. This account administers onboarding and is created once.
     </p>
 
     <form (ngSubmit)="submit()" class="mt-6 space-y-4">
-      <div class="grid gap-4 lg:grid-cols-2">
+      <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2">
         <div>
-          <label class="a-label" for="fullName">Full name</label>
-          <div class="a-field mt-1.5">
+          <label class="auth-label" for="fullName">Full name</label>
+          <div class="auth-field mt-2">
             <app-icon name="user" className="h-4 w-4 text-muted" />
             <input id="fullName" type="text" name="fullName" autocomplete="name" autofocus [(ngModel)]="fullName" class="w-full bg-transparent py-2.5 text-sm text-ink outline-none" required />
           </div>
         </div>
         <div>
-          <label class="a-label" for="username">Username</label>
-          <div class="a-field mt-1.5">
+          <label class="auth-label" for="username">Username</label>
+          <div class="auth-field mt-2">
             <app-icon name="user" className="h-4 w-4 text-muted" />
             <input id="username" type="text" name="username" autocomplete="username" [(ngModel)]="username" class="w-full bg-transparent py-2.5 text-sm text-ink outline-none" required />
           </div>
@@ -30,18 +30,18 @@
       </div>
 
       <div>
-        <label class="a-label" for="email">Email</label>
-        <div class="a-field mt-1.5">
+        <label class="auth-label" for="email">Email</label>
+        <div class="auth-field mt-2">
           <app-icon name="inbox" className="h-4 w-4 text-muted" />
           <input id="email" type="email" name="email" autocomplete="email" [(ngModel)]="email" class="w-full bg-transparent py-2.5 text-sm text-ink outline-none" required />
         </div>
         <p class="mt-1.5 text-xs text-muted">The operator's own address, not a Head's or a staff member's.</p>
       </div>
 
-      <div class="grid gap-4 lg:grid-cols-2">
+      <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2">
         <div>
-          <label class="a-label" for="password">Password</label>
-          <div class="a-field mt-1.5">
+          <label class="auth-label" for="password">Password</label>
+          <div class="auth-field mt-2">
             <app-icon name="lock" className="h-4 w-4 text-muted" />
             <input id="password" [type]="showPassword() ? 'text' : 'password'" name="password" autocomplete="new-password" [(ngModel)]="password" class="w-full bg-transparent py-2.5 text-sm text-ink outline-none" required />
             <button type="button" (click)="togglePassword()" class="shrink-0 rounded px-1.5 py-1 text-xs font-semibold text-civic hover:underline" [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
@@ -50,8 +50,8 @@
           </div>
         </div>
         <div>
-          <label class="a-label" for="confirm">Confirm password</label>
-          <div class="a-field mt-1.5" [class.!border-red]="passwordsDiffer">
+          <label class="auth-label" for="confirm">Confirm password</label>
+          <div class="auth-field mt-2" [class.!border-red]="passwordsDiffer">
             <app-icon name="lock" className="h-4 w-4 text-muted" />
             <input id="confirm" [type]="showPassword() ? 'text' : 'password'" name="confirm" autocomplete="new-password" [(ngModel)]="confirm" class="w-full bg-transparent py-2.5 text-sm text-ink outline-none" [attr.aria-invalid]="passwordsDiffer" required />
           </div>

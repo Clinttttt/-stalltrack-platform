@@ -96,6 +96,35 @@ export class PasswordRecoveryService {
     }
   }
 
+  /**
+   * Confirms a mailed one-time token. Public by design: the token is the credential.
+   * Called only when the visitor chooses Confirm on the dedicated link page, never on mere page load.
+   */
+  async verifyEmail(token: string): Promise<{ ok: boolean; error?: string }> {
+    if (!token) return { ok: false, error: 'This confirmation link is missing its token.' };
+    try {
+      await firstValueFrom(
+        this.http.post(`${API_BASE_URL}/api/adminauth/verify-email`, { token }),
+      );
+      return { ok: true };
+    } catch (e: unknown) {
+      const err = e as { status?: number; error?: { error?: string; message?: string } };
+      if (err.status === 0) {
+        return { ok: false, error: 'Cannot reach the server. Check your connection and try again.' };
+      }
+      if (err.status === 429) {
+        return { ok: false, error: 'Too many attempts. Please wait a moment and try again.' };
+      }
+      if (err.status === 400 || err.status === 404) {
+        return { ok: false, error: 'This confirmation link is invalid, expired, or has already been used.' };
+      }
+      return {
+        ok: false,
+        error: 'We could not confirm this email. Please try again.',
+      };
+    }
+  }
+
   /** Sends the caller its own confirmation link. The subject is the token's account, so no id is passed. */
   async sendMyEmailConfirmation(): Promise<{ ok: boolean; error?: string }> {
     try {

@@ -50,11 +50,20 @@ export class Login {
     });
   }
 
-  submit(): void {
+  submit(event: Event): void {
     this.error.set('');
+
+    // Chrome/password managers can populate visible inputs without dispatching
+    // events Angular's ngModel observes. Read the submitted form values so the
+    // credentials on screen are the credentials sent to the existing auth API.
+    const form = event.target instanceof HTMLFormElement ? event.target : null;
+    const fields = form ? new FormData(form) : null;
+    const username = String(fields?.get('username') ?? this.username);
+    const password = String(fields?.get('password') ?? this.password);
+
     this.busy.set(true);
     this.auth
-      .login(this.username, this.password)
+      .login(username, password)
       .then((res) => {
         this.busy.set(false);
         if (res.ok) this.router.navigateByUrl(this.from, { replaceUrl: true });

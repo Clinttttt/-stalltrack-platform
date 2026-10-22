@@ -2,9 +2,9 @@
   <!-- Sidebar (desktop) -->
   <aside class="hidden w-60 shrink-0 flex-col border-r border-line bg-white lg:flex">
     <div class="flex items-center gap-3 px-5 py-5">
-      <img src="/stalltrack-logo.png" alt="" class="h-10 w-10 shrink-0 object-contain" />
+      <img src="/brand/stalltrack-seal.png" alt="" class="h-11 w-11 shrink-0 object-contain" />
       <div class="leading-tight">
-        <div class="font-display text-lg font-bold">StallTrack</div>
+        <div class="font-display text-xl font-bold text-civic-deep">StallTrack</div>
         <div class="text-xs text-muted">Platform Admin</div>
       </div>
     </div>
@@ -17,7 +17,7 @@
           #rla="routerLinkActive"
           [routerLinkActiveOptions]="{ exact: true }"
           [attr.aria-current]="rla.isActive ? 'page' : null"
-          [class]="'mb-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition ' + (rla.isActive ? 'bg-civic-soft text-civic' : 'text-ink/75 hover:bg-mist hover:text-ink')"
+          [class]="'mb-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition ' + (rla.isActive ? 'bg-tint text-civic-deep shadow-[inset_3px_0_0_theme(colors.civic.panel)]' : 'text-ink/75 hover:bg-mist hover:text-ink')"
         >
           <app-icon [name]="item.icon" className="h-5 w-5" />
           {{ item.label }}
@@ -41,7 +41,7 @@
     <header class="z-30 shrink-0 border-b border-line bg-white">
       <div class="flex h-16 items-center justify-between px-5 sm:px-8">
         <div class="flex items-center gap-3 lg:hidden">
-          <img src="/stalltrack-logo.png" alt="" class="h-9 w-9 shrink-0 object-contain" />
+          <img src="/brand/stalltrack-seal.png" alt="" class="h-9 w-9 shrink-0 object-contain" />
           <div class="leading-tight">
             <div class="font-display text-base font-bold">StallTrack</div>
             <div class="text-xs text-muted">Platform Admin</div>
@@ -53,7 +53,7 @@
           <div class="hidden text-right sm:block">
             <div class="text-sm font-semibold">{{ user?.displayName || 'Platform Operator' }}</div>
           </div>
-          <span class="grid h-9 w-9 place-items-center rounded-full bg-civic-soft text-civic" aria-hidden="true">
+          <span class="grid h-9 w-9 place-items-center rounded-full border border-tint-line bg-tint text-civic-panel" aria-hidden="true">
             <app-icon name="user" className="h-4 w-4" />
           </span>
           <button (click)="signOut()" class="a-btn-ghost !px-3 !py-2 lg:hidden" title="Sign out" aria-label="Sign out">
@@ -71,7 +71,7 @@
             #rlm="routerLinkActive"
             [routerLinkActiveOptions]="{ exact: true }"
             [attr.aria-current]="rlm.isActive ? 'page' : null"
-            [class]="'shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold transition ' + (rlm.isActive ? 'bg-civic text-white' : 'text-ink/75 hover:bg-mist')"
+            [class]="'shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold transition ' + (rlm.isActive ? 'bg-civic-panel text-white' : 'text-ink/75 hover:bg-mist')"
           >
             {{ item.label }}
           </a>
