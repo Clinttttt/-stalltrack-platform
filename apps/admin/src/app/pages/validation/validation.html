@@ -265,6 +265,20 @@
             @for (p of operationProblems(); track p) {
               <p class="a-note-warn mt-2 text-xs">{{ p }}</p>
             }
+            @if (terminalSectionsUnreadable()) {
+              <p class="a-note-warn mt-3 text-sm" role="alert">Terminal section configuration needs LGU review before activation.</p>
+            } @else if (terminalSections().length) {
+              <h3 class="mt-5 text-sm font-semibold">Income From Terminal sections</h3>
+              <p class="mt-1 text-xs text-muted">Configured sections do not authorize Cash Ticket collections. The Head must separately approve revenue policy.</p>
+              <ul class="mt-2 divide-y divide-line rounded-lg border border-line">
+                @for (section of terminalSections(); track section.section) {
+                  <li class="flex flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm">
+                    <span>{{ terminalLabels[section.section] }}@if (section.localDisplayName) { — {{ section.localDisplayName }} }</span>
+                    <span class="text-xs text-muted">{{ section.isEnabled ? 'Selected' : 'Not selected' }}</span>
+                  </li>
+                }
+              </ul>
+            }
 
             <!-- Branding + users -->
             <div class="mt-6 grid gap-4 sm:grid-cols-2">

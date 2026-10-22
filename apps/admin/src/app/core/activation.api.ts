@@ -142,8 +142,14 @@ export interface ActivateMunicipalityCommand {
    * fallback. An EMPTY list means the LGU explicitly chose none. Never inferred.
    */
   operationDeclarations?: ActivationOperation[];
+  terminalSectionDeclarations?: ActivationTerminalSection[];
 }
 
+export interface ActivationTerminalSection {
+  section: "ComfortRoom" | "PullPulVansCargoVans" | "Tricycad";
+  isEnabled: boolean;
+  localDisplayName?: string | null;
+}
 export interface ActivationOperation {
   operationCode: string;
   selected: boolean;

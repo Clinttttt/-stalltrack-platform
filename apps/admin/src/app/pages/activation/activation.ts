@@ -1,3 +1,4 @@
+import { TERMINAL_LABELS } from '@stalltrack/terminal-config';
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon/icon';
 import { Facility, RequestRecord, STATUS } from '../../core/demo';
@@ -65,6 +66,9 @@ export class Activation {
   readonly mappingErrors = signal<string[]>([]);
   /** Operations the office declared. Shown so the operator can tell "ready to activate" from "setup after activation". */
   readonly declaredOperations = signal<DeclaredOperationRow[]>([]);
+  readonly terminalLabels = TERMINAL_LABELS;
+  readonly terminalSections = computed(() => this.selected()?.config?.terminalSections ?? []);
+  readonly terminalSectionsUnreadable = computed(() => this.selected()?.config?.terminalSectionsUnreadable === true);
 
   readonly scoped = computed(() => this.requests().filter(inScope));
   /**

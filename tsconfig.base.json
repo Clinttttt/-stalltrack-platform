@@ -17,6 +17,7 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "paths": {
+      "@stalltrack/terminal-config": ["./libs/terminal-config/src/index.ts"],
       "@stalltrack/ui": [
         "./libs/ui/src/index.ts"
       ]

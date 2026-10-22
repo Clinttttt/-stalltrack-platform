@@ -1,3 +1,4 @@
+import { TERMINAL_LABELS, TerminalChoice, TerminalCode, defaultTerminalChoices, readTerminalSections, terminalNameProblem, writeTerminalSections } from '@stalltrack/terminal-config';
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { UiInfoTip } from '@stalltrack/ui';
@@ -19,7 +20,7 @@ const MAX_CUSTOM_FACILITIES = 5;
 
 // The groups of the official Monthly Income statement (OfficialMonthlyIncomeStructure): Income From Market, Rent Income (Stall
 // Rental), Space Rental, Income From Terminal, Income From Slaughterhouse. Grouping is how the workspace PRESENTS choices; it
-// never changes a classification. A facility of the office's own has no approved statement line yet, so it is shown under rent
+// never changes a classification. A facility of the office's own uses the existing other-monthly-rent line, so it is shown under rent
 // with a note rather than placed by guess.
 type RevenueGroupKey = 'market' | 'rent' | 'space' | 'terminal' | 'slaughterhouse';
 const REVENUE_GROUPS: ReadonlyArray<{ key: RevenueGroupKey; label: string; hint: string }> = [
@@ -38,7 +39,7 @@ const ADD_NAME: Readonly<Record<string, string>> = {
   weekly: 'Weekly market',
   terminal: 'Transport terminal',
   slaughterhouse: 'Slaughterhouse',
-  other: 'a rental facility of your own',
+  other: 'new stall rental',
 };
 const GROUP_OF_CATALOG: Readonly<Record<string, RevenueGroupKey>> = {
   public_market: 'rent',
@@ -191,7 +192,7 @@ const CATALOG: CatalogItem[] = [
   { key: 'slaughterhouse', label: 'Slaughterhouse — per head', type: 'Per head', unitLabel: 'heads', archetype: 'PerHead' },
   { key: 'terminal', label: 'Transport / Bus Terminal — per trip', type: 'Per trip', unitLabel: 'trips', archetype: 'PerTrip' },
   { key: 'weekly', label: 'Weekly / Tabo market — market day', type: 'Weekly market', unitLabel: 'vendors', archetype: 'WeeklyMarket' },
-  { key: 'other', label: 'Other (custom facility)', type: 'Custom', unitLabel: 'units', archetype: 'Custom' },
+  { key: 'other', label: 'Custom monthly stall rental', type: 'Custom', unitLabel: 'units', archetype: 'Custom' },
 ];
 
 const RATE_UNIT_FOR: Record<string, string> = {
@@ -676,6 +677,17 @@ export class OnboardingWorkspace {
   }
 
   // ── revenue operations (initial intent only) ──────────────────────────────
+  readonly terminalChoices = signal<TerminalChoice[]>(defaultTerminalChoices());
+  readonly terminalLabels = TERMINAL_LABELS;
+  readonly lockedTerminal = signal<unknown | undefined>(undefined);
+  readonly terminalValid = computed(() => !terminalNameProblem(this.terminalChoices()));
+  readonly terminalProblem = computed(() => terminalNameProblem(this.terminalChoices()));
+  toggleTerminal(section: TerminalCode): void {
+    this.terminalChoices.update((rows) => rows.map((x) => x.section === section ? { ...x, isEnabled: !x.isEnabled } : x));
+  }
+  nameTerminal(section: TerminalCode, name: string): void {
+    this.terminalChoices.update((rows) => rows.map((x) => x.section === section ? { ...x, localDisplayName: name.slice(0, 80) } : x));
+  }
   readonly operationCatalog = OPERATION_CATALOG;
   readonly operations = signal<Record<string, OperationState>>({});
   /** Codes in a saved draft that this workspace does not recognise; shown once so nothing vanishes silently. */
@@ -814,7 +826,7 @@ export class OnboardingWorkspace {
   }
 
   submit(): void {
-    if (this.allDone() && this.operationsValid()) this.submitDraft.emit(this.serialize());
+    if (this.allDone() && this.operationsValid() && this.terminalValid() && this.lockedTerminal() === undefined) this.submitDraft.emit(this.serialize());
   }
   editSubmission(): void {
     this.edit.emit();
@@ -837,6 +849,7 @@ export class OnboardingWorkspace {
       administrator: this.admin(),
       branding: this.branding(),
       // Entries this version cannot edit go back exactly as they were read: saving another field never erases them.
+      terminalSections: this.lockedTerminal() !== undefined ? this.lockedTerminal() : writeTerminalSections(this.terminalChoices()),
       operations:
         this.lockedOperations() !== null
           ? this.lockedOperations()
@@ -851,9 +864,13 @@ export class OnboardingWorkspace {
         administrator?: { name?: string; position?: string; email?: string };
         branding?: { officeName?: string; orPrefix?: string; orStart?: string; logoName?: string; logoDataUri?: string };
         operations?: unknown;
+        terminalSections?: unknown;
       };
-      const { facilities: _f, administrator: _a, branding: _b, operations: _o, ...rest } = cfg as Record<string, unknown>;
+      const { facilities: _f, administrator: _a, branding: _b, operations: _o, terminalSections: _t, ...rest } = cfg as Record<string, unknown>;
       this.extras = rest;
+      const terminal = readTerminalSections(cfg.terminalSections);
+      this.terminalChoices.set(terminal.choices);
+      this.lockedTerminal.set(terminal.unreadable ? cfg.terminalSections : undefined);
       if (isEditableOperationsBlock(cfg.operations)) {
         const ops = readOperations(cfg.operations);
         this.operations.set(ops.states);
