@@ -135,6 +135,21 @@
                       </p>
                     </div>
                   }
+                  @if (terminalSectionsUnreadable()) {
+                    <p class="a-note-danger mt-3 text-sm" role="alert">This Terminal configuration cannot be read. Activation is blocked until reviewed.</p>
+                  } @else if (terminalSections().length) {
+                    <div class="mt-3 rounded-lg border border-line px-3.5 py-3 text-sm">
+                      <div class="font-semibold">Income From Terminal sections</div>
+                      <ul class="mt-1.5 grid gap-x-6 gap-y-1 sm:grid-cols-2">
+                        @for (section of terminalSections(); track section.section) {
+                          <li>{{ terminalLabels[section.section] }}@if (section.localDisplayName) { — {{ section.localDisplayName }} }
+                            <span class="text-xs text-muted">({{ section.isEnabled ? 'selected' : 'not selected' }})</span>
+                          </li>
+                        }
+                      </ul>
+                      <p class="mt-2 text-xs text-muted">Revenue classification is created for selected sections; the LGU Head must approve the Cash Ticket policy before collecting.</p>
+                    </div>
+                  }
                   @if (warnings().length) {
                     <div class="a-note-warn mt-3 text-xs">
                       <div class="mb-1 font-semibold">Please review before activating</div>

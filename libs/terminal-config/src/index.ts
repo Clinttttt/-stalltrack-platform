@@ -23,12 +23,17 @@ export function readTerminalSections(raw: unknown): { choices: TerminalChoice[];
   if (raw === undefined) return { choices: defaultTerminalChoices(), present: false, unreadable: false };
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { choices: defaultTerminalChoices(), present: true, unreadable: true };
   const block = raw as { version?: unknown; items?: unknown };
+  // Version-one extensions must not be stripped by an older workspace on save.
+  if (Object.keys(raw).some((key) => key !== 'version' && key !== 'items'))
+    return { choices: defaultTerminalChoices(), present: true, unreadable: true };
   if (block.version !== 1 || !Array.isArray(block.items) || block.items.length !== 3)
     return { choices: defaultTerminalChoices(), present: true, unreadable: true };
   const items: TerminalChoice[] = [];
   for (const item of block.items) {
     if (!item || typeof item !== 'object') return { choices: defaultTerminalChoices(), present: true, unreadable: true };
     const row = item as Record<string, unknown>;
+    if (Object.keys(row).some((key) => !['section', 'isEnabled', 'localDisplayName'].includes(key)))
+      return { choices: defaultTerminalChoices(), present: true, unreadable: true };
     if (!TERMINAL_CODES.includes(row['section'] as TerminalCode) || typeof row['isEnabled'] !== 'boolean' ||
         (row['localDisplayName'] !== undefined && row['localDisplayName'] !== null && typeof row['localDisplayName'] !== 'string'))
       return { choices: defaultTerminalChoices(), present: true, unreadable: true };

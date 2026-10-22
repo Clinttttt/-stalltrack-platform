@@ -22,7 +22,9 @@ describe('Tenant Terminal section declarations', () => {
   it('refuses a future, partial, or ambiguous declaration instead of silently enabling an unknown source', () => {
     const defaults = writeTerminalSections(defaultTerminalChoices());
     expect(readTerminalSections({ ...defaults, version: 4 }).unreadable).toBe(true);
+    expect(readTerminalSections({ ...defaults, futurePolicy: 'unknown' }).unreadable).toBe(true);
     expect(readTerminalSections({ version: 1, items: defaults.items.slice(0, 2) }).unreadable).toBe(true);
+    expect(readTerminalSections({ version: 1, items: defaults.items.map((x, i) => i === 1 ? { ...x, unknownField: true } : x) }).unreadable).toBe(true);
     const duplicate = defaultTerminalChoices();
     duplicate[0].localDisplayName = 'Same local name';
     duplicate[1].localDisplayName = 'Same local name';
