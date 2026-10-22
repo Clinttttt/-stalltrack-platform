@@ -148,6 +148,8 @@ export interface Config {
   operationsDeclared?: boolean;
   /** The block exists but this console cannot read it, so activation must not guess what the office chose. */
   operationsUnreadable?: boolean;
+  terminalSections?: Array<{ section: string; isEnabled: boolean; localDisplayName: string }>;
+  terminalSectionsUnreadable?: boolean;
 }
 
 export interface ChecklistItem {

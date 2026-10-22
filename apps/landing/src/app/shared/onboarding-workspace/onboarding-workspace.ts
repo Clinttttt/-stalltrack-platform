@@ -1,3 +1,4 @@
+import { TERMINAL_LABELS, TerminalChoice, TerminalCode, defaultTerminalChoices, readTerminalSections, terminalNameProblem, writeTerminalSections } from '@stalltrack/terminal-config';
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { UiInfoTip } from '@stalltrack/ui';
@@ -676,6 +677,17 @@ export class OnboardingWorkspace {
   }
 
   // ── revenue operations (initial intent only) ──────────────────────────────
+  readonly terminalChoices = signal<TerminalChoice[]>(defaultTerminalChoices());
+  readonly terminalLabels = TERMINAL_LABELS;
+  readonly lockedTerminal = signal<unknown | undefined>(undefined);
+  readonly terminalValid = computed(() => !terminalNameProblem(this.terminalChoices()));
+  readonly terminalProblem = computed(() => terminalNameProblem(this.terminalChoices()));
+  toggleTerminal(section: TerminalCode): void {
+    this.terminalChoices.update((rows) => rows.map((x) => x.section === section ? { ...x, isEnabled: !x.isEnabled } : x));
+  }
+  nameTerminal(section: TerminalCode, name: string): void {
+    this.terminalChoices.update((rows) => rows.map((x) => x.section === section ? { ...x, localDisplayName: name.slice(0, 80) } : x));
+  }
   readonly operationCatalog = OPERATION_CATALOG;
   readonly operations = signal<Record<string, OperationState>>({});
   /** Codes in a saved draft that this workspace does not recognise; shown once so nothing vanishes silently. */
@@ -814,7 +826,7 @@ export class OnboardingWorkspace {
   }
 
   submit(): void {
-    if (this.allDone() && this.operationsValid()) this.submitDraft.emit(this.serialize());
+    if (this.allDone() && this.operationsValid() && this.terminalValid() && this.lockedTerminal() === undefined) this.submitDraft.emit(this.serialize());
   }
   editSubmission(): void {
     this.edit.emit();
@@ -837,6 +849,7 @@ export class OnboardingWorkspace {
       administrator: this.admin(),
       branding: this.branding(),
       // Entries this version cannot edit go back exactly as they were read: saving another field never erases them.
+      terminalSections: this.lockedTerminal() !== undefined ? this.lockedTerminal() : writeTerminalSections(this.terminalChoices()),
       operations:
         this.lockedOperations() !== null
           ? this.lockedOperations()
@@ -851,9 +864,13 @@ export class OnboardingWorkspace {
         administrator?: { name?: string; position?: string; email?: string };
         branding?: { officeName?: string; orPrefix?: string; orStart?: string; logoName?: string; logoDataUri?: string };
         operations?: unknown;
+        terminalSections?: unknown;
       };
-      const { facilities: _f, administrator: _a, branding: _b, operations: _o, ...rest } = cfg as Record<string, unknown>;
+      const { facilities: _f, administrator: _a, branding: _b, operations: _o, terminalSections: _t, ...rest } = cfg as Record<string, unknown>;
       this.extras = rest;
+      const terminal = readTerminalSections(cfg.terminalSections);
+      this.terminalChoices.set(terminal.choices);
+      this.lockedTerminal.set(terminal.unreadable ? cfg.terminalSections : undefined);
       if (isEditableOperationsBlock(cfg.operations)) {
         const ops = readOperations(cfg.operations);
         this.operations.set(ops.states);
