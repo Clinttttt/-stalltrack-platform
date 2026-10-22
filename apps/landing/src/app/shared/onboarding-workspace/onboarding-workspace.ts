@@ -19,7 +19,7 @@ const MAX_CUSTOM_FACILITIES = 5;
 
 // The groups of the official Monthly Income statement (OfficialMonthlyIncomeStructure): Income From Market, Rent Income (Stall
 // Rental), Space Rental, Income From Terminal, Income From Slaughterhouse. Grouping is how the workspace PRESENTS choices; it
-// never changes a classification. A facility of the office's own has no approved statement line yet, so it is shown under rent
+// never changes a classification. A facility of the office's own uses the existing other-monthly-rent line, so it is shown under rent
 // with a note rather than placed by guess.
 type RevenueGroupKey = 'market' | 'rent' | 'space' | 'terminal' | 'slaughterhouse';
 const REVENUE_GROUPS: ReadonlyArray<{ key: RevenueGroupKey; label: string; hint: string }> = [
@@ -38,7 +38,7 @@ const ADD_NAME: Readonly<Record<string, string>> = {
   weekly: 'Weekly market',
   terminal: 'Transport terminal',
   slaughterhouse: 'Slaughterhouse',
-  other: 'a rental facility of your own',
+  other: 'new stall rental',
 };
 const GROUP_OF_CATALOG: Readonly<Record<string, RevenueGroupKey>> = {
   public_market: 'rent',
@@ -191,7 +191,7 @@ const CATALOG: CatalogItem[] = [
   { key: 'slaughterhouse', label: 'Slaughterhouse — per head', type: 'Per head', unitLabel: 'heads', archetype: 'PerHead' },
   { key: 'terminal', label: 'Transport / Bus Terminal — per trip', type: 'Per trip', unitLabel: 'trips', archetype: 'PerTrip' },
   { key: 'weekly', label: 'Weekly / Tabo market — market day', type: 'Weekly market', unitLabel: 'vendors', archetype: 'WeeklyMarket' },
-  { key: 'other', label: 'Other (custom facility)', type: 'Custom', unitLabel: 'units', archetype: 'Custom' },
+  { key: 'other', label: 'Custom monthly stall rental', type: 'Custom', unitLabel: 'units', archetype: 'Custom' },
 ];
 
 const RATE_UNIT_FOR: Record<string, string> = {
