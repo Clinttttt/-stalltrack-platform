@@ -613,5 +613,15 @@ export function mapRequestToCommand(
   }
   for (const problem of r.config?.operationProblems ?? []) warnings.push(`Declared revenue operations: ${problem}`);
 
+  if (r.config?.terminalSectionsUnreadable) {
+    blockingErrors.push('The declared Terminal sections cannot be read. Return the draft for LGU review.');
+  } else if (r.config?.terminalSections) {
+    command.terminalSectionDeclarations = r.config.terminalSections.map((row) => ({
+      section: row.section as 'ComfortRoom' | 'PullPulVansCargoVans' | 'Tricycad',
+      isEnabled: row.isEnabled,
+      localDisplayName: row.localDisplayName.trim() || null,
+    }));
+  }
+
   return { command, warnings, blockingErrors, declaredOperations };
 }

@@ -1,3 +1,4 @@
+import { TERMINAL_LABELS } from '@stalltrack/terminal-config';
 import { Component, computed, DestroyRef, HostListener, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon/icon';
 import { Sensitive } from '../../shared/privacy/sensitive';
@@ -85,6 +86,9 @@ export class Validation {
     return OPERATION_GROUP_ORDER.map((g) => ({ label: g.label, rows: rows.filter((o) => o.group === g.key) })).filter((g) => g.rows.length > 0);
   });
   readonly operationProblems = computed(() => this.selected()?.config?.operationProblems ?? []);
+  readonly terminalLabels = TERMINAL_LABELS;
+  readonly terminalSections = computed(() => this.selected()?.config?.terminalSections ?? []);
+  readonly terminalSectionsUnreadable = computed(() => this.selected()?.config?.terminalSectionsUnreadable === true);
 
   /** Whether this configuration holds any value that is hidden until revealed. */
   readonly hasSensitive = computed(() => {

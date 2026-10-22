@@ -1,6 +1,7 @@
 import { Config, Facility } from './demo';
 import { withDeclaredAreas } from './market-sections';
 import { parseOperations } from './onboarding-operations';
+import { readTerminalSections } from '@stalltrack/terminal-config';
 
 /** The persisted workspace document. Both Validation and Activation must read this one shape. */
 export interface WorkspaceConfig {
@@ -9,6 +10,7 @@ export interface WorkspaceConfig {
   branding?: { officeName?: string; orPrefix?: string; orStart?: string; logoName?: string; logoDataUri?: string };
   /** Declared revenue operations — initial intent only. Absent in every draft saved before they existed. */
   operations?: { version?: number; items?: unknown[] } | null;
+  terminalSections?: unknown;
 }
 
 export function parseWorkspaceConfig(json: string | null): WorkspaceConfig | null {
@@ -23,6 +25,7 @@ export function parseWorkspaceConfig(json: string | null): WorkspaceConfig | nul
 /** Project the saved workspace into the common operator-review shape without dropping branding identity. */
 export function toReviewConfig(workspace: WorkspaceConfig | null): Config {
   const operations = parseOperations(workspace?.operations);
+  const terminal = readTerminalSections(workspace?.terminalSections);
   return {
     facilities: Array.isArray(workspace?.facilities)
       ? workspace.facilities.map((facility) => ({
@@ -43,5 +46,7 @@ export function toReviewConfig(workspace: WorkspaceConfig | null): Config {
     operationProblems: operations.problems,
     operationsDeclared: operations.present,
     operationsUnreadable: operations.unreadable,
+    terminalSections: terminal.present && !terminal.unreadable ? terminal.choices : undefined,
+    terminalSectionsUnreadable: terminal.unreadable,
   };
 }
