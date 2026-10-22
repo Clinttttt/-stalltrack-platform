@@ -34,6 +34,10 @@ export const appRoutes: Route[] = [
     loadComponent: () => import('./pages/reset-password/reset-password').then((m) => m.ResetPassword),
   },
   {
+    path: 'verify-email/:token',
+    loadComponent: () => import('./pages/verify-email/verify-email').then((m) => m.VerifyEmail),
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./shared/admin-layout/admin-layout').then((m) => m.AdminLayout),

@@ -1,0 +1,48 @@
+<app-auth-shell>
+  <div class="auth-eyebrow">Account security <span class="h-px w-14 bg-civic-deep/50" aria-hidden="true"></span></div>
+
+  @if (confirmed()) {
+    <div class="mt-6 flex h-14 w-14 items-center justify-center rounded-xl border border-green/20 bg-green-bg text-green" aria-hidden="true">
+      <app-icon name="check" className="h-7 w-7" />
+    </div>
+    <h1 class="auth-title !mt-5 !text-4xl">Email confirmed.</h1>
+    <p class="mt-4 text-base leading-relaxed text-muted">
+      Your email address is verified. You can now use it for password recovery when needed.
+    </p>
+    <a routerLink="/login" class="a-btn-primary mt-8 w-full !py-3.5">
+      Return to StallTrack
+      <app-icon name="arrowRight" className="h-4 w-4" />
+    </a>
+  } @else if (!hasToken) {
+    <h1 class="auth-title !mt-5 !text-4xl">Confirmation link missing.</h1>
+    <p class="mt-4 text-base leading-relaxed text-muted">
+      Open the full confirmation link from your email, or sign in to request a new one.
+    </p>
+    <a routerLink="/login" class="a-btn-primary mt-8 w-full !py-3.5">
+      Go to sign in
+      <app-icon name="arrowRight" className="h-4 w-4" />
+    </a>
+  } @else {
+    <h1 class="auth-title !mt-5 !text-4xl">Confirm your email.</h1>
+    <p class="mt-4 text-base leading-relaxed text-muted">
+      Verify your email address to enable secure account recovery. This link can only be used once.
+    </p>
+
+    @if (error()) {
+      <div class="a-note-danger mt-6 flex items-start gap-2" role="alert">
+        <app-icon name="x" className="mt-0.5 h-4 w-4 shrink-0" />
+        <span>{{ error() }}</span>
+      </div>
+    }
+
+    <button type="button" class="a-btn-primary mt-8 w-full !py-3.5" [disabled]="busy()" (click)="confirm()">
+      {{ busy() ? 'Confirming…' : 'Confirm email address' }}
+      @if (!busy()) {
+        <app-icon name="arrowRight" className="h-4 w-4" />
+      }
+    </button>
+    <a routerLink="/login" class="mt-6 block text-center text-sm font-semibold text-civic hover:underline">
+      Back to sign in
+    </a>
+  }
+</app-auth-shell>

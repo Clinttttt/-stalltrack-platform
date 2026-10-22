@@ -130,6 +130,41 @@ describe('PasswordRecoveryService', () => {
     });
   });
 
+  describe('confirmation link opened from email', () => {
+    it('posts the one-time token only when verification is requested', async () => {
+      const pending = service.verifyEmail('emailed-token');
+      const req = http.expectOne(`${API_BASE_URL}/api/adminauth/verify-email`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ token: 'emailed-token' });
+      req.flush({ username: 'operator', alreadyVerified: false });
+      expect((await pending).ok).toBe(true);
+    });
+
+    it('never submits an empty token', async () => {
+      const result = await service.verifyEmail('');
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain('missing');
+    });
+
+    it('shows an expired or already-used token as an invalid link', async () => {
+      const pending = service.verifyEmail('expired-token');
+      http.expectOne(`${API_BASE_URL}/api/adminauth/verify-email`)
+        .flush({ error: 'invalid or expired' }, { status: 400, statusText: 'Bad Request' });
+      const result = await pending;
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain('invalid, expired');
+    });
+
+    it('separates loss of connection from an invalid token', async () => {
+      const pending = service.verifyEmail('emailed-token');
+      http.expectOne(`${API_BASE_URL}/api/adminauth/verify-email`)
+        .flush(null, { status: 0, statusText: 'Unknown Error' });
+      const result = await pending;
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain('Cannot reach the server');
+    });
+  });
+
   describe('confirming your own address', () => {
     it('asks the API about the caller, with no id of its own', async () => {
       const pending = service.myEmailConfirmation();

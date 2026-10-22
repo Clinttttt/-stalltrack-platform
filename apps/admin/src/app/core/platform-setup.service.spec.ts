@@ -92,6 +92,56 @@ describe('PlatformSetupService: what a refusal says', () => {
     expect(res.error).toContain('must contain a number');
   });
 
+  it('identifies a blocked setup preflight instead of calling the healthy API unreachable', async () => {
+    const pending = submit();
+    flush(0, null);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    http.expectOne(`${API_BASE_URL}/api/platform-setup/status`).flush({ isSetupRequired: true });
+    const res = await pending;
+
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain('production setup gate');
+    expect(res.alreadySetUp).toBeFalsy();
+  });
+
+  it('offers sign-in when status confirms an operator already exists', async () => {
+    const pending = submit();
+    flush(0, null);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    http.expectOne(`${API_BASE_URL}/api/platform-setup/status`).flush({ isSetupRequired: false });
+    const res = await pending;
+
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.alreadySetUp).toBe(true);
+  });
+
+  it('keeps the network-error wording if the status endpoint is also unreachable', async () => {
+    const pending = submit();
+    flush(0, null);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    http.expectOne(`${API_BASE_URL}/api/platform-setup/status`).flush(null, {
+      status: 0,
+      statusText: 'Unknown Error',
+    });
+    const res = await pending;
+
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain('Cannot reach the API');
+  });
+
+  it('reports an explicit 403 setup denial', async () => {
+    const pending = submit();
+    flush(403, 'Initial setup is disabled.');
+    const res = await pending;
+
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain('Initial setup is disabled');
+  });
+
   it('reports success plainly', async () => {
     const pending = submit();
     http.expectOne(`${API_BASE_URL}/api/platform-setup/create-first-operator`).flush(true);
