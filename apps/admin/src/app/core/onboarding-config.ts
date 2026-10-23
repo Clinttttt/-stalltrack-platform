@@ -11,6 +11,7 @@ export interface WorkspaceConfig {
   /** Declared revenue operations — initial intent only. Absent in every draft saved before they existed. */
   operations?: { version?: number; items?: unknown[] } | null;
   terminalSections?: unknown;
+  weighing?: unknown;
 }
 
 export function parseWorkspaceConfig(json: string | null): WorkspaceConfig | null {
@@ -46,6 +47,23 @@ export function toReviewConfig(workspace: WorkspaceConfig | null): Config {
     operationProblems: operations.problems,
     operationsDeclared: operations.present,
     operationsUnreadable: operations.unreadable,
+    weighing: (() => {
+      const raw = workspace?.weighing;
+      if (raw === undefined || raw === null || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+      const w = raw as { version?: unknown; fishEnabled?: unknown; fishRate?: unknown; meatEnabled?: unknown; meatRate?: unknown };
+      return w.version === 1 && typeof w.fishEnabled === 'boolean' && typeof w.meatEnabled === 'boolean'
+        && typeof w.fishRate === 'string' && typeof w.meatRate === 'string'
+        ? { version: 1, fishEnabled: w.fishEnabled, fishRate: w.fishRate,
+            meatEnabled: w.meatEnabled, meatRate: w.meatRate }
+        : undefined;
+    })(),
+    weighingUnreadable: workspace?.weighing != null && (() => {
+      const raw = workspace.weighing;
+      if (typeof raw !== 'object' || Array.isArray(raw)) return true;
+      const w = raw as { version?: unknown; fishEnabled?: unknown; fishRate?: unknown; meatEnabled?: unknown; meatRate?: unknown };
+      return w.version !== 1 || typeof w.fishEnabled !== 'boolean' || typeof w.meatEnabled !== 'boolean'
+        || typeof w.fishRate !== 'string' || typeof w.meatRate !== 'string';
+    })(),
     terminalSections: terminal.present && !terminal.unreadable ? terminal.choices : undefined,
     terminalSectionsUnreadable: terminal.unreadable,
   };
