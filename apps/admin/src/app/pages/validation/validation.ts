@@ -103,7 +103,7 @@ export class Validation {
         (f.addOns ?? []).some((a) => !!a.amount) ||
         (f.sections ?? []).some((s) => !!s.rate || (s.fees?.length ?? 0) > 0),
     );
-    return rates || (cfg.users ?? []).some((u) => !!u.email);
+    return rates || !!(cfg.weighing?.fishEnabled || cfg.weighing?.meatEnabled) || (cfg.users ?? []).some((u) => !!u.email);
   });
 
   readonly kpis = computed(() => {

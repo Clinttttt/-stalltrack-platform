@@ -267,6 +267,30 @@
             @for (p of operationProblems(); track p) {
               <p class="a-note-warn mt-2 text-xs">{{ p }}</p>
             }
+            @if (r.config.weighingUnreadable) {
+              <p class="a-note-warn mt-3 text-sm" role="alert">Weight & Measure settings require review in a compatible onboarding workspace.</p>
+            } @else if (r.config.weighing) {
+              <h3 class="mt-5 text-sm font-semibold">Weight & Measure rates</h3>
+              <ul class="mt-2 divide-y divide-line rounded-lg border border-line text-sm">
+                <li class="flex items-center justify-between gap-3 px-4 py-2">
+                  <span>Fish weighing</span>
+                  <span class="text-muted">
+                    @if (!r.config.weighing.fishEnabled) { Not enabled }
+                    @else if (revealed()) { ₱{{ r.config.weighing.fishRate }} per kg }
+                    @else { Enabled · Rate hidden }
+                  </span>
+                </li>
+                <li class="flex items-center justify-between gap-3 px-4 py-2">
+                  <span>Meat weighing</span>
+                  <span class="text-muted">
+                    @if (!r.config.weighing.meatEnabled) { Not enabled }
+                    @else if (revealed()) { ₱{{ r.config.weighing.meatRate }} per kg }
+                    @else { Enabled · Rate hidden }
+                  </span>
+                </li>
+              </ul>
+              <p class="mt-1.5 text-xs text-muted">The office-provided rates remain separate from NPM stalls and require the municipality's approved OR policy.</p>
+            }
             @if (terminalSectionsUnreadable()) {
               <p class="a-note-warn mt-3 text-sm" role="alert">Terminal section configuration needs LGU review before activation.</p>
             } @else if (terminalSections().length) {

@@ -149,6 +149,8 @@ export interface Config {
   operationsDeclared?: boolean;
   /** The block exists but this console cannot read it, so activation must not guess what the office chose. */
   operationsUnreadable?: boolean;
+  weighing?: { version: number; fishEnabled: boolean; fishRate: string; meatEnabled: boolean; meatRate: string };
+  weighingUnreadable?: boolean;
   terminalSections?: Array<{ section: 'ComfortRoom' | 'PullPulVansCargoVans' | 'Tricycad'; isEnabled: boolean; localDisplayName: string }>;
   terminalSectionsUnreadable?: boolean;
 }

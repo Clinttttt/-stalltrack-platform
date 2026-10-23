@@ -15,6 +15,7 @@ const CONFIG = JSON.stringify({
       notes: '', marketDay: 'Sunday', sections: [], addOns: [],
     },
   ],
+  weighing: { version: 1, fishEnabled: true, fishRate: '2.50', meatEnabled: false, meatRate: '' },
   operations: { version: 1, items: [
     { operationCode: 'FISH_MEAT_VENDOR_FEE', selected: true, localDisplayName: 'Fish & Meat Vendors' },
     { operationCode: 'ECF', selected: true },
@@ -68,6 +69,9 @@ describe('Validation: sensitive submitted details are held back until a reviewer
   it('hides rates and addresses by default, but never the operation names or the configuration itself', async () => {
     const { text } = await setup();
     expect(text()).not.toContain('4321');
+    expect(text()).not.toContain('₱2.50');
+    expect(text()).toContain('Fish weighing');
+    expect(text()).toContain('Enabled · Rate hidden');
     expect(text()).not.toContain('head.private@madrid.example.test');
     expect(text()).toContain('Weekly Market');
     expect(text()).toContain('Fish / Meat Vendor Fee');
@@ -86,6 +90,7 @@ describe('Validation: sensitive submitted details are held back until a reviewer
     const { text, click, privacy, fixture } = await setup();
     click('Reveal details');
     expect(text()).toContain('4321');
+    expect(text()).toContain('₱2.50');
     expect(text()).toContain('head.private@madrid.example.test');
     expect(privacy.isRevealed('r1')).toBe(true);
     expect(privacy.isRevealed('r2')).toBe(false);

@@ -144,6 +144,7 @@ export interface ActivateMunicipalityCommand {
    */
   operationDeclarations?: ActivationOperation[];
   terminalSectionDeclarations?: ActivationTerminalSection[];
+  weighingConfiguration?: { fishEnabled: boolean; fishRatePerKilo: number | null; meatEnabled: boolean; meatRatePerKilo: number | null };
 }
 
 export interface ActivationTerminalSection {

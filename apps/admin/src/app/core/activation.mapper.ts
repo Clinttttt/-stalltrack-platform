@@ -601,6 +601,30 @@ export function mapRequestToCommand(
     tpmMarketDay,
   };
 
+  // Independent Fish/Meat weighing configuration. This is operation pricing, never an NPM section rate.
+  if (r.config?.weighingUnreadable) {
+    blockingErrors.push('The Weight & Measure configuration uses an unsupported format. Return the draft for review.');
+  } else if (r.config?.weighing) {
+    const w = r.config.weighing;
+    const parsed = (active: boolean, raw: string, label: string): number | null => {
+      if (!active) return null;
+      const n = Number(raw);
+      if (!raw.trim() || !Number.isFinite(n) || n <= 0 || n > 999999 || Math.abs(Math.round(n * 100) - n * 100) > 0.000001) {
+        blockingErrors.push(`${label} requires an approved rate greater than zero with at most two decimal places.`);
+        return null;
+      }
+      return n;
+    };
+    const selected = r.config.operations?.some(x => x.operationCode === 'WEIGHT_AND_MEASURE' && x.selected);
+    if (!selected && (w.fishEnabled || w.meatEnabled)) warnings.push('Weight & Measure was not selected; its saved weighing choices will remain disabled.');
+    const fish = selected && w.fishEnabled;
+    const meat = selected && w.meatEnabled;
+    command.weighingConfiguration = {
+      fishEnabled: !!fish, fishRatePerKilo: parsed(!!fish, w.fishRate, 'Fish weighing'),
+      meatEnabled: !!meat, meatRatePerKilo: parsed(!!meat, w.meatRate, 'Meat weighing'),
+    };
+  }
+
   // Declared revenue operations. They are shown to the operator and carried into the command as the municipality's operation
   // configuration (listing and local names - presentation only). They cannot block activation for being unfinished, and they enable
   // no service, assign no Collector and file no rate. A single unreadable ITEM is reported as a warning; an unreadable BLOCK is refused below.

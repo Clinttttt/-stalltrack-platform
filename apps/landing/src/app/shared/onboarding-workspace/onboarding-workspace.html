@@ -598,6 +598,30 @@
                           <label class="mb-1 block text-xs font-medium text-ink/80" [attr.for]="'op-name-' + op.code">Your name for it <span class="font-normal text-muted">(optional)</span></label>
                           <input [id]="'op-name-' + op.code" [class]="INPUT + ' !py-2'" [value]="operationName(op.code)" [attr.maxlength]="maxLocalName"
                             (input)="setOperationName(op.code, $any($event.target).value)" [placeholder]="op.label" />
+                          @if (op.code === 'WEIGHT_AND_MEASURE') {
+                            <div class="mt-3 space-y-2 border-t border-civic-line pt-2.5">
+                              <p class="text-xs leading-snug text-muted">Select the services your office collects. State each approved rate per kilogram.</p>
+                              <label class="flex items-center gap-2 text-sm text-ink">
+                                <input type="checkbox" [checked]="weighing().fishEnabled" (change)="setWeighing('fishEnabled', $any($event.target).checked)" /> Fish weighing
+                              </label>
+                              @if (weighing().fishEnabled) {
+                                <label class="block text-xs text-ink/80">Fish rate (₱/kg)
+                                  <input type="number" min="0.01" step="0.01" inputmode="decimal" [class]="INPUT + ' mt-1 !py-2'" [value]="weighing().fishRate" (input)="setWeighing('fishRate', $any($event.target).value)" placeholder="0.00" />
+                                </label>
+                              }
+                              <label class="flex items-center gap-2 text-sm text-ink">
+                                <input type="checkbox" [checked]="weighing().meatEnabled" (change)="setWeighing('meatEnabled', $any($event.target).checked)" /> Meat weighing
+                              </label>
+                              @if (weighing().meatEnabled) {
+                                <label class="block text-xs text-ink/80">Meat rate (₱/kg)
+                                  <input type="number" min="0.01" step="0.01" inputmode="decimal" [class]="INPUT + ' mt-1 !py-2'" [value]="weighing().meatRate" (input)="setWeighing('meatRate', $any($event.target).value)" placeholder="0.00" />
+                                </label>
+                              }
+                              @if (!weighingValid()) {
+                                <p class="text-xs font-medium text-red">Each enabled type needs a valid approved rate.</p>
+                              }
+                            </div>
+                          }
                           @if (operationProblem(op.code)) {
                             <p class="mt-1 text-xs font-medium leading-snug text-red">{{ operationProblem(op.code) }}</p>
                           }
@@ -646,9 +670,9 @@
       <div class="grid items-center gap-5 lg:grid-cols-[1.4fr,0.6fr]">
         <div>
           <h2 id="submit-title" class="font-display text-xl font-bold text-ink sm:text-2xl">
-            {{ allDone() && operationsValid() && terminalValid() && lockedTerminal() === undefined ? 'Ready to submit' : 'Submit for validation' }}
+            {{ allDone() && operationsValid() && weighingValid() && terminalValid() && lockedTerminal() === undefined ? 'Ready to submit' : 'Submit for validation' }}
           </h2>
-          @if (allDone() && operationsValid() && terminalValid() && lockedTerminal() === undefined) {
+          @if (allDone() && operationsValid() && weighingValid() && terminalValid() && lockedTerminal() === undefined) {
             <p class="mt-1.5 text-sm text-muted">All {{ sectionFlags().length }} sections are ready. Submitting sends {{ municipalityName() }}&rsquo;s configuration to the platform team for review.</p>
           } @else {
             <p class="mt-1.5 text-sm text-muted">Still needed before you can submit:</p>
@@ -662,6 +686,9 @@
               @if (!terminalValid() || lockedTerminal() !== undefined) {
                 <li><button type="button" (click)="jumpTo('sec-ops')" class="rounded-full bg-amber-bg px-3 py-1 text-xs font-semibold text-amber hover:underline">Review Terminal section configuration</button></li>
               }
+              @if (!weighingValid()) {
+                <li><button type="button" (click)="jumpTo('sec-ops')" class="rounded-full bg-amber-bg px-3 py-1 text-xs font-semibold text-amber hover:underline">Review Fish / Meat weighing rates</button></li>
+              }
             </ul>
           }
         </div>
@@ -669,7 +696,7 @@
           <button type="button" (click)="saveProgress()" [disabled]="busy()" class="btn-secondary w-full disabled:opacity-50">
             {{ busy() ? 'Saving…' : 'Save progress' }}
           </button>
-          <button type="button" (click)="submit()" [disabled]="!allDone() || !operationsValid() || !terminalValid() || lockedTerminal() !== undefined || busy()" class="btn-primary w-full">
+          <button type="button" (click)="submit()" [disabled]="!allDone() || !operationsValid() || !weighingValid() || !terminalValid() || lockedTerminal() !== undefined || busy()" class="btn-primary w-full">
             Submit for validation
           </button>
         </div>

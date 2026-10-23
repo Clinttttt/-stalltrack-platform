@@ -702,6 +702,20 @@ export class OnboardingWorkspace {
   }
   readonly operationCatalog = OPERATION_CATALOG;
   readonly operations = signal<Record<string, OperationState>>({});
+  // Independent operation-level weighing, not NPM section pricing. No other LGU's rates are prefilled.
+  readonly weighing = signal({ fishEnabled: false, fishRate: '', meatEnabled: false, meatRate: '' });
+  setWeighing(key: 'fishEnabled' | 'fishRate' | 'meatEnabled' | 'meatRate', value: boolean | string): void {
+    this.weighing.update((w) => ({ ...w, [key]: value }));
+  }
+  readonly lockedWeighing = signal<unknown | undefined>(undefined);
+  readonly weighingValid = computed(() => {
+    if (this.lockedWeighing() !== undefined) return false;
+    if (!this.isOperationSelected('WEIGHT_AND_MEASURE')) return true;
+    const w = this.weighing();
+    const valid = (active: boolean, raw: string) => !active || (raw.trim() !== '' && Number.isFinite(Number(raw))
+      && Number(raw) > 0 && Number(raw) <= 999999 && Math.abs(Math.round(Number(raw) * 100) - Number(raw) * 100) < 0.000001);
+    return valid(w.fishEnabled, w.fishRate) && valid(w.meatEnabled, w.meatRate);
+  });
   /** Codes in a saved draft that this workspace does not recognise; shown once so nothing vanishes silently. */
   readonly preservedOperations = signal<unknown[]>([]);
   readonly preservedOperationNames = computed(() => this.preservedOperations().map(describePreserved));
@@ -840,7 +854,7 @@ export class OnboardingWorkspace {
   }
 
   submit(): void {
-    if (this.allDone() && this.operationsValid() && this.terminalValid() && this.lockedTerminal() === undefined) this.submitDraft.emit(this.serialize());
+    if (this.allDone() && this.operationsValid() && this.weighingValid() && this.terminalValid() && this.lockedTerminal() === undefined) this.submitDraft.emit(this.serialize());
   }
   editSubmission(): void {
     this.edit.emit();
@@ -868,6 +882,7 @@ export class OnboardingWorkspace {
         this.lockedOperations() !== null
           ? this.lockedOperations()
           : writeOperations(this.operations(), this.preservedOperations(), this.operationsExtras),
+      weighing: this.lockedWeighing() ?? { version: 1, ...this.weighing() },
     });
   }
 
@@ -879,9 +894,18 @@ export class OnboardingWorkspace {
         branding?: { officeName?: string; orPrefix?: string; orStart?: string; logoName?: string; logoDataUri?: string };
         operations?: unknown;
         terminalSections?: unknown;
+        weighing?: { version?: number; fishEnabled?: boolean; fishRate?: string; meatEnabled?: boolean; meatRate?: string };
       };
-      const { facilities: _f, administrator: _a, branding: _b, operations: _o, terminalSections: _t, ...rest } = cfg as Record<string, unknown>;
+      const { facilities: _f, administrator: _a, branding: _b, operations: _o, terminalSections: _t, weighing: _w, ...rest } = cfg as Record<string, unknown>;
       this.extras = rest;
+      if (cfg.weighing?.version === 1) {
+        if (typeof cfg.weighing.fishEnabled !== 'boolean' || typeof cfg.weighing.meatEnabled !== 'boolean'
+          || typeof cfg.weighing.fishRate !== 'string' || typeof cfg.weighing.meatRate !== 'string') {
+          this.lockedWeighing.set(cfg.weighing);
+        } else this.weighing.set({ fishEnabled: cfg.weighing.fishEnabled,
+          fishRate: cfg.weighing.fishRate, meatEnabled: cfg.weighing.meatEnabled,
+          meatRate: cfg.weighing.meatRate });
+      } else if (cfg.weighing) { this.lockedWeighing.set(cfg.weighing); }
       const terminal = readTerminalSections(cfg.terminalSections);
       this.terminalChoices.set(terminal.choices);
       this.lockedTerminal.set(terminal.unreadable ? cfg.terminalSections : undefined);
