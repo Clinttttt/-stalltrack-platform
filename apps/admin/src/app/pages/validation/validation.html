@@ -123,7 +123,9 @@
                 <div class="overflow-hidden rounded-lg border border-line">
                   <div class="flex items-center justify-between gap-2 border-b border-line bg-mist px-4 py-2.5">
                     <span class="font-semibold">{{ f.name }}</span>
-                    <span class="a-chip-neutral !bg-white">{{ f.type }}</span>
+                    <span class="a-chip-neutral !bg-white">{{ f.catalogKey === 'other'
+                      ? (f.customCategory === 'SpaceRental' ? 'Space Rental' : 'Stall Rent')
+                      : f.type }}</span>
                   </div>
                   <div class="space-y-3 p-4 text-sm">
                     @if (f.type === 'Per head') {

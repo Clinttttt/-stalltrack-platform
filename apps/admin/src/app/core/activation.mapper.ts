@@ -306,6 +306,14 @@ export function mapRequestToCommand(
     }
     if (!code) continue; // unreachable: every path above sets a code or continues
     const archetype: BillingArchetypeStr = custom ? 'MonthlyRental' : declaredArchetype;
+    if (custom && f.customCategory !== undefined && f.customCategory !== 'StallRent' && f.customCategory !== 'SpaceRental') {
+      blockingErrors.push('Unknown custom rental category for "' + f.name + '". Return the draft for LGU review.');
+      continue;
+    }
+    if (!custom && f.customCategory === 'SpaceRental') {
+      blockingErrors.push('Standard facility "' + f.name + '" cannot use the custom Space Rental category.');
+      continue;
+    }
     used.add(code);
 
     // NOTE: activation provisions only the LGU identity, facilities, fixed rates, and the Head account.
@@ -353,6 +361,7 @@ export function mapRequestToCommand(
       name: f.name.trim(),
       shortName: facilityShortName(f.name, code),
       archetype,
+      customCategory: custom ? (f.customCategory === 'SpaceRental' ? 'SpaceRental' : 'StallRent') : undefined,
       stallGroups: undefined,
       customSections: customAreas.length ? customAreas : undefined,
       // How the office measures a market month. Sent only for a daily-collected market, because nothing else has one, and

@@ -62,6 +62,7 @@ export interface ActivationFacility {
   name: string;
   shortName: string;
   archetype: BillingArchetypeStr;
+  customCategory?: 'StallRent' | 'SpaceRental';
   stallGroups?: ActivationStallGroup[];
   /** Daily-stall markets only: the LGU's own name for each collection area. */
   sectionLabels?: ActivationSectionLabels;

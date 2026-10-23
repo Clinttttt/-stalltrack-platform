@@ -112,6 +112,8 @@ interface SlaughterhouseConfig {
 interface Facility {
   id: string;
   catalogKey: string;
+  /** Defaults to StallRent for older draft configurations. */
+  customCategory?: 'StallRent' | 'SpaceRental';
   archetype: string;
   name: string;
   type: string;
@@ -254,6 +256,7 @@ function facilityFrom(c: CatalogItem): Facility {
   return {
     id: uid(),
     catalogKey: c.key,
+    customCategory: c.key === 'other' ? 'StallRent' : undefined,
     archetype: c.archetype,
     name: c.key === 'other' ? '' : shortName(c.label),
     type: c.type,
@@ -526,7 +529,7 @@ export class OnboardingWorkspace {
   setFacility(id: string, key: keyof Facility, val: string): void {
     this.mapFacility(id, (x) => ({ ...x, [key]: val }));
   }
-  addFromCatalog(c: CatalogItem): void {
+  addFromCatalog(c: CatalogItem, category: 'StallRent' | 'SpaceRental' = 'StallRent'): void {
     // A non-custom facility type can be configured only once; block re-adding a type already present.
     // 'other' (custom facility) may be added many times.
     if (this.isCatalogUsed(c)) return;
@@ -535,7 +538,7 @@ export class OnboardingWorkspace {
     // button, because a disabled control is not a guard - the picker can be open when the last field is cleared.
     if (this.unfinishedFacility()) return;
 
-    const nf = facilityFrom(c);
+    const nf = { ...facilityFrom(c), customCategory: c.key === 'other' ? category : undefined };
     this.facilities.update((f) => [...f, nf]);
     this.expandedId.set(nf.id);
     this.picking.set(false);
@@ -556,6 +559,15 @@ export class OnboardingWorkspace {
     if (!f) return '';
 
     return f.name.trim() ? f.name.trim() : 'the facility above';
+  }
+
+  addCustomSpace(): void {
+    const custom = CATALOG.find((c) => c.key === 'other');
+    if (custom) this.addFromCatalog(custom, 'SpaceRental');
+  }
+
+  setCustomCategory(id: string, category: 'StallRent' | 'SpaceRental'): void {
+    this.mapFacility(id, f => f.catalogKey === 'other' ? { ...f, customCategory: category } : f);
   }
 
   /** True when this catalog type is already configured (so it can't be added again). Custom is exempt. */
@@ -736,6 +748,7 @@ export class OnboardingWorkspace {
   readonly revenueGroups = REVENUE_GROUPS;
   /** Which official group a facility sits under. From the type the office chose; a legacy draft falls back on its billing type. */
   groupOfFacility(f: Facility): RevenueGroupKey {
+    if (f.catalogKey === 'other') return f.customCategory === 'SpaceRental' ? 'space' : 'rent';
     const byKey = f.catalogKey ? GROUP_OF_CATALOG[f.catalogKey] : undefined;
     if (byKey) return byKey;
     switch (f.type) {
@@ -793,6 +806,7 @@ export class OnboardingWorkspace {
         case 'slaughterhouse': out.push(`Slaughterhouse — ${name}`); break;
         case 'terminal': out.push(`Terminal — ${name}`); break;
         case 'weekly': out.push(`Weekly market — ${name}`); break;
+        case 'other': out.push((f.customCategory === 'SpaceRental' ? 'Space rental' : 'Stall rental') + ' — ' + name); break;
         default: out.push(`Space rental — ${name}`);
       }
     }

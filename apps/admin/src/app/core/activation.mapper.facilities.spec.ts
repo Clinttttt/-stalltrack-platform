@@ -59,6 +59,25 @@ function request(config: Partial<Config> & { facilities: Facility[] }): RequestR
 const codesOf = (r: RequestRecord) => mapRequestToCommand(r).command.facilities.map((f) => f.code);
 
 describe('activation mapper: facility identity', () => {
+  it('maps custom Space and Stall rental to separate reserved codes without changing monthly billing', () => {
+    const r = request({ facilities: [
+      rental('Civic Plaza', 'other', { customCategory: 'SpaceRental' }),
+      rental('Trade Hall', 'other', { customCategory: 'StallRent' }),
+    ] });
+    const { command, blockingErrors } = mapRequestToCommand(r);
+    expect(blockingErrors).toEqual([]);
+    expect(command.facilities.map(f => [f.code, f.customCategory, f.archetype])).toEqual([
+      ['Custom1', 'SpaceRental', 'MonthlyRental'],
+      ['Custom2', 'StallRent', 'MonthlyRental'],
+    ]);
+  });
+
+  it('defaults older custom drafts to StallRent and rejects unknown category values', () => {
+    const legacy = mapRequestToCommand(request({ facilities: [rental('Older Hall', 'other')] }));
+    expect(legacy.command.facilities[0].customCategory).toBe('StallRent');
+    const bad = rental('Unknown category', 'other', { customCategory: 'NewSource' as 'SpaceRental' });
+    expect(mapRequestToCommand(request({ facilities: [bad] })).blockingErrors).not.toEqual([]);
+  });
   it('maps one ordinary facility from the type the office chose, keeping its own name', () => {
     const { command, blockingErrors } = mapRequestToCommand(request({ facilities: [market('Carrascal Pamilihan')] }));
     expect(blockingErrors).toEqual([]);

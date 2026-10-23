@@ -147,6 +147,24 @@
                     <input [class]="INPUT" [value]="f.name" (input)="setFacility(f.id, 'name', $any($event.target).value)" placeholder="e.g. New Public Market" />
                   </div>
 
+                  @if (f.catalogKey === 'other') {
+                    <div>
+                      <label [class]="LABEL">Rental category</label>
+                      <div class="mt-2 flex flex-wrap gap-4 text-sm text-ink">
+                        <label class="flex items-center gap-2">
+                          <input type="radio" [name]="'category-' + f.id" [checked]="f.customCategory !== 'SpaceRental'"
+                                 (change)="setCustomCategory(f.id, 'StallRent')" />
+                          Stall Rent
+                        </label>
+                        <label class="flex items-center gap-2">
+                          <input type="radio" [name]="'category-' + f.id" [checked]="f.customCategory === 'SpaceRental'"
+                                 (change)="setCustomCategory(f.id, 'SpaceRental')" />
+                          Space Rental
+                        </label>
+                      </div>
+                      <p class="mt-1 text-xs text-muted">Monthly rental. The category determines its Operations section, not its billing engine.</p>
+                    </div>
+                  }
                   @if (showBaseRate(f)) {
                     <div>
                       <label [class]="LABEL">Base rate</label>
@@ -526,6 +544,15 @@
                 }
               }
 
+              @if (g.key === 'space') {
+                <button type="button" (click)="addCustomSpace()"
+                        [disabled]="customFacilityCount() >= 5 || !!unfinishedFacility()"
+                        data-add-facility="custom-space"
+                        class="mt-3 flex min-h-[3.25rem] items-center gap-2 rounded-lg border border-dashed border-line bg-white px-3 text-left text-sm font-semibold text-ink/85 hover:border-civic/50 disabled:cursor-not-allowed disabled:opacity-50">
+                  <span class="grid h-6 w-6 place-items-center rounded bg-mist text-civic">+</span>
+                  {{ customFacilityCount() >= 5 ? 'Limit of 5 reached' : 'Add new space rental' }}
+                </button>
+              }
               @if (g.key === 'terminal') {
                 <div class="mt-3 rounded-xl border border-line bg-mist/30 p-4" aria-label="Terminal income sections">
                   <div class="text-sm font-semibold text-ink">Terminal income sections</div>

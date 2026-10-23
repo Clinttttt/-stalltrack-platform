@@ -36,6 +36,42 @@ describe('OnboardingWorkspace — a facility must be finished before another is 
     return ws.catalog.find((c) => c.key === 'other')!;
   }
 
+  it('adds custom Spaces with the same monthly billing contract and persists the category', () => {
+    const ws = workspace();
+    ws.addCustomSpace();
+    const facility = ws.facilities()[0];
+    expect(facility.catalogKey).toBe('other');
+    expect(facility.customCategory).toBe('SpaceRental');
+    expect(ws.groupOfFacility(facility)).toBe('space');
+    expect(ws.showBaseRate(facility)).toBe(false);
+    ws.setFacility(facility.id, 'name', 'Civic Plaza');
+    expect(ws.isFacilityDone(ws.facilities()[0])).toBe(true);
+
+    let draft = '';
+    ws.saveDraft.subscribe((value) => draft = value);
+    ws.saveProgress();
+    expect(JSON.parse(draft).facilities[0].customCategory).toBe('SpaceRental');
+
+    ws.setCustomCategory(facility.id, 'StallRent');
+    expect(ws.groupOfFacility(ws.facilities()[0])).toBe('rent');
+  });
+
+  it('defaults legacy custom rental drafts to Stall Rent without deleting unrelated saved fields', () => {
+    const custom = {
+      id: 'old-custom', catalogKey: 'other', archetype: 'MonthlyRental',
+      name: 'Old Hall', type: 'Custom', monthlyRent: '', rateAmount: '',
+      monthBasis: 'RentGoal', rentalModel: 'daily', rateUnit: 'per month',
+      unitLabel: 'stalls', units: '', ordinance: '', notes: '', marketDay: '',
+      sections: [], addOns: [],
+    };
+    const ws = workspace(JSON.stringify({ facilities: [custom], extraCustomFutureField: 'preserve' }));
+    expect(ws.groupOfFacility(ws.facilities()[0])).toBe('rent');
+    let saved = '';
+    ws.saveDraft.subscribe(value => saved = value);
+    ws.saveProgress();
+    expect(JSON.parse(saved).extraCustomFutureField).toBe('preserve');
+  });
+
   it('adds the first facility, since there is nothing unfinished to hold it', () => {
     const ws = workspace();
 

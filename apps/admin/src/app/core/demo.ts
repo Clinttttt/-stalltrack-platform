@@ -97,6 +97,7 @@ export interface Facility {
    * warned heuristic.
    */
   catalogKey?: string;
+  customCategory?: 'StallRent' | 'SpaceRental';
   rateAmount: string;
   /** A daily-stall market only: the monthly rent a space is let for, when the ordinance states one. */
   monthlyRent?: string;
