@@ -87,6 +87,39 @@ describe('OnboardingWorkspace — declared revenue operations', () => {
     expect(reloaded.isOperationSelected('WCF')).toBe(false);
   });
 
+  it('validates independent Fish-only rates and round-trips the submitted weighing block', () => {
+    const ws = workspace(versionless);
+    ws.toggleOperation('WEIGHT_AND_MEASURE');
+    expect(ws.weighingValid()).toBe(true); // Neither enabled is an explicit supported configuration.
+    ws.setWeighing('fishEnabled', true);
+    expect(ws.weighingValid()).toBe(false); // A fee without an approved rate is never ready.
+    ws.setWeighing('fishRate', '2.50');
+    expect(ws.weighingValid()).toBe(true);
+    const doc = saved(ws);
+    expect(doc.weighing).toEqual({
+      version: 1, fishEnabled: true, fishRate: '2.50', meatEnabled: false, meatRate: '',
+    });
+    const reloaded = workspace(JSON.stringify(doc));
+    expect(reloaded.weighing()).toEqual({
+      fishEnabled: true, fishRate: '2.50', meatEnabled: false, meatRate: '',
+    });
+    expect(reloaded.weighingValid()).toBe(true);
+    reloaded.setWeighing('meatEnabled', true);
+    reloaded.setWeighing('meatRate', '-1');
+    expect(reloaded.weighingValid()).toBe(false);
+    reloaded.setWeighing('meatRate', '60.00');
+    expect(reloaded.weighingValid()).toBe(true);
+  });
+
+  it('preserves an unknown weighing draft version but does not treat it as approved', () => {
+    const future = { version: 2, rules: ['future-office-policy'], fishEnabled: true };
+    const ws = workspace(JSON.stringify({
+      ...JSON.parse(versionless), weighing: future,
+    }));
+    expect(ws.weighingValid()).toBe(false);
+    expect(saved(ws).weighing).toEqual(future);
+  });
+
   it('keeps a typed local name when an operation is switched off and back on', () => {
     const ws = workspace();
     ws.toggleOperation('WCF');
