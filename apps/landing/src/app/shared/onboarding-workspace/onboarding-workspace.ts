@@ -1,7 +1,7 @@
 import { TERMINAL_LABELS, TerminalChoice, TerminalCode, defaultTerminalChoices, readTerminalSections, terminalNameProblem, writeTerminalSections } from '@stalltrack/terminal-config';
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, input, output, signal } from '@angular/core';
-import { UiInfoTip } from '@stalltrack/ui';
+import { UiIcon, UiInfoTip } from '@stalltrack/ui';
 import { PolishedSelect } from '../polished-select/polished-select';
 import {
   MAX_LOCAL_NAME_LENGTH,
@@ -347,7 +347,7 @@ function migrateLegacySlaughterhouse(items: RateItem[]): SlaughterhouseConfig {
 @Component({
   selector: 'app-onboarding-workspace',
   standalone: true,
-  imports: [PolishedSelect, NgTemplateOutlet, UiInfoTip],
+  imports: [PolishedSelect, NgTemplateOutlet, UiInfoTip, UiIcon],
   templateUrl: './onboarding-workspace.html',
 })
 export class OnboardingWorkspace {
@@ -707,6 +707,11 @@ export class OnboardingWorkspace {
   setWeighing(key: 'fishEnabled' | 'fishRate' | 'meatEnabled' | 'meatRate', value: boolean | string): void {
     this.weighing.update((w) => ({ ...w, [key]: value }));
   }
+  /** The two weighing services, as rows of the Weight & Measure settings. */
+  readonly weighingKinds = [
+    { key: 'fish', label: 'Fish weighing', enabled: 'fishEnabled', rate: 'fishRate' },
+    { key: 'meat', label: 'Meat weighing', enabled: 'meatEnabled', rate: 'meatRate' },
+  ] as const;
   readonly lockedWeighing = signal<unknown | undefined>(undefined);
   readonly weighingValid = computed(() => {
     if (this.lockedWeighing() !== undefined) return false;
@@ -786,6 +791,9 @@ export class OnboardingWorkspace {
     return ADD_NAME[c.key] ?? shortName(c.label);
   }
 
+  selectedInGroup(key: string): number {
+    return this.operationsInGroup(key).filter((o) => this.isOperationSelected(o.code)).length;
+  }
   isOperationSelected(code: string): boolean {
     return this.operations()[code]?.selected === true;
   }

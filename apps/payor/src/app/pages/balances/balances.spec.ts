@@ -238,7 +238,8 @@ describe('Balances: what a fish day costs', () => {
 
     it('names each kind in the office own words', () => {
       expect(inner.label(fishMonth)).toBe('Fish day fees');
-      expect(inner.label({ ...fishMonth, kind: 'NpmDaily' })).toBe('Daily market fees');
+      expect(inner.label({ ...fishMonth, kind: 'NpmDaily' })).toBe('Stall rent');
+      expect(inner.caption({ ...fishMonth, kind: 'NpmDaily', days: null, dailyRate: null })).toBe('Balance for the month');
       expect(inner.label({ ...fishMonth, kind: 'NpmUtility' })).toBe('Electricity and water');
       expect(inner.label({ ...fishMonth, kind: 'Monthly' })).toBe('Monthly rent');
     });

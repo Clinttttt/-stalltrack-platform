@@ -197,10 +197,10 @@ describe('OnboardingWorkspace — declared revenue operations', () => {
   it('does not describe ECF/WCF as reading-only: they follow verified service and direct or office-prepared collection', () => {
     const ws = workspace();
     for (const code of ['ECF', 'WCF']) {
-      const hint = ws.operationCatalog.find((o) => o.code === code)!.hint;
-      expect(hint).toMatch(/verified/);
-      expect(hint).toMatch(/directly or from an office-prepared bill/);
-      expect(hint).not.toMatch(/meter reading/i);
+      const op = ws.operationCatalog.find((o) => o.code === code)!;
+      expect(op.detail).toMatch(/verified/);
+      expect(op.detail).toMatch(/directly or from an office-prepared bill/);
+      expect(`${op.hint} ${op.detail}`).not.toMatch(/meter reading/i);
     }
   });
 

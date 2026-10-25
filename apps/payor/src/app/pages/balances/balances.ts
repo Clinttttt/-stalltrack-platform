@@ -89,7 +89,7 @@ export class Balances {
   protected label(item: PayableItem): string {
     switch (item.kind) {
       case 'NpmDaily':
-        return 'Daily market fees';
+        return 'Stall rent';
       case 'NpmUtility':
         return 'Electricity and water';
       case 'NpmFish':
@@ -118,6 +118,11 @@ export class Balances {
 
     if (item.kind === 'NpmDaily' && item.days && item.dailyRate) {
       return `${item.days} ${item.days === 1 ? 'day' : 'days'} × ${peso(item.dailyRate)}`;
+    }
+
+    // The market's stall rent is offered as the rest of the month, so no day count is stated.
+    if (item.kind === 'NpmDaily') {
+      return 'Balance for the month';
     }
 
     return '';

@@ -136,6 +136,27 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
         @case ('chevronRight') {
           <path d="m9 18 6-6-6-6" />
         }
+        @case ('scale') {
+          <path d="M12 3v18" /><path d="M7 21h10" /><path d="M5 7h14" /><path d="m5 7-3 7a3 3 0 0 0 6 0z" /><path d="m19 7-3 7a3 3 0 0 0 6 0z" />
+        }
+        @case ('fish') {
+          <path d="M6.5 12c3-5 9-6 13.5 0-4.5 6-10.5 5-13.5 0z" /><path d="M6.5 12 3 9v6z" /><path d="M16 11h.01" />
+        }
+        @case ('anchor') {
+          <circle cx="12" cy="5" r="2" /><path d="M12 7v14" /><path d="M8 11h8" /><path d="M5 14a7 7 0 0 0 14 0" />
+        }
+        @case ('car') {
+          <path d="M5 17h14v-5l-2-5H7l-2 5z" /><path d="M5 12h14" /><circle cx="8" cy="17" r="1.5" /><circle cx="16" cy="17" r="1.5" />
+        }
+        @case ('truck') {
+          <path d="M3 6h11v10H3z" /><path d="M14 10h4l3 3v3h-7" /><circle cx="7" cy="18" r="1.5" /><circle cx="17" cy="18" r="1.5" />
+        }
+        @case ('calendar') {
+          <rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M3 10h18" />
+        }
+        @case ('leaf') {
+          <path d="M5 19c0-8 5-14 15-15-1 10-7 15-15 15z" /><path d="m5 19 8-8" />
+        }
       }
     </svg>
   `,
