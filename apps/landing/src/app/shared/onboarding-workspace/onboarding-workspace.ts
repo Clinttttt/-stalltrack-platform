@@ -845,16 +845,21 @@ export class OnboardingWorkspace {
   onLogo(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
-    // The seal is stored inline (base64 data URI) and returned with the LGU's branding, so keep it small.
-    if (file.size > 200 * 1024) {
-      this.logoError.set('Logo is too large — please use an image under 200 KB.');
+    // The seal is stored inline (base64 data URI) inside the draft, which the server caps, so it is shrunk here first.
+    if (file.size > 5 * 1024 * 1024) {
+      this.logoError.set('Logo is too large — please use an image under 5 MB.');
       return;
     }
     this.logoError.set('');
-    this.setBranding('logoName', file.name);
     const reader = new FileReader();
-    reader.onload = () => {
-      const dataUri = typeof reader.result === 'string' ? reader.result : '';
+    reader.onload = async () => {
+      const original = typeof reader.result === 'string' ? reader.result : '';
+      const dataUri = await shrinkLogo(original);
+      if (!dataUri) {
+        this.logoError.set('This image could not be read or made small enough — please use a PNG or JPG under 200 KB.');
+        return;
+      }
+      this.setBranding('logoName', file.name);
       this.setBranding('logoDataUri', dataUri);
       this.logoPreview.set(dataUri);
     };
@@ -963,4 +968,33 @@ export class OnboardingWorkspace {
   catalogIcon(type: string): 'coins' | 'grid' | 'building' {
     return type === 'Per head' ? 'coins' : type === 'Weekly market' ? 'grid' : 'building';
   }
+}
+
+/** Longest seal data URI kept in the draft; the server caps the whole draft at 400,000 characters. */
+const MAX_LOGO_CHARS = 150_000;
+
+/**
+ * Returns the seal as a data URI small enough for the draft: as uploaded when it already fits, otherwise redrawn as a PNG
+ * at progressively smaller sizes (transparency kept). Empty when the image cannot be decoded or never fits.
+ */
+async function shrinkLogo(dataUri: string): Promise<string> {
+  if (!dataUri) return '';
+  if (dataUri.length <= MAX_LOGO_CHARS) return dataUri;
+  const img = new Image();
+  try {
+    img.src = dataUri;
+    await img.decode();
+  } catch {
+    return '';
+  }
+  for (const edge of [512, 384, 256, 192]) {
+    const scale = Math.min(1, edge / Math.max(img.naturalWidth || edge, img.naturalHeight || edge));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round((img.naturalWidth || edge) * scale));
+    canvas.height = Math.max(1, Math.round((img.naturalHeight || edge) * scale));
+    canvas.getContext('2d')?.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const png = canvas.toDataURL('image/png');
+    if (png.length <= MAX_LOGO_CHARS) return png;
+  }
+  return '';
 }
