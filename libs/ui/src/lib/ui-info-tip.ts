@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, afterRenderEffect, inject, input, signal, viewChild } from '@angular/core';
 import { UiIcon } from './ui-icon';
 
 let nextId = 0;
@@ -37,6 +37,7 @@ let nextId = 0;
     </button>
     @if (visible()) {
       <span
+        #tip
         [id]="id"
         role="tooltip"
         class="pointer-events-none absolute left-1/2 z-50 w-max max-w-[17.5rem] -translate-x-1/2 animate-ui-pop rounded-md bg-ink px-3 py-2 text-left text-[0.8125rem] font-normal normal-case leading-snug tracking-normal text-white shadow-card"
@@ -70,7 +71,20 @@ export class UiInfoTip {
     this.pinned.update((p) => !p);
   }
 
+  private readonly tip = viewChild<ElementRef<HTMLElement>>('tip');
+
   constructor() {
+    // Centred on its icon, a tip near the edge of a narrow screen would run off it: shift it sideways just enough to stay 8px inside.
+    afterRenderEffect(() => {
+      const el = this.tip()?.nativeElement;
+      if (!el) return;
+      el.style.marginLeft = '0px';
+      const r = el.getBoundingClientRect();
+      const edge = 8;
+      const shift = r.right > innerWidth - edge ? innerWidth - edge - r.right : r.left < edge ? edge - r.left : 0;
+      el.style.marginLeft = `${shift}px`;
+    });
+
     afterNextRender(() => {
       const onKey = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {

@@ -20,22 +20,48 @@ export interface OperationCatalogEntry {
   /** Neutral wording — never a single LGU's local programme name. */
   label: string;
   group: OperationGroup;
-  /** One short line on what the operation collects, to help an office recognise its own. */
+  /** One short line on what the operation collects, to help an office recognise its own. Always visible. */
   hint: string;
+  /** How it is charged, in one or two sentences. Shown behind the info icon. */
+  detail: string;
+  /** Its icon in the shared set. */
+  icon: string;
 }
 
 export const OPERATION_CATALOG: readonly OperationCatalogEntry[] = [
-  { code: 'FISH_MEAT_VENDOR_FEE', label: 'Fish / Meat Vendor Fee', group: 'market', hint: 'A fee from registered fish and meat vendors.' },
-  { code: 'WEIGHT_AND_MEASURE', label: 'Weight & Measure', group: 'market', hint: 'Inspection and calibration of scales and measures.' },
-  { code: 'MARKET_FEES', label: 'Market Fees', group: 'market', hint: 'Miscellaneous approved market fees.' },
-  { code: 'KANMANGGAY_SPACE_RENTAL', label: 'Municipal Space Rental', group: 'space', hint: 'Rental of a municipal space held by a registered occupant.' },
-  { code: 'FIESTA_ARAW_LOT_RENTAL', label: 'Event / Temporary Lot Rental', group: 'space', hint: 'Lots rented for a fiesta, anniversary or similar event.' },
-  { code: 'VEGETABLE_FRUIT_SPACE_RENTAL', label: 'Vegetable / Fruit Space Rental', group: 'space', hint: 'Space rented to vegetable and fruit sellers.' },
-  { code: 'ECF', label: 'Electricity Consumption Fees', group: 'utility', hint: 'Electricity charged to spaces with a verified electricity service, collected directly or from an office-prepared bill.' },
-  { code: 'WCF', label: 'Water Consumption Fees', group: 'utility', hint: 'Water charged to spaces with a verified water service, collected directly or from an office-prepared bill.' },
-  { code: 'LANDING_BERTHING', label: 'Landing / Berthing', group: 'other', hint: 'Landing and berthing fees.' },
-  { code: 'TRANSPORTATION', label: 'Transportation / Parking', group: 'other', hint: 'Parking and vehicle fees by vehicle class.' },
-  { code: 'TRANSFER_LARGE_CATTLE', label: 'Transfer Large Cattle', group: 'other', hint: 'Fees for transferring large cattle.' },
+  { code: 'FISH_MEAT_VENDOR_FEE', label: 'Fish / Meat Vendor Fee', group: 'market', icon: 'fish',
+    hint: 'Fee from registered fish and meat vendors.',
+    detail: 'Collected from vendors in your fish and meat vendor registry, for the amount actually received. Separate from stall rent and from weighing fees.' },
+  { code: 'WEIGHT_AND_MEASURE', label: 'Weight & Measure', group: 'market', icon: 'scale',
+    hint: 'Per-kilogram fee for weighing fish and meat.',
+    detail: 'Charged on the weight of fish or meat weighed for registered vendors, at the approved rate per kilogram you state here.' },
+  { code: 'MARKET_FEES', label: 'Market Fees', group: 'market', icon: 'receipt',
+    hint: 'Other approved fees collected in the market.',
+    detail: 'Approved market fees that do not belong to a stall, a vendor registry or a utility.' },
+  { code: 'KANMANGGAY_SPACE_RENTAL', label: 'Municipal Space Rental', group: 'space', icon: 'building2',
+    hint: 'Municipal spaces let to registered occupants.',
+    detail: 'Charged per space each month to the occupant holding it.' },
+  { code: 'FIESTA_ARAW_LOT_RENTAL', label: 'Event / Temporary Lot Rental', group: 'space', icon: 'calendar',
+    hint: 'Lots let for a fiesta or other event.',
+    detail: 'Charged per lot for a fiesta, anniversary or similar event.' },
+  { code: 'VEGETABLE_FRUIT_SPACE_RENTAL', label: 'Vegetable / Fruit Space Rental', group: 'space', icon: 'leaf',
+    hint: 'Open spaces for vegetable and fruit sellers.',
+    detail: 'Temporary open-space selling, paid by the day or as a whole. Separate from permanent market stalls.' },
+  { code: 'ECF', label: 'Electricity Consumption Fees', group: 'utility', icon: 'zap',
+    hint: 'Electricity used by a space.',
+    detail: 'Electricity charged to spaces with a verified electricity service, collected directly or from an office-prepared bill.' },
+  { code: 'WCF', label: 'Water Consumption Fees', group: 'utility', icon: 'droplet',
+    hint: 'Water used by a space.',
+    detail: 'Water charged to spaces with a verified water service, collected directly or from an office-prepared bill.' },
+  { code: 'LANDING_BERTHING', label: 'Landing / Berthing', group: 'other', icon: 'anchor',
+    hint: 'Fees for boats that land or berth.',
+    detail: 'Collected for each boat that lands or berths at a municipal port or landing site.' },
+  { code: 'TRANSPORTATION', label: 'Transportation / Parking', group: 'other', icon: 'car',
+    hint: 'Parking and vehicle fees.',
+    detail: 'Charged per vehicle by vehicle class. Separate from the terminal and its per-trip fees.' },
+  { code: 'TRANSFER_LARGE_CATTLE', label: 'Transfer Large Cattle', group: 'other', icon: 'truck',
+    hint: 'Fee for transferring large cattle.',
+    detail: 'An occasional fee, at an approved amount, each time large cattle are transferred.' },
 ];
 
 export const OPERATION_GROUPS: ReadonlyArray<{ key: OperationGroup; label: string }> = [
