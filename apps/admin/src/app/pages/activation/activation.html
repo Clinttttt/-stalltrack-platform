@@ -57,7 +57,7 @@
                 <span class="font-display text-sm font-bold">{{ r.municipality }}</span>
                 <span class="a-chip-success">{{ r.activated ? 'Active' : 'Completed' }}</span>
               </div>
-              <div class="mt-0.5 truncate text-xs text-muted">{{ r.province }}</div>
+              <div class="mt-0.5 truncate text-xs text-muted">{{ r.province }}@if (requestCountFor(r) > 1) { · {{ requestCountFor(r) }} onboarding requests }</div>
             </div>
           }
         }
