@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { officeDayShort, officeMonth, peso } from '../../core/format';
+import { facilityLabel, officeDayShort, officeMonth, peso } from '../../core/format';
 import { PayableItem, PortalApi } from '../../core/portal.api';
 import { PayorLayout } from '../../shared/payor-layout';
 
@@ -101,7 +101,7 @@ export class Balances {
 
   /** The space it belongs to. */
   protected where(item: PayableItem): string {
-    return item.stallNo ? `${item.facility} · Stall ${item.stallNo}` : item.facility;
+    return item.stallNo ? `${facilityLabel(item)} · Stall ${item.stallNo}` : facilityLabel(item);
   }
 
   /** The figure on the row: what is payable, or a day's fee where the days are paid one at a time. */

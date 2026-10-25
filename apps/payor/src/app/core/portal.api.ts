@@ -17,6 +17,9 @@ export interface PayorBalance {
   isDailyBilled: boolean;
   dailyRate: number;
   daysOwed: number;
+  /** The office's own name and acronym for the facility. `facility` is only its internal code; absent from an older API. */
+  facilityName?: string | null;
+  facilityShortName?: string | null;
 }
 
 /**
@@ -42,6 +45,9 @@ export interface PayableItem {
   /** NpmDaily only: how many days the amount is made of, and the fee for one of them. */
   days: number | null;
   dailyRate: number | null;
+  /** The office's own name and acronym for the facility. `facility` is only its internal code; absent from an older API. */
+  facilityName?: string | null;
+  facilityShortName?: string | null;
 }
 
 /** One day inside a daily-billed month, as the payor's own record of it. */

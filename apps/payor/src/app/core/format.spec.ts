@@ -1,4 +1,4 @@
-import { peso, officeDate, officeMonth, officeDayShort } from './format';
+import { peso, officeDate, officeMonth, officeDayShort, facilityLabel } from './format';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // How the office writes a figure and a date.
@@ -70,5 +70,25 @@ describe('officeDayShort', () => {
 
   it('hands back something unreadable untouched', () => {
     expect(officeDayShort('')).toBe('');
+  });
+});
+
+describe('facilityLabel', () => {
+  it('words a facility by the office\'s own acronym, never by the internal slot code the API also carries', () => {
+    expect(facilityLabel({ facility: 'Custom1', facilityName: 'Rest Rooms', facilityShortName: 'RR' })).toBe('RR');
+  });
+
+  it('falls back to the office\'s own name when no acronym is saved', () => {
+    expect(facilityLabel({ facility: 'Custom2', facilityName: 'Cold Storage', facilityShortName: null })).toBe('Cold Storage');
+    expect(facilityLabel({ facility: 'Custom2', facilityName: 'Cold Storage', facilityShortName: '  ' })).toBe('Cold Storage');
+  });
+
+  it('uses the code only for an older API that sends nothing else, so no screen goes blank', () => {
+    expect(facilityLabel({ facility: 'TCC' })).toBe('TCC');
+    expect(facilityLabel({ facility: 'Custom3', facilityName: null, facilityShortName: null })).toBe('Custom3');
+  });
+
+  it('lets a tenant\'s own acronym win over the standard code for the same slot', () => {
+    expect(facilityLabel({ facility: 'NPM', facilityName: 'Madrid Public Market', facilityShortName: 'MPM' })).toBe('MPM');
   });
 });

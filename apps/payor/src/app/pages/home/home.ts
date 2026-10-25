@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { BrandingService } from '../../core/branding.service';
-import { peso } from '../../core/format';
+import { facilityLabel, peso } from '../../core/format';
 import { PayorBalance, PortalApi } from '../../core/portal.api';
 import { PayorLayout } from '../../shared/payor-layout';
 
@@ -33,6 +33,7 @@ export class Home {
   protected readonly withBalance = computed(() => this.accounts().filter((a) => a.outstandingBalance > 0).length);
 
   protected money = peso;
+  protected facilityLabel = facilityLabel;
 
   constructor() {
     void this.load();
