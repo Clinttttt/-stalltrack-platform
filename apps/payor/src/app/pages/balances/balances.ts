@@ -99,6 +99,11 @@ export class Balances {
     }
   }
 
+  /** Only the month's stall rent is paid online; other charges are shown as balances to settle at the office or with the collector. */
+  protected canPayOnline(item: PayableItem): boolean {
+    return item.payableOnline !== false;
+  }
+
   /** The space it belongs to. */
   protected where(item: PayableItem): string {
     return item.stallNo ? `${item.facility} · Stall ${item.stallNo}` : item.facility;

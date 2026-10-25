@@ -33,10 +33,16 @@
                 <p class="font-display text-base text-civic-deep">{{ money(shown(item)) }}</p>
                 <p class="text-[10px] text-muted">{{ caption(item) }}</p>
               </div>
-              <button class="rounded-lg bg-civic-panel shadow-soft transition hover:bg-civic-deep px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
-                      type="button" [disabled]="paying() !== null" (click)="act(item)">
-                {{ paying() === key(item) ? 'Opening…' : item.kind === 'NpmFish' ? 'Declare' : 'Pay' }}
-              </button>
+              @if (canPayOnline(item)) {
+                <button class="rounded-lg bg-civic-panel shadow-soft transition hover:bg-civic-deep px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
+                        type="button" [disabled]="paying() !== null" (click)="act(item)">
+                  {{ paying() === key(item) ? 'Opening…' : item.kind === 'NpmFish' ? 'Declare' : 'Pay' }}
+                </button>
+              } @else {
+                <p class="max-w-[7rem] text-[10px] leading-snug text-muted" data-testid="pay-offline-note">
+                  Pay at the office or to your collector
+                </p>
+              }
             </div>
           </article>
         }

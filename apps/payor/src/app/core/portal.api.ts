@@ -42,6 +42,8 @@ export interface PayableItem {
   /** NpmDaily only: how many days the amount is made of, and the fee for one of them. */
   days: number | null;
   dailyRate: number | null;
+  /** False = listed as an outstanding balance only; the API accepts online checkout for monthly stall rent alone. Absent (older API) means payable. */
+  payableOnline?: boolean;
 }
 
 /** One day inside a daily-billed month, as the payor's own record of it. */
