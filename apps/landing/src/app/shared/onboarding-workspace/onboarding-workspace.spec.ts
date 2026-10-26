@@ -72,6 +72,45 @@ describe('OnboardingWorkspace — a facility must be finished before another is 
     expect(JSON.parse(saved).extraCustomFutureField).toBe('preserve');
   });
 
+  it('no longer offers a Transport terminal facility to a new onboarding, and refuses to add one', () => {
+    const ws = workspace();
+
+    expect(ws.catalogInGroup('terminal')).toEqual([]);
+    ws.addFromCatalog(terminal(ws));
+
+    expect(ws.facilities().length).toBe(0);
+    // The Terminal income sections stay: they are separate from the facility and from Transportation / Parking.
+    expect(ws.terminalChoices().map((x) => x.section).length).toBe(3);
+  });
+
+  it('still reads, groups and keeps the rate of a saved draft that already holds a Transport terminal', () => {
+    const trm = {
+      id: 'old-trm', catalogKey: 'terminal', archetype: 'PerTrip', name: 'Transport', type: 'Per trip', monthlyRent: '', rateAmount: '30',
+      monthBasis: 'RentGoal', rentalModel: 'daily', rateUnit: 'per trip', unitLabel: 'trips', units: '', ordinance: '', notes: '', marketDay: '',
+      sections: [], addOns: [],
+    };
+    const ws = workspace(JSON.stringify({ facilities: [trm] }));
+
+    expect(ws.facilities().length).toBe(1);
+    expect(ws.groupOfFacility(ws.facilities()[0])).toBe('terminal');
+    expect(ws.facilities()[0].rateAmount).toBe('30');
+    let saved = '';
+    ws.saveDraft.subscribe((value) => (saved = value));
+    ws.saveProgress();
+    expect(JSON.parse(saved).facilities[0]).toMatchObject({ catalogKey: 'terminal', rateAmount: '30' });
+  });
+
+  it('keeps Transportation / Parking as the one collection toggle, with its optional local name and no facility behind it', () => {
+    const ws = workspace();
+
+    ws.toggleOperation('TRANSPORTATION');
+    ws.setOperationName('TRANSPORTATION', 'Parking fee');
+
+    expect(ws.isOperationSelected('TRANSPORTATION')).toBe(true);
+    expect(ws.operationName('TRANSPORTATION')).toBe('Parking fee');
+    expect(ws.facilities().length).toBe(0);
+  });
+
   it('adds the first facility, since there is nothing unfinished to hold it', () => {
     const ws = workspace();
 
@@ -83,12 +122,17 @@ describe('OnboardingWorkspace — a facility must be finished before another is 
   function terminal(ws: OnboardingWorkspace) {
     return ws.catalog.find((c) => c.key === 'terminal')!;
   }
+  // The weekly (Tabo) market is the catalogue facility that keeps a facility-level rate the platform files, so it stands in for the
+  // per-trip terminal these checks used before the terminal facility was retired from new onboarding.
+  function weekly(ws: OnboardingWorkspace) {
+    return ws.catalog.find((c) => c.key === 'weekly')!;
+  }
 
   it('refuses a second facility while the first has no rate', () => {
     const ws = workspace();
-    // A terminal bills a per-trip rate the platform files, so a named terminal with no rate is the dangerous state: it looks
+    // A weekly market bills a per-vendor rate the platform files, so a named one with no rate is the dangerous state: it looks
     // configured on screen and bills nobody.
-    ws.addFromCatalog(terminal(ws));
+    ws.addFromCatalog(weekly(ws));
 
     ws.addFromCatalog(iceplant(ws));
 
@@ -104,8 +148,8 @@ describe('OnboardingWorkspace — a facility must be finished before another is 
     expect(ws.showBaseRate(f)).toBe(false);
     expect(ws.isFacilityDone(f)).toBe(true);
     expect(ws.summaryFor(f)).toBe('rent set per space');
-    // …and a per-trip terminal still does, because that rate IS filed.
-    ws.addFromCatalog(terminal(ws));
+    // …and a weekly market still does, because that rate IS filed.
+    ws.addFromCatalog(weekly(ws));
     expect(ws.showBaseRate(ws.facilities()[1])).toBe(true);
   });
 
@@ -137,11 +181,11 @@ describe('OnboardingWorkspace — a facility must be finished before another is 
 
   it('names the facility that is holding things up, and falls back when it has no name yet', () => {
     const ws = workspace();
-    ws.addFromCatalog(terminal(ws));
+    ws.addFromCatalog(weekly(ws));
     const first = ws.facilities()[0];
 
     // A catalogue facility arrives named, so the message can name it straight away.
-    expect(ws.unfinishedFacilityLabel()).toBe('Transport');
+    expect(ws.unfinishedFacilityLabel()).toBe('Weekly');
 
     // Cleared, or a custom facility never named: the message cannot point at a name that does not exist.
     ws.setFacility(first.id, 'name', '   ');

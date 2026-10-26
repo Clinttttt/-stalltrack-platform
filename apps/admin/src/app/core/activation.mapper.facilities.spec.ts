@@ -240,6 +240,16 @@ describe('activation mapper: declared revenue operations', () => {
     ]);
   });
 
+  it('declares Transportation / Parking with its local name and creates no Transport (TRM) facility for it', () => {
+    const r = withOps([{ operationCode: 'TRANSPORTATION', selected: true, localDisplayName: 'Parking Fees' }]);
+    const { command, declaredOperations, blockingErrors } = mapRequestToCommand(r);
+
+    expect(blockingErrors).toEqual([]);
+    expect(command.facilities.map((f) => f.code)).toEqual(['NPM']);                 // no TRM facility: the declaration is the only thing Transportation adds
+    expect(declaredOperations).toEqual([{ code: 'TRANSPORTATION', label: 'Transportation / Parking', group: 'other', localName: 'Parking Fees' }]);
+    expect(command.operationDeclarations).toEqual([expect.objectContaining({ operationCode: 'TRANSPORTATION', localDisplayName: 'Parking Fees' })]);
+  });
+
   it('declares ECF without WCF and WCF without ECF independently', () => {
     expect(mapRequestToCommand(withOps([{ operationCode: 'ECF', selected: true }])).declaredOperations.map((o) => o.code)).toEqual(['ECF']);
     expect(mapRequestToCommand(withOps([{ operationCode: 'WCF', selected: true }])).declaredOperations.map((o) => o.code)).toEqual(['WCF']);
