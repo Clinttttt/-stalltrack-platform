@@ -245,3 +245,41 @@ describe('Balances: what a fish day costs', () => {
     });
   });
 });
+
+// Only the month's stall rent is paid online. Anything else stays on the statement as a balance, with no Pay action.
+describe('Balances: online payment scope', () => {
+  const rent: PayableItem = { ...fishMonth, stallNo: 'A-1', kind: 'NpmDaily', balanceDue: 840, uncollectedDays: null, baseFee: null, fishRatePerKilo: null };
+  const utility: PayableItem = { ...rent, kind: 'NpmUtility', balanceDue: 220, payableOnline: false };
+  const fish: PayableItem = { ...fishMonth, payableOnline: false };
+
+  async function render(items: PayableItem[]): Promise<HTMLElement> {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    });
+    const http = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(Balances);
+    http.expectOne(`${API_BASE_URL}/api/payor/payable-items`).flush(items);
+    http.expectOne(`${API_BASE_URL}/api/payor/balances`).flush([{ outstandingBalance: 1 }]);
+    http
+      .match(`${API_BASE_URL}/api/municipalities/current/branding`)
+      .forEach((req) => req.flush({ name: 'Test Municipality', sealPath: null }));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  it('shows Pay only for the rent row; utility and fish rows are listed read-only with a note', async () => {
+    const el = await render([rent, utility, fish]);
+
+    expect(el.querySelectorAll('article').length).toBe(3);
+    expect(el.querySelectorAll('article button').length).toBe(1);
+    expect(el.querySelectorAll('[data-testid="pay-offline-note"]').length).toBe(2);
+    expect(el.textContent).toContain('Pay at the office or to your collector');
+  });
+
+  it('treats an item from an older API (no flag) as payable', async () => {
+    const el = await render([rent]);
+
+    expect(el.querySelectorAll('article button').length).toBe(1);
+  });
+});

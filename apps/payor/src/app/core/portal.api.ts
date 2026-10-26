@@ -48,6 +48,8 @@ export interface PayableItem {
   /** The office's own name and acronym for the facility. `facility` is only its internal code; absent from an older API. */
   facilityName?: string | null;
   facilityShortName?: string | null;
+  /** False = listed as an outstanding balance only; the API accepts online checkout for monthly stall rent alone. Absent (older API) means payable. */
+  payableOnline?: boolean;
 }
 
 /** One day inside a daily-billed month, as the payor's own record of it. */
