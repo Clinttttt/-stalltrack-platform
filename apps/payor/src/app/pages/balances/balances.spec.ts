@@ -77,6 +77,7 @@ describe('Balances: what a fish day costs', () => {
 
     // The screen reads both on creation: the rows from the payable items, the total from the office's own balances.
     http.expectOne(`${API_BASE_URL}/api/payor/payable-items`).flush([fishMonth]);
+    http.expectOne(`${API_BASE_URL}/api/payor/historical/obligations`).flush([]);
     http.expectOne(`${API_BASE_URL}/api/payor/balances`).flush([
       { outstandingBalance: 180 },
       { outstandingBalance: 60 },
@@ -259,6 +260,7 @@ describe('Balances: online payment scope', () => {
     const http = TestBed.inject(HttpTestingController);
     const fixture = TestBed.createComponent(Balances);
     http.expectOne(`${API_BASE_URL}/api/payor/payable-items`).flush(items);
+    http.expectOne(`${API_BASE_URL}/api/payor/historical/obligations`).flush([]);
     http.expectOne(`${API_BASE_URL}/api/payor/balances`).flush([{ outstandingBalance: 1 }]);
     http
       .match(`${API_BASE_URL}/api/municipalities/current/branding`)
