@@ -54,6 +54,28 @@ export interface HistoryDay {
   recordedByName: string | null;
 }
 
+/**
+ * One unpaid obligation of an EARLIER account the payor was explicitly linked to (a lapsed, closed, renewed or former
+ * term). Mirrors the API's PayorHistoricalObligationDto. Read-only: `payableOnline` is always false, and `channel` says
+ * where it is paid.
+ */
+export interface HistoricalObligation {
+  accountKey: string;
+  kind: 'StallRent' | 'SpaceRental';
+  operationName: string;
+  space: string;
+  /** Active, Lapsed, Closed, Renewed or Re-let. */
+  status: string;
+  context: string | null;
+  period: string;
+  assessed: number;
+  paid: number;
+  balance: number;
+  settlement: 'Unpaid' | 'Partial';
+  channel: 'PayAtOfficeOrCollector' | 'AwaitingOr';
+  payableOnline: boolean;
+}
+
 /** One month of a space's ledger. Mirrors the API's PaymentHistoryDto. */
 export interface HistoryMonth {
   period: string;
@@ -143,6 +165,26 @@ export class PortalApi {
         reference,
       }),
     );
+  }
+
+  /** The unpaid obligations of the earlier accounts this payor is linked to. Read-only; the API scopes it to the caller. */
+  async historicalObligations(): Promise<HistoricalObligation[]> {
+    return (
+      (await firstValueFrom(
+        this.http.get<HistoricalObligation[]>(`${API_BASE_URL}/api/payor/historical/obligations`),
+      )) ?? []
+    );
+  }
+
+  /** Links an earlier account with a code the office issued for it. Returns the API's refusal text, or null on success. */
+  async linkHistorical(activationCode: string): Promise<string | null> {
+    try {
+      await firstValueFrom(this.http.post(`${API_BASE_URL}/api/payor/historical/link`, { activationCode }));
+      return null;
+    } catch (error: unknown) {
+      const body = (error as { error?: { message?: string; error?: string } } | null)?.error;
+      return body?.message ?? body?.error ?? 'That code could not be used. Check it and try again, or ask the office.';
+    }
   }
 
   async history(stallId: string): Promise<HistoryMonth[]> {
