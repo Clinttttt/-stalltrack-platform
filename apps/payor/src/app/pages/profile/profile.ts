@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { PayorBalance, PortalApi } from '../../core/portal.api';
 import { PayorLayout } from '../../shared/payor-layout';
+import { facilityLabel } from '../../core/format';
 
 /**
  * The payor's own details, and the spaces the office has linked to them.
@@ -33,7 +34,7 @@ export class Profile {
 
   /** The space, as the office numbers it. */
   protected where(account: PayorBalance): string {
-    return account.stallNo ? `${account.facility} · Stall ${account.stallNo}` : account.facility;
+    return account.stallNo ? `${facilityLabel(account)} · Stall ${account.stallNo}` : facilityLabel(account);
   }
 
   protected async signOut(): Promise<void> {

@@ -37,3 +37,13 @@ export function officeDayShort(iso: string): string {
     ? iso
     : date.toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' });
 }
+
+/**
+ * A facility as the office names it: its own acronym ("RR"), else its own name, and only without either the internal code the API also carries.
+ *
+ * The code ("Custom1") is how the system keys a facility, not wording: two municipalities can use the same slot for different facilities. Older
+ * API versions send only the code, so it remains the last resort rather than the first choice.
+ */
+export function facilityLabel(item: { facility: string; facilityShortName?: string | null; facilityName?: string | null }): string {
+  return item.facilityShortName?.trim() || item.facilityName?.trim() || item.facility;
+}
