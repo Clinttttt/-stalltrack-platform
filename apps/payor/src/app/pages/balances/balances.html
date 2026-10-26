@@ -35,7 +35,7 @@
               </div>
               @if (canPayOnline(item)) {
                 <button class="rounded-lg bg-civic-panel shadow-soft transition hover:bg-civic-deep px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
-                        type="button" [disabled]="paying() !== null" (click)="act(item)">
+                        type="button" [disabled]="paying() !== null" [attr.aria-label]="(item.kind === 'NpmFish' ? 'Declare ' : 'Pay ') + label(item) + ' for ' + month(item.period)" (click)="act(item)">
                   {{ paying() === key(item) ? 'Opening…' : item.kind === 'NpmFish' ? 'Declare' : 'Pay' }}
                 </button>
               } @else {

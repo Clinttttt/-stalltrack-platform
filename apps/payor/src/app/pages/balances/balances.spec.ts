@@ -248,7 +248,7 @@ describe('Balances: what a fish day costs', () => {
 
 // Only the month's stall rent is paid online. Anything else stays on the statement as a balance, with no Pay action.
 describe('Balances: online payment scope', () => {
-  const rent: PayableItem = { ...fishMonth, stallNo: 'A-1', kind: 'NpmDaily', balanceDue: 840, uncollectedDays: null, baseFee: null, fishRatePerKilo: null };
+  const rent: PayableItem = { ...fishMonth, stallNo: 'A-1', kind: 'Monthly', balanceDue: 840, uncollectedDays: null, baseFee: null, fishRatePerKilo: null };
   const utility: PayableItem = { ...rent, kind: 'NpmUtility', balanceDue: 220, payableOnline: false };
   const fish: PayableItem = { ...fishMonth, payableOnline: false };
 
@@ -281,5 +281,22 @@ describe('Balances: online payment scope', () => {
     const el = await render([rent]);
 
     expect(el.querySelectorAll('article button').length).toBe(1);
+  });
+
+  it('lists each earlier period of monthly rent as its own row; Pay names the period and targets only that one', async () => {
+    const june: PayableItem = { ...rent, month: 6, period: '2026-06', balanceDue: 2400 };
+    const july: PayableItem = { ...rent, month: 7, period: '2026-07', balanceDue: 2400 };
+    const el = await render([june, july]);
+
+    const buttons = Array.from(el.querySelectorAll<HTMLButtonElement>('article button'));
+    expect(buttons.length).toBe(2);
+    expect(buttons[0].getAttribute('aria-label')).toContain('June');
+    expect(buttons[1].getAttribute('aria-label')).toContain('July');
+
+    const http = TestBed.inject(HttpTestingController);
+    buttons[1].click();
+    const req = http.expectOne(`${API_BASE_URL}/api/onlinepayments/initiate`);
+    expect(req.request.body).toMatchObject({ month: 7, kind: 'Monthly' }); // one checkout = one stall + period
+    req.flush({ checkoutUrl: '', reference: 'x' });
   });
 });
