@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { officeDate, peso } from '../../core/format';
+import { facilityLabel, officeDate, peso } from '../../core/format';
 import { HistoryMonth, PayorBalance, PortalApi } from '../../core/portal.api';
 import { PayorLayout } from '../../shared/payor-layout';
 
@@ -32,6 +32,7 @@ export class History {
   private readonly open = signal<ReadonlySet<string>>(new Set<string>());
 
   protected money = peso;
+  protected facilityLabel = facilityLabel;
   protected date = officeDate;
 
   constructor() {

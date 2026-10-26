@@ -182,7 +182,7 @@ describe('OnboardingWorkspace — operations saved by a newer version', () => {
     add('public_market', 'Pamilihan');
     expect(ws.groupOfFacility(ws.facilities()[0])).toBe('rent');
     expect(ws.catalogInGroup('slaughterhouse').map((c) => c.key)).toEqual(['slaughterhouse']);
-    expect(ws.catalogInGroup('terminal').map((c) => c.key)).toEqual(['terminal']);
+    expect(ws.catalogInGroup('terminal').map((c) => c.key)).toEqual([]);   // the Transport terminal facility is retired from new onboarding
     expect(ws.catalogInGroup('market').map((c) => c.key).sort()).toEqual(['iceplant', 'weekly']);
     expect(ws.catalogInGroup('rent').map((c) => c.key).sort()).toEqual(['barbecue', 'commercial', 'other', 'public_market']);
     expect(ws.operationsInGroup('space').map((o) => o.code)).toEqual([

@@ -27,7 +27,7 @@ const REVENUE_GROUPS: ReadonlyArray<{ key: RevenueGroupKey; label: string; hint:
   { key: 'market', label: 'Income From Market', hint: 'Market fees, vendor and utility collections, landing and transport fees, the weekly market and the ice plant.' },
   { key: 'rent', label: 'Rent Income — Stall Rental', hint: 'Public market stalls, commercial centers, barbecue stands and other rental facilities. Rent is set for each space after activation.' },
   { key: 'space', label: 'Space Rental', hint: 'Municipal spaces, event lots and vegetable / fruit spaces.' },
-  { key: 'terminal', label: 'Income From Terminal', hint: 'The transport terminal and its per-trip fee.' },
+  { key: 'terminal', label: 'Income From Terminal', hint: 'The terminal income sections this LGU operates. Transportation / Parking is declared under Collections.' },
   { key: 'slaughterhouse', label: 'Income From Slaughterhouse', hint: 'The slaughterhouse and its per-head animal rates.' },
 ];
 // How each facility type reads on its add button (the catalog label is a longer, picker-style sentence).
@@ -157,6 +157,11 @@ interface CatalogItem {
   type: string;
   unitLabel: string;
   archetype: string;
+  /**
+   * No longer offered to a NEW onboarding, but kept so a saved draft (or a configured LGU) that already holds one still reads, groups
+   * and maps as before. Transport belongs to the Transportation / Parking collection and the Terminal income sections.
+   */
+  retired?: boolean;
 }
 
 const uid = (): string => Math.random().toString(36).slice(2, 9);
@@ -192,7 +197,7 @@ const CATALOG: CatalogItem[] = [
   { key: 'barbecue', label: 'Barbecue / food stalls', type: 'Monthly rental', unitLabel: 'stalls', archetype: 'MonthlyRental' },
   { key: 'iceplant', label: 'Iceplant / cold storage', type: 'Monthly rental', unitLabel: 'units', archetype: 'MonthlyRental' },
   { key: 'slaughterhouse', label: 'Slaughterhouse — per head', type: 'Per head', unitLabel: 'heads', archetype: 'PerHead' },
-  { key: 'terminal', label: 'Transport / Bus Terminal — per trip', type: 'Per trip', unitLabel: 'trips', archetype: 'PerTrip' },
+  { key: 'terminal', label: 'Transport / Bus Terminal — per trip', type: 'Per trip', unitLabel: 'trips', archetype: 'PerTrip', retired: true },
   { key: 'weekly', label: 'Weekly / Tabo market — market day', type: 'Weekly market', unitLabel: 'vendors', archetype: 'WeeklyMarket' },
   { key: 'other', label: 'Custom monthly stall rental', type: 'Custom', unitLabel: 'units', archetype: 'Custom' },
 ];
@@ -532,7 +537,7 @@ export class OnboardingWorkspace {
   addFromCatalog(c: CatalogItem, category: 'StallRent' | 'SpaceRental' = 'StallRent'): void {
     // A non-custom facility type can be configured only once; block re-adding a type already present.
     // 'other' (custom facility) may be added many times.
-    if (this.isCatalogUsed(c)) return;
+    if (this.isCatalogUsed(c) || c.retired) return;
 
     // And nothing is added while a facility already on the page is unfinished. Refused here as well as disabled on the
     // button, because a disabled control is not a guard - the picker can be open when the last field is cleared.
@@ -781,7 +786,7 @@ export class OnboardingWorkspace {
     return this.facilities().filter((f) => this.groupOfFacility(f) === key);
   }
   catalogInGroup(key: string): CatalogItem[] {
-    return CATALOG.filter((c) => GROUP_OF_CATALOG[c.key] === key);
+    return CATALOG.filter((c) => GROUP_OF_CATALOG[c.key] === key && !c.retired);
   }
   operationsInGroup(key: string) {
     return OPERATION_CATALOG.filter((o) => (o.group === 'space' ? 'space' : 'market') === key);

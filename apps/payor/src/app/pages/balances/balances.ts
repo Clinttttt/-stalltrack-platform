@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { officeDayShort, officeMonth, peso } from '../../core/format';
-import { PayableItem, PortalApi } from '../../core/portal.api';
+import { facilityLabel, officeDayShort, officeMonth, peso } from '../../core/format';
+import { HistoricalObligation, PayableItem, PortalApi } from '../../core/portal.api';
 import { PayorLayout } from '../../shared/payor-layout';
 
 /**
@@ -23,6 +23,28 @@ export class Balances {
   private readonly api = inject(PortalApi);
 
   protected readonly items = signal<PayableItem[]>([]);
+
+  /** Unpaid obligations of earlier accounts this payor was linked to by the office. Read-only: never offered for online payment. */
+  protected readonly earlier = signal<HistoricalObligation[]>([]);
+  protected readonly earlierTotal = computed(() => this.earlier().reduce((sum, r) => sum + r.balance, 0));
+
+  /** One block per earlier account, with its term context, so a lapsed or renewed term is never mistaken for the current one. */
+  protected readonly earlierAccounts = computed(() => {
+    const groups = new Map<string, HistoricalObligation[]>();
+    for (const row of this.earlier()) groups.set(row.accountKey, [...(groups.get(row.accountKey) ?? []), row]);
+    return [...groups.entries()].map(([key, rows]) => ({
+      key,
+      title: `${rows[0].operationName} · ${rows[0].space}`,
+      status: rows[0].status,
+      rows,
+      total: rows.reduce((sum, r) => sum + r.balance, 0),
+    }));
+  });
+
+  protected readonly linkCode = signal('');
+  protected readonly linking = signal(false);
+  protected readonly linkMessage = signal<string | null>(null);
+
   protected readonly total = signal(0);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
@@ -99,9 +121,14 @@ export class Balances {
     }
   }
 
+  /** Only the month's stall rent is paid online; other charges are shown as balances to settle at the office or with the collector. */
+  protected canPayOnline(item: PayableItem): boolean {
+    return item.payableOnline !== false;
+  }
+
   /** The space it belongs to. */
   protected where(item: PayableItem): string {
-    return item.stallNo ? `${item.facility} · Stall ${item.stallNo}` : item.facility;
+    return item.stallNo ? `${facilityLabel(item)} · Stall ${item.stallNo}` : facilityLabel(item);
   }
 
   /** The figure on the row: what is payable, or a day's fee where the days are paid one at a time. */
@@ -274,7 +301,43 @@ export class Balances {
     }
   }
 
+  /** Links an earlier account with the code the office issued for it, then re-reads the earlier accounts. */
+  protected async link(): Promise<void> {
+    const code = this.linkCode().trim();
+    if (this.linking() || code.length === 0) return;
+    this.linking.set(true);
+    this.linkMessage.set(null);
+    const refusal = await this.api.linkHistorical(code);
+    if (refusal === null) {
+      this.linkCode.set('');
+      this.linkMessage.set('Linked. Its unpaid items are listed below.');
+      await this.loadEarlier();
+    } else {
+      this.linkMessage.set(refusal);
+    }
+    this.linking.set(false);
+  }
+
+  protected setLinkCode(event: Event): void {
+    this.linkCode.set((event.target as HTMLInputElement).value.toUpperCase());
+  }
+
+  /** Where an earlier item is settled. Online payment is never offered for these. */
+  protected channelNote(row: HistoricalObligation): string {
+    return row.channel === 'AwaitingOr' ? 'Paid, awaiting the Official Receipt' : 'Pay at the office or to your collector';
+  }
+
+  private async loadEarlier(): Promise<void> {
+    try {
+      this.earlier.set(await this.api.historicalObligations());
+    } catch {
+      // Earlier accounts are additional to the current ones: if they cannot be read, the current balances still stand.
+      this.earlier.set([]);
+    }
+  }
+
   private async load(): Promise<void> {
+    void this.loadEarlier();
     try {
       // Both, together: the rows come from the payable items, the total from the office's own balances, and neither is
       // derived from the other. Read in parallel because a payor on mobile data waits for both.

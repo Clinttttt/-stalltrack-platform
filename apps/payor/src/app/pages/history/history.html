@@ -11,7 +11,7 @@
   } @else {
     @for (entry of ledgers(); track entry.account.stallId) {
       <p class="mt-6 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
-        {{ entry.account.facility }}{{ entry.account.stallNo ? ' · Stall ' + entry.account.stallNo : '' }}
+        {{ facilityLabel(entry.account) }}{{ entry.account.stallNo ? ' · Stall ' + entry.account.stallNo : '' }}
       </p>
 
       <div class="mt-2 rounded-2xl border border-line bg-white shadow-soft">

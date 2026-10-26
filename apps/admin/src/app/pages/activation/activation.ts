@@ -72,13 +72,43 @@ export class Activation {
 
   readonly scoped = computed(() => this.requests().filter(inScope));
   /**
-   * Completed activations. One just committed in this session counts at once: the server has already moved its request to
-   * Completed, but this list is only reloaded on refresh, so waiting for that left "No completed activations yet" beside a
-   * municipality the console had just announced as live.
+   * Activation history, ONE row per municipality. Every onboarding request stays in the request lists with its own state; this list answers "which
+   * municipalities are live", so a municipality that raised two requests (a re-request, a superseded draft) is not shown twice.
+   *
+   * Identity is the municipality's name AND province: the same name in another province is another municipality. A request counts when it actually
+   * completed activation, or — for a municipality that was already live before the request flow, or one just committed in this session before the list
+   * reloaded — when it is marked activated and the name belongs to one province only (the live registry carries no province, so a shared name cannot be
+   * attributed to either). The representative of each municipality is its completed request, else its most recent one.
    */
-  readonly completedHistory = computed(() =>
-    this.requests().filter((r) => (r.status === STATUS.COMPLETED && r.stage === 'Completed') || r.activated),
-  );
+  readonly completedHistory = computed(() => {
+    const reqs = this.requests();
+    const completed = (r: RequestRecord) => r.status === STATUS.COMPLETED && r.stage === 'Completed';
+    const nameOf = (r: RequestRecord) => r.municipality.trim().toLowerCase();
+    const keyOf = (r: RequestRecord) => `${nameOf(r)}|${r.province.trim().toLowerCase()}`;
+    const provincesByName = new Map<string, Set<string>>();
+    for (const r of reqs) {
+      const provinces = provincesByName.get(nameOf(r)) ?? new Set<string>();
+      provinces.add(r.province.trim().toLowerCase());
+      provincesByName.set(nameOf(r), provinces);
+    }
+    const unambiguous = (r: RequestRecord) => (provincesByName.get(nameOf(r))?.size ?? 0) <= 1;
+
+    const byMunicipality = new Map<string, RequestRecord>();
+    for (const r of reqs.filter((x) => completed(x) || (x.activated && unambiguous(x)))) {
+      const held = byMunicipality.get(keyOf(r));
+      const better = !held
+        || (completed(r) && !completed(held))
+        || (completed(r) === completed(held) && r.submittedAt > held.submittedAt);
+      if (better) byMunicipality.set(keyOf(r), r);
+    }
+    return [...byMunicipality.values()].sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+  });
+
+  /** How many onboarding requests the same municipality (name and province) has raised, so one history row can say it stands for several. */
+  requestCountFor(r: RequestRecord): number {
+    const key = `${r.municipality.trim().toLowerCase()}|${r.province.trim().toLowerCase()}`;
+    return this.requests().filter((x) => `${x.municipality.trim().toLowerCase()}|${x.province.trim().toLowerCase()}` === key).length;
+  }
   readonly selected = computed<RequestRecord | null>(() => {
     const s = this.scoped();
     return s.find((r) => r.id === this.selectedId()) || s[0] || null;
@@ -90,7 +120,7 @@ export class Activation {
     return [
       { label: 'In validation', value: validation },
       { label: 'Ready to activate', value: this.scoped().filter((r) => !r.activated).length },
-      { label: 'Activated', value: this.municipalityRegistryAvailable() ? this.activeMunis().size : '—' },
+      { label: 'Active municipalities', value: this.municipalityRegistryAvailable() ? this.activeMunis().size : '—' },
       { label: 'Total requests', value: reqs.length },
     ];
   });

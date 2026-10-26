@@ -77,6 +77,7 @@ describe('Balances: what a fish day costs', () => {
 
     // The screen reads both on creation: the rows from the payable items, the total from the office's own balances.
     http.expectOne(`${API_BASE_URL}/api/payor/payable-items`).flush([fishMonth]);
+    http.expectOne(`${API_BASE_URL}/api/payor/historical/obligations`).flush([]);
     http.expectOne(`${API_BASE_URL}/api/payor/balances`).flush([
       { outstandingBalance: 180 },
       { outstandingBalance: 60 },
@@ -243,5 +244,61 @@ describe('Balances: what a fish day costs', () => {
       expect(inner.label({ ...fishMonth, kind: 'NpmUtility' })).toBe('Electricity and water');
       expect(inner.label({ ...fishMonth, kind: 'Monthly' })).toBe('Monthly rent');
     });
+  });
+});
+
+// Only the month's stall rent is paid online. Anything else stays on the statement as a balance, with no Pay action.
+describe('Balances: online payment scope', () => {
+  const rent: PayableItem = { ...fishMonth, stallNo: 'A-1', kind: 'Monthly', balanceDue: 840, uncollectedDays: null, baseFee: null, fishRatePerKilo: null };
+  const utility: PayableItem = { ...rent, kind: 'NpmUtility', balanceDue: 220, payableOnline: false };
+  const fish: PayableItem = { ...fishMonth, payableOnline: false };
+
+  async function render(items: PayableItem[]): Promise<HTMLElement> {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    });
+    const http = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(Balances);
+    http.expectOne(`${API_BASE_URL}/api/payor/payable-items`).flush(items);
+    http.expectOne(`${API_BASE_URL}/api/payor/historical/obligations`).flush([]);
+    http.expectOne(`${API_BASE_URL}/api/payor/balances`).flush([{ outstandingBalance: 1 }]);
+    http
+      .match(`${API_BASE_URL}/api/municipalities/current/branding`)
+      .forEach((req) => req.flush({ name: 'Test Municipality', sealPath: null }));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  it('shows Pay only for the rent row; utility and fish rows are listed read-only with a note', async () => {
+    const el = await render([rent, utility, fish]);
+
+    expect(el.querySelectorAll('article').length).toBe(3);
+    expect(el.querySelectorAll('article button').length).toBe(1);
+    expect(el.querySelectorAll('[data-testid="pay-offline-note"]').length).toBe(2);
+    expect(el.textContent).toContain('Pay at the office or to your collector');
+  });
+
+  it('treats an item from an older API (no flag) as payable', async () => {
+    const el = await render([rent]);
+
+    expect(el.querySelectorAll('article button').length).toBe(1);
+  });
+
+  it('lists each earlier period of monthly rent as its own row; Pay names the period and targets only that one', async () => {
+    const june: PayableItem = { ...rent, month: 6, period: '2026-06', balanceDue: 2400 };
+    const july: PayableItem = { ...rent, month: 7, period: '2026-07', balanceDue: 2400 };
+    const el = await render([june, july]);
+
+    const buttons = Array.from(el.querySelectorAll<HTMLButtonElement>('article button'));
+    expect(buttons.length).toBe(2);
+    expect(buttons[0].getAttribute('aria-label')).toContain('June');
+    expect(buttons[1].getAttribute('aria-label')).toContain('July');
+
+    const http = TestBed.inject(HttpTestingController);
+    buttons[1].click();
+    const req = http.expectOne(`${API_BASE_URL}/api/onlinepayments/initiate`);
+    expect(req.request.body).toMatchObject({ month: 7, kind: 'Monthly' }); // one checkout = one stall + period
+    req.flush({ checkoutUrl: '', reference: 'x' });
   });
 });

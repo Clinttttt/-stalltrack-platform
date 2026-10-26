@@ -109,6 +109,34 @@ describe('AuthService: a session the app cannot read', () => {
     });
   });
 
+  describe('activating with a code for an earlier account', () => {
+    it('tries the historical endpoint when the stall endpoint does not know the code', async () => {
+      const pending = service.activate('ABCD-2345', '09170000001', 'Secret123!');
+
+      http.expectOne(`${API_BASE_URL}/api/payorauth/activate`).flush({}, { status: 400, statusText: 'Bad Request' });
+      await Promise.resolve();
+      const second = http.expectOne(`${API_BASE_URL}/api/payorauth/activate-historical`);
+      expect(second.request.withCredentials).toBe(true);
+      expect(second.request.body).toEqual({ activationCode: 'ABCD-2345', contactNumber: '09170000001', password: 'Secret123!' });
+      second.flush({ accessToken: 'a', refreshToken: 'r' });
+
+      expect(await pending).toBeNull();
+      expect(service.signedIn()).toBe(true);
+    });
+
+    it('does not fall back when the number is already activated: that answer is final', async () => {
+      const pending = service.activate('ABCD-2345', '09170000001', 'Secret123!');
+
+      http
+        .expectOne(`${API_BASE_URL}/api/payorauth/activate`)
+        .flush({ message: 'This mobile number is already activated. Please sign in instead.' }, { status: 409, statusText: 'Conflict' });
+
+      expect(await pending).toContain('already activated');
+      http.expectNone(`${API_BASE_URL}/api/payorauth/activate-historical`);
+      expect(service.signedIn()).toBe(false);
+    });
+  });
+
   describe('restoring on a reload', () => {
     it('asks the API whether the refresh cookie is still good, because it cannot look', async () => {
       const pending = service.restore();

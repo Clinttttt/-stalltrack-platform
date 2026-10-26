@@ -48,11 +48,21 @@ export class AuthService {
    * on the account.
    */
   async activate(activationCode: string, contactNumber: string, password: string): Promise<string | null> {
-    return this.exchange(`${API_BASE_URL}/api/payorauth/activate`, {
-      activationCode,
-      contactNumber,
-      password,
-    });
+    const body = { activationCode, contactNumber, password };
+    try {
+      await firstValueFrom(this.http.post(`${API_BASE_URL}/api/payorauth/activate`, body, { withCredentials: true }));
+      this.established.set(true);
+      return null;
+    } catch (error: unknown) {
+      // A code the office issued for an EARLIER account (a lapsed, closed or former term) is a different kind of code and
+      // is redeemed at its own endpoint. The stall endpoint answers 400 for a code it does not know; any other answer
+      // (for example 409, this number is already activated) is final and is shown as it is.
+      if ((error as { status?: number } | null)?.status === 400) {
+        return this.exchange(`${API_BASE_URL}/api/payorauth/activate-historical`, body);
+      }
+      this.established.set(false);
+      return messageFor(error);
+    }
   }
 
   /**
