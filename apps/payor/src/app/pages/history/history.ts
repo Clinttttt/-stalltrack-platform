@@ -1,21 +1,20 @@
-import { Component, inject, signal } from '@angular/core';
-import { facilityLabel, officeDate, peso } from '../../core/format';
+import { Component, HostListener, inject, signal } from '@angular/core';
+import { facilityLabel, officeDate, officeMonth, peso } from '../../core/format';
 import { HistoryMonth, PayorBalance, PortalApi } from '../../core/portal.api';
 import { PayorLayout } from '../../shared/payor-layout';
 
-/** One space's ledger, kept beside the space it belongs to so a payor with two stalls can tell them apart. */
+/** A space's authoritative history rows, scoped to the signed-in payor by the API. */
 interface AccountHistory {
   account: PayorBalance;
   months: HistoryMonth[];
 }
 
-/**
- * What the payor has paid.
- *
- * A market month reaches them as one row, because that is how the office reconciles it, but the days behind it are
- * listed on request: each date, its own fee, the receipt where one has been encoded, and who took it. A day a collector
- * took in the field reads exactly like one paid online, which is the point.
- */
+/** A read-only statement for exactly one space and period; never a substitute for a physical OR. */
+interface SelectedHistory {
+  account: PayorBalance;
+  month: HistoryMonth;
+}
+
 @Component({
   selector: 'app-history',
   imports: [PayorLayout],
@@ -27,19 +26,18 @@ export class History {
   protected readonly ledgers = signal<AccountHistory[]>([]);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
-
-  /** Which months have their days open, keyed by space and period so one month at two stalls is two rows. */
-  private readonly open = signal<ReadonlySet<string>>(new Set<string>());
+  protected readonly selected = signal<SelectedHistory | null>(null);
 
   protected money = peso;
   protected facilityLabel = facilityLabel;
   protected date = officeDate;
+  protected monthLabel = officeMonth;
 
   constructor() {
     void this.load();
   }
 
-  /** An unpaid month shows what is owed; anything else shows what was received. */
+  /** Unpaid periods show the bill; paid or partial periods show the money actually recorded. */
   protected shown(month: HistoryMonth): number {
     return month.status === 'Unpaid' ? month.totalBill : month.amountPaid;
   }
@@ -51,21 +49,23 @@ export class History {
     return 'text-red';
   }
 
-  protected expanded(stallId: string, period: string): boolean {
-    return this.open().has(`${stallId}|${period}`);
+  protected openDetail(account: PayorBalance, month: HistoryMonth): void {
+    this.selected.set({ account, month });
   }
 
-  protected toggle(stallId: string, period: string): void {
-    const key = `${stallId}|${period}`;
-    const next = new Set(this.open());
-    if (!next.delete(key)) next.add(key);
-    this.open.set(next);
+  protected closeDetail(): void {
+    this.selected.set(null);
+  }
+
+  @HostListener('document:keydown.escape')
+  protected onEscape(): void {
+    this.closeDetail();
   }
 
   private async load(): Promise<void> {
     try {
       const accounts = await this.api.balances();
-      // One request per space, in parallel: a payor holds one or two, and the API scopes each to the caller.
+      // One request per linked space. The server authorizes each requested stall for the current payor.
       const months = await Promise.all(accounts.map((a) => this.api.history(a.stallId)));
       this.ledgers.set(accounts.map((account, i) => ({ account, months: months[i] ?? [] })));
     } catch {

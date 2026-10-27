@@ -2,6 +2,7 @@
   <div class="pt-5">
     <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">What you have paid</p>
     <h1 class="mt-1 font-display text-xl text-civic-deep">Payment history</h1>
+    <p class="mt-1.5 text-xs text-muted">Select a period to view the payment details recorded by the office.</p>
   </div>
 
   @if (loading()) {
@@ -14,56 +15,35 @@
         {{ facilityLabel(entry.account) }}{{ entry.account.stallNo ? ' · Stall ' + entry.account.stallNo : '' }}
       </p>
 
-      <div class="mt-2 rounded-2xl border border-line bg-white shadow-soft">
+      <div class="mt-2 overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
         @for (month of entry.months; track month.period) {
-          <div class="border-b border-line last:border-b-0">
-            <div class="flex items-start justify-between gap-3 px-4 py-3">
-              <div class="min-w-0">
-                <p class="text-sm font-semibold text-civic-deep">{{ month.period }}</p>
-                <p class="mt-0.5 truncate text-xs text-muted">
-                  @if (month.orNumber) {
-                    OR {{ month.orNumber }}
-                  } @else if (month.status !== 'Unpaid' && !month.isExcused) {
-                    awaiting OR
-                  }
-                </p>
-              </div>
-              <div class="shrink-0 text-right">
-                <p class="font-display text-base text-civic-deep">{{ money(shown(month)) }}</p>
-                <p class="text-[10px] font-semibold uppercase tracking-wide"
-                   [class]="statusClass(month)">
-                  {{ month.isExcused ? 'Excused' : month.status }}
-                </p>
-              </div>
-            </div>
-
-            @if (month.days && month.days.length > 0) {
-              <div class="px-4 pb-3">
-                <button class="pb-1 text-[11px] text-muted" type="button"
-                        (click)="toggle(entry.account.stallId, month.period)">
-                  {{ month.days.length }} {{ month.days.length === 1 ? 'day' : 'days' }} collected
-                  <span class="font-semibold text-civic-deep">
-                    {{ expanded(entry.account.stallId, month.period) ? 'Hide' : 'Show' }}
-                  </span>
-                </button>
-
-                @if (expanded(entry.account.stallId, month.period)) {
-                  @for (day of month.days; track day.day) {
-                    <!-- Three columns: the date takes what it needs, the receipt line gives way to an ellipsis, and the
-                         amount never shrinks. A fixed date column left a broad gap after every short date and a long
-                         receipt-and-collector line then had nowhere to go. -->
-                    <div class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-x-2.5 border-l-2 border-line py-1.5 pl-2.5 text-[11.5px]">
-                      <span class="whitespace-nowrap text-civic-deep">{{ date(day.day) }}</span>
-                      <span class="truncate text-muted">
-                        {{ day.orNumber ? 'OR ' + day.orNumber : 'awaiting OR' }}{{ day.recordedByName ? ' · ' + day.recordedByName : '' }}
-                      </span>
-                      <span class="whitespace-nowrap font-semibold text-civic-deep">{{ money(day.amount) }}</span>
-                    </div>
-                  }
+          <button type="button" class="flex w-full items-center justify-between gap-3 border-b border-line px-4 py-3.5 text-left transition-colors last:border-b-0 hover:bg-tint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-civic"
+                  (click)="openDetail(entry.account, month)"
+                  [attr.aria-label]="'View details for ' + monthLabel(month.period) + ' at ' + facilityLabel(entry.account)">
+            <span class="min-w-0">
+              <span class="block text-sm font-semibold text-civic-deep">{{ monthLabel(month.period) }}</span>
+              <span class="mt-0.5 block truncate text-xs text-muted">
+                @if (month.orNumber) {
+                  OR {{ month.orNumber }}
+                } @else if (month.amountPaid > 0 && !month.isExcused) {
+                  Official receipt pending
+                } @else {
+                  {{ month.isExcused ? 'Excused period' : 'Payment not recorded' }}
                 }
-              </div>
-            }
-          </div>
+              </span>
+            </span>
+            <span class="flex shrink-0 items-center gap-3">
+              <span class="text-right">
+                <span class="block font-display text-base text-civic-deep">{{ money(shown(month)) }}</span>
+                <span class="block text-[10px] font-semibold uppercase tracking-wide" [class]="statusClass(month)">
+                  {{ month.isExcused ? 'Excused' : month.status }}
+                </span>
+              </span>
+              <svg class="h-4 w-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6"/>
+              </svg>
+            </span>
+          </button>
         } @empty {
           <p class="px-4 py-4 text-sm text-muted">No payments recorded for this space yet.</p>
         }
@@ -75,3 +55,115 @@
     }
   }
 </app-payor-layout>
+
+@if (selected(); as detail) {
+  <div class="fixed inset-0 z-40 flex items-end justify-center bg-ink/55 sm:items-center sm:p-5"
+       (click)="closeDetail()">
+    <section role="dialog" aria-modal="true" aria-labelledby="history-detail-heading"
+             class="flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl sm:rounded-2xl"
+             (click)="$event.stopPropagation()">
+      <div class="shrink-0 border-b border-line px-5 pb-4 pt-5 sm:px-6">
+        <div class="mb-4 flex items-start justify-between gap-4">
+          <div>
+            <p class="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted">StallTrack · Payment record</p>
+            <h2 id="history-detail-heading" class="mt-1 font-display text-xl text-civic-deep">Payment details</h2>
+            <p class="mt-0.5 text-xs text-muted">{{ monthLabel(detail.month.period) }}</p>
+          </div>
+          <button type="button" class="rounded-lg border border-line p-2 text-muted hover:bg-tint focus-visible:outline focus-visible:outline-2 focus-visible:outline-civic"
+                  (click)="closeDetail()" aria-label="Close payment details">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <path stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="rounded-xl bg-tint px-4 py-3">
+          <div class="flex items-baseline justify-between gap-3">
+            <span class="text-xs text-muted">Amount recorded as paid</span>
+            <span class="font-display text-2xl text-civic-deep">{{ money(detail.month.amountPaid) }}</span>
+          </div>
+          <p class="mt-1 text-right text-[11px] font-semibold uppercase tracking-wide" [class]="statusClass(detail.month)">
+            {{ detail.month.isExcused ? 'Excused' : detail.month.status }}
+          </p>
+        </div>
+      </div>
+
+      <div class="min-h-0 overflow-y-auto px-5 py-4 sm:px-6">
+        <div class="grid grid-cols-2 gap-x-4 gap-y-4 text-sm">
+          <div class="col-span-2">
+            <p class="text-[11px] text-muted">Revenue source</p>
+            <p class="mt-0.5 font-medium text-civic-deep">{{ facilityLabel(detail.account) }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] text-muted">Space / Stall</p>
+            <p class="mt-0.5 font-medium text-civic-deep">{{ detail.account.stallNo || 'Not specified' }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] text-muted">Billing period</p>
+            <p class="mt-0.5 font-medium text-civic-deep">{{ monthLabel(detail.month.period) }}</p>
+          </div>
+          @if (detail.month.paidAt) {
+            <div>
+              <p class="text-[11px] text-muted">Payment date</p>
+              <p class="mt-0.5 font-medium text-civic-deep">{{ date(detail.month.paidAt) }}</p>
+            </div>
+          }
+          @if (detail.month.recordedByName) {
+            <div>
+              <p class="text-[11px] text-muted">Recorded by</p>
+              <p class="mt-0.5 font-medium text-civic-deep">{{ detail.month.recordedByName }}</p>
+            </div>
+          }
+          <div class="col-span-2 rounded-lg border border-line px-3 py-2.5">
+            <p class="text-[11px] text-muted">Official receipt (OR)</p>
+            <p class="mt-0.5 break-all text-sm font-semibold text-civic-deep">
+              {{ detail.month.orNumber || (detail.month.amountPaid > 0 ? 'Awaiting office-issued OR' : 'Not issued') }}
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 border-t border-line pt-4">
+          <p class="text-xs font-semibold text-civic-deep">Account summary</p>
+          <dl class="mt-3 space-y-2.5 text-sm">
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-muted">Assessed for period</dt>
+              <dd class="font-medium text-civic-deep">{{ money(detail.month.totalBill) }}</dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-muted">Recorded as paid</dt>
+              <dd class="font-medium text-civic-deep">{{ money(detail.month.amountPaid) }}</dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3 border-t border-line pt-2.5">
+              <dt class="font-semibold text-civic-deep">Balance remaining</dt>
+              <dd class="font-semibold text-civic-deep">{{ money(detail.month.balanceDue) }}</dd>
+            </div>
+          </dl>
+        </div>
+
+        @if (detail.month.days?.length) {
+          <div class="mt-5 border-t border-line pt-4">
+            <p class="text-xs font-semibold text-civic-deep">Daily payment breakdown</p>
+            <div class="mt-2 divide-y divide-line">
+              @for (day of detail.month.days ?? []; track day.day) {
+                <div class="flex items-start justify-between gap-3 py-2.5 text-xs">
+                  <div class="min-w-0">
+                    <p class="font-medium text-civic-deep">{{ date(day.day) }}</p>
+                    <p class="mt-0.5 text-muted">{{ day.orNumber ? 'OR ' + day.orNumber : 'OR pending' }}{{ day.recordedByName ? ' · ' + day.recordedByName : '' }}</p>
+                  </div>
+                  <p class="shrink-0 font-semibold text-civic-deep">{{ money(day.amount) }}</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <p class="mt-5 border-t border-line pt-3 text-[11px] leading-relaxed text-muted">
+          This is a read-only payment history summary, not an Official Receipt. The office issues and records the physical OR separately. Older payments may not have a StallTrack Reference Code (SRC).
+        </p>
+      </div>
+      <div class="shrink-0 border-t border-line bg-white px-5 py-3 sm:px-6">
+        <button type="button" class="w-full rounded-lg bg-civic-panel px-4 py-3 text-sm font-semibold text-white transition hover:bg-civic-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-civic"
+                (click)="closeDetail()">Close details</button>
+      </div>
+    </section>
+  </div>
+}
