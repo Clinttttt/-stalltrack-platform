@@ -113,6 +113,15 @@
               <p class="mt-0.5 font-medium text-civic-deep">{{ detail.month.recordedByName }}</p>
             </div>
           }
+          @if (detail.month.srcReferences?.length) {
+            <div class="col-span-2 rounded-lg border border-line px-3 py-2.5">
+              <p class="text-[11px] text-muted">StallTrack Reference Code (SRC)</p>
+              @for (src of detail.month.srcReferences ?? []; track src) {
+                <p class="mt-1 break-all font-mono text-sm font-semibold text-civic-deep">{{ src }}</p>
+              }
+              <p class="mt-1 text-[11px] text-muted">System collection reference, not a physical receipt.</p>
+            </div>
+          }
           <div class="col-span-2 rounded-lg border border-line px-3 py-2.5">
             <p class="text-[11px] text-muted">Official receipt (OR)</p>
             <p class="mt-0.5 break-all text-sm font-semibold text-civic-deep">
