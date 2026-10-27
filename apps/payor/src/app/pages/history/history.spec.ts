@@ -60,6 +60,24 @@ describe('Payor payment history detail', () => {
     expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
   });
 
+  it('shows the exact canonical SRCs separately from the physical OR, including partial payments', async () => {
+    const fixture = await render();
+    const instance = fixture.componentInstance as unknown as {
+      selected: { set: (v: unknown) => void };
+      ledgers: () => Array<{ account: unknown; months: Array<Record<string, unknown>> }>;
+    };
+    const { account, months } = instance.ledgers()[0];
+    instance.selected.set({ account, month: {
+      ...months[0], srcReferences: ['SRC-2026-000101', 'SRC-2026-000102'],
+    } });
+    fixture.detectChanges();
+    const dialog = fixture.nativeElement.querySelector('[role="dialog"]') as HTMLElement;
+    expect(dialog.textContent).toContain('SRC-2026-000101');
+    expect(dialog.textContent).toContain('SRC-2026-000102');
+    expect(dialog.textContent).toContain('OR-2026-01');
+    expect(dialog.textContent).toContain('System collection reference, not a physical receipt.');
+  });
+
   it('presents a payment without an OR as pending, without inventing an SRC or receipt', async () => {
     const fixture = await render();
     const instance = fixture.componentInstance as unknown as {

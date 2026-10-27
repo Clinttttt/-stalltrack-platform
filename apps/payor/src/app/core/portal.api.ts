@@ -93,6 +93,9 @@ export interface HistoryMonth {
   paidAt: string | null;
   isExcused: boolean;
   recordedByName: string | null;
+  /** Real persisted SRC references from canonical Collections allocated to this rent month.
+   * Empty/absent for historic Legacy rows. Never derived from the physical OR. */
+  srcReferences?: string[] | null;
   /** The days behind a market month, earliest first. Absent for monthly facilities. */
   days: HistoryDay[] | null;
 }
