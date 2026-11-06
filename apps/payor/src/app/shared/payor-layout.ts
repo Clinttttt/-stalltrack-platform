@@ -1,6 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { BrandingService } from '../core/branding.service';
+import { PortalApi } from '../core/portal.api';
 
 /**
  * The shell every signed-in screen sits in: the office's own header, the screen itself, and the footer navigation.
@@ -16,6 +17,8 @@ import { BrandingService } from '../core/branding.service';
 })
 export class PayorLayout {
   protected readonly branding = inject(BrandingService);
+  private readonly api = inject(PortalApi);
+  protected readonly unread = this.api.unread;
 
   /** "EEMO · MUNICIPALITY OF CANTILAN" where the office is known, and the platform's name until it is. */
   protected readonly eyebrow = computed(() => {
@@ -30,5 +33,8 @@ export class PayorLayout {
 
   constructor() {
     void this.branding.ensureLoaded();
+    // A count is a convenience: a failed read keeps the last one and costs the screen nothing.
+    // shortcut: asked once per screen, so a message written meanwhile shows on the next screen. Use the existing hub if payors need it live.
+    this.api.inbox().catch(() => undefined);
   }
 }

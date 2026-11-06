@@ -16,6 +16,19 @@
         Your account has been credited. The office issues your Official Receipt once it validates the payment.
       </p>
     }
+    @case ('review') {
+      <h1 class="font-display text-2xl text-civic-deep">Payment received, under review</h1>
+      <p class="mt-2 max-w-sm text-sm leading-relaxed text-muted">
+        Your payment reached us, but it could not be applied to your balance on its own. The office is reviewing it, and
+        your balance may still show the amount until then. Please do not pay it again.
+      </p>
+    }
+    @case ('refunded') {
+      <h1 class="font-display text-2xl text-civic-deep">Payment refunded</h1>
+      <p class="mt-2 max-w-sm text-sm leading-relaxed text-muted">
+        The office recorded this payment as refunded. Contact the office if you have not received it.
+      </p>
+    }
     @case ('pending') {
       <h1 class="font-display text-2xl text-civic-deep">Payment is being confirmed</h1>
       <p class="mt-2 max-w-sm text-sm leading-relaxed text-muted">
@@ -26,7 +39,8 @@
     @case ('failed') {
       <h1 class="font-display text-2xl text-civic-deep">Payment not completed</h1>
       <p class="mt-2 max-w-sm text-sm leading-relaxed text-muted">
-        Nothing was charged. You can try again, or pay the collector at your stall.
+        The gateway did not confirm a successful payment. If money left your account, keep your receipt and contact the
+        office. Otherwise you can try again, or pay the collector at your stall.
       </p>
     }
   }

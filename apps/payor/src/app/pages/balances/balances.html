@@ -2,7 +2,7 @@
   <div class="pt-5">
     <h1 class="font-display text-xl text-civic-deep">Balances</h1>
     <p class="mt-0.5 text-xs text-muted">
-      {{ items().length }} {{ items().length === 1 ? 'item outstanding' : 'items outstanding' }}
+      {{ owedCount() }} {{ owedCount() === 1 ? 'item outstanding' : 'items outstanding' }}
     </p>
   </div>
 
@@ -21,32 +21,41 @@
 
     <!-- A statement, not a stack of cards: one sheet, hairline between rows, the amount and its action on the right. -->
     @if (items().length > 0) {
-      <section class="mt-4 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
-        @for (item of items(); track key(item)) {
-          <article class="flex items-center justify-between gap-4 px-4 py-3.5">
-            <div class="min-w-0">
-              <p class="truncate text-sm font-semibold text-civic-deep">{{ label(item) }}</p>
-              <p class="mt-0.5 truncate text-xs text-muted">{{ where(item) }} · {{ month(item.period) }}</p>
-            </div>
-            <div class="flex shrink-0 items-center gap-3">
-              <div class="text-right">
-                <p class="font-display text-base text-civic-deep">{{ money(shown(item)) }}</p>
-                <p class="text-[10px] text-muted">{{ caption(item) }}</p>
-              </div>
-              @if (canPayOnline(item)) {
-                <button class="rounded-lg bg-civic-panel shadow-soft transition hover:bg-civic-deep px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
-                        type="button" [disabled]="paying() !== null" [attr.aria-label]="(item.kind === 'NpmFish' ? 'Declare ' : 'Pay ') + label(item) + ' for ' + month(item.period)" (click)="act(item)">
-                  {{ paying() === key(item) ? 'Opening…' : item.kind === 'NpmFish' ? 'Declare' : 'Pay' }}
-                </button>
-              } @else {
-                <p class="max-w-[7rem] text-[10px] leading-snug text-muted" data-testid="pay-offline-note">
-                  Pay at the office or to your collector
-                </p>
-              }
-            </div>
-          </article>
+      @for (group of groups(); track group.title) {
+        @if (group.title) {
+          <h2 class="mt-5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted" data-testid="balance-group">{{ group.title }}</h2>
         }
-      </section>
+        <section class="mt-2 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white" [class.mt-4]="!group.title">
+          @for (item of group.items; track key(item)) {
+            <article class="flex items-center justify-between gap-4 px-4 py-3.5">
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-civic-deep">{{ label(item) }}</p>
+                <p class="mt-0.5 text-xs text-muted">{{ where(item) }} · {{ month(item.period) }}</p>
+              </div>
+              <div class="flex shrink-0 items-center gap-3">
+                <div class="text-right">
+                  <p class="font-display text-base text-civic-deep">{{ money(shown(item)) }}</p>
+                  <p class="text-[10px] text-muted">{{ caption(item) }}</p>
+                </div>
+                @if (item.paymentUnderReview) {
+                  <p class="max-w-[8rem] text-[10px] leading-snug text-muted" data-testid="under-review-note">
+                    Payment received. The office is reviewing it. Please do not pay again.
+                  </p>
+                } @else if (canPayOnline(item)) {
+                  <button class="rounded-lg bg-civic-panel shadow-soft transition hover:bg-civic-deep px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
+                          type="button" [disabled]="paying() !== null" [attr.aria-label]="(item.kind === 'NpmFish' ? 'Declare ' : 'Pay ') + label(item) + ' for ' + month(item.period)" (click)="act(item)">
+                    {{ paying() === key(item) ? 'Opening…' : item.kind === 'NpmFish' ? 'Declare' : 'Pay' }}
+                  </button>
+                } @else {
+                  <p class="max-w-[7rem] text-[10px] leading-snug text-muted" data-testid="pay-offline-note">
+                    {{ offlineNote(item) }}
+                  </p>
+                }
+              </div>
+            </article>
+          }
+        </section>
+      }
     } @else {
       <p class="mt-4 rounded-2xl border border-line bg-white px-4 py-3.5 text-sm text-muted">
         Nothing is outstanding.

@@ -29,6 +29,7 @@ describe('Payor payment history detail', () => {
     ]);
     http.match(`${API_BASE_URL}/api/municipalities/current/branding`)
       .forEach((req) => req.flush({ name: 'Cantilan', sealPath: null }));
+    http.match(`${API_BASE_URL}/api/payor/inbox`).forEach((req) => req.flush({ items: [], unread: 0 }));
     // Resolve the final Promise.all and let the component commit its signal before asserting the DOM.
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
     fixture.detectChanges();

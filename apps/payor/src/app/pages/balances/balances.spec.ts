@@ -90,7 +90,11 @@ describe('Balances: what a fish day costs', () => {
     inner.openFish(fishMonth);
   });
 
-  afterEach(() => http.verify());
+  // The shell asks for the unread count whenever it renders; that has no bearing on what a row costs.
+  afterEach(() => {
+    http.match(`${API_BASE_URL}/api/payor/inbox`);
+    http.verify();
+  });
 
   describe('choosing days', () => {
     it('starts on the earliest day owed, which is the one the office collects first', () => {
@@ -279,10 +283,67 @@ describe('Balances: online payment scope', () => {
     expect(el.textContent).toContain('Pay at the office or to your collector');
   });
 
+  it('names the month to pay first when the office takes the oldest month first', async () => {
+    const el = await render([{ ...rent, year: 2026, month: 11, period: '2026-11', payableOnline: false, payFirst: '2026-08' }]);
+
+    expect(el.querySelectorAll('article button').length).toBe(0);
+    expect(el.querySelector('[data-testid="pay-offline-note"]')?.textContent).toContain('first');
+    expect(el.querySelector('[data-testid="pay-offline-note"]')?.textContent).toContain('2026');
+  });
+
+  it('offers a month ahead under its own heading and does not count it as outstanding', async () => {
+    const el = await render([{ ...rent, advance: true }]);
+
+    expect(Array.from(el.querySelectorAll('[data-testid="balance-group"]')).map((h) => h.textContent)).toEqual(['Pay ahead']);
+    expect(el.querySelectorAll('article button').length).toBe(1);
+    expect(el.textContent).toContain('0 items outstanding');
+  });
+
+  it('states a penalty as owed at the office, with no Pay action', async () => {
+    const el = await render([{ ...rent, kind: 'Penalty', balanceDue: 60, payableOnline: false }]);
+
+    expect(el.textContent).toContain('Fines and late penalties');
+    expect(el.querySelectorAll('article button').length).toBe(0);
+    expect(el.querySelector('[data-testid="pay-offline-note"]')?.textContent).toContain('Pay at the office');
+  });
+
+  it('shows this month\'s due date, but not on a month already past it', async () => {
+    const el = await render([{ ...rent, dueDate: '2026-11-30' }, { ...rent, year: 2026, month: 8, period: '2026-08', dueDate: '2026-08-31', previousBalance: true }]);
+
+    expect(el.textContent).toContain('Due ');
+    expect(el.textContent?.match(/Due /g)?.length).toBe(1);
+  });
+
+  it('tells the payor not to pay again while the office reviews a payment it already received', async () => {
+    const el = await render([{ ...rent, payableOnline: false, paymentUnderReview: true }]);
+
+    expect(el.querySelectorAll('article button').length).toBe(0);
+    expect(el.querySelector('[data-testid="under-review-note"]')?.textContent).toContain('Please do not pay again');
+    // "Pay at the office" here would invite the second payment this note exists to stop.
+    expect(el.querySelector('[data-testid="pay-offline-note"]')).toBeNull();
+  });
+
   it('treats an item from an older API (no flag) as payable', async () => {
     const el = await render([rent]);
 
     expect(el.querySelectorAll('article button').length).toBe(1);
+  });
+
+  it('states elapsed months under Previous balance, ahead of the month in progress', async () => {
+    const june: PayableItem = { ...rent, month: 6, period: '2026-06', previousBalance: true };
+    const august: PayableItem = { ...rent, month: 8, period: '2026-08' };
+    const el = await render([august, june]);
+
+    const headings = Array.from(el.querySelectorAll('[data-testid="balance-group"]')).map((h) => h.textContent?.trim());
+    expect(headings).toEqual(['Previous balance', 'This month']);
+    expect(el.querySelectorAll('article')[0].textContent).toContain('June');
+  });
+
+  it('adds no headings when nothing is previous, which also covers an older API that sends no flag', async () => {
+    const el = await render([rent]);
+
+    expect(el.querySelectorAll('[data-testid="balance-group"]').length).toBe(0);
+    expect(el.querySelectorAll('article').length).toBe(1);
   });
 
   it('lists each earlier period of monthly rent as its own row; Pay names the period and targets only that one', async () => {

@@ -18,7 +18,7 @@ export class PaymentSuccess {
   private readonly api = inject(PortalApi);
   private readonly router = inject(Router);
 
-  readonly state = signal<'confirming' | 'paid' | 'pending' | 'failed'>('confirming');
+  readonly state = signal<'confirming' | 'paid' | 'review' | 'refunded' | 'pending' | 'failed'>('confirming');
 
   constructor() {
     void this.confirm();
@@ -40,7 +40,16 @@ export class PaymentSuccess {
           this.state.set('paid');
           return;
         }
-        if (result.status?.toLowerCase() === 'failed') {
+        const status = result.status?.toLowerCase();
+        if (status === 'underreview') {
+          this.state.set('review');
+          return;
+        }
+        if (status === 'refunded') {
+          this.state.set('refunded');
+          return;
+        }
+        if (status === 'failed' || status === 'expired' || status === 'cancelled') {
           this.state.set('failed');
           return;
         }
