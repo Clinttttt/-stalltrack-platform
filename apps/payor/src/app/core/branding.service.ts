@@ -33,7 +33,11 @@ export class BrandingService {
   readonly acronym = computed(() => this.current()?.officeAcronym ?? '');
   readonly municipality = computed(() => this.current()?.name ?? '');
   readonly province = computed(() => this.current()?.province ?? '');
-  readonly sealUrl = computed(() => this.current()?.sealPath ?? null);
+  /** A relative path names a file on the office portal's host, not this one, so it would only show a broken image. */
+  readonly sealUrl = computed(() => {
+    const seal = this.current()?.sealPath;
+    return seal && /^(data:|https?:)/.test(seal) ? seal : null;
+  });
 
   /** Loaded once per session. A failure leaves the header unbranded rather than blocking the screens behind it. */
   async ensureLoaded(): Promise<void> {

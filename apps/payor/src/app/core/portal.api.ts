@@ -1,7 +1,23 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api.config';
+
+/** One message to the signed-in payor. Mirrors the API's InboxItemDto. */
+export interface InboxItem {
+  id: string;
+  title: string;
+  body: string;
+  link: string | null;
+  createdAt: string;
+  read: boolean;
+}
+
+/** The payor's latest messages, and how many of all their messages are unread. Mirrors the API's InboxPageDto. */
+export interface InboxPage {
+  items: InboxItem[];
+  unread: number;
+}
 
 /** One space the payor holds, and what it currently owes. Mirrors the API's PayorStallBalanceDto. */
 export interface PayorBalance {
@@ -26,7 +42,7 @@ export interface PayorBalance {
  * The kinds of thing a payor can owe. Serialised as names by the API, so they are compared as names here.
  * A market stall can owe all three at once: its daily fees, its metered utilities, and a fish day it declares.
  */
-export type PayableKind = 'Monthly' | 'NpmDaily' | 'NpmUtility' | 'NpmFish';
+export type PayableKind = 'Monthly' | 'NpmDaily' | 'NpmUtility' | 'NpmFish' | 'Penalty';
 
 /** One payable item. Mirrors the API's PayorPayableItemDto. */
 export interface PayableItem {
@@ -50,6 +66,16 @@ export interface PayableItem {
   facilityShortName?: string | null;
   /** False = listed as an outstanding balance only; the API accepts online checkout for monthly stall rent alone. Absent (older API) means payable. */
   payableOnline?: boolean;
+  /** The gateway took money for this period and the office is reviewing it, so it must not be paid again. Absent from an older API. */
+  paymentUnderReview?: boolean;
+  /** A month that has fully elapsed, stated under "Previous balance". The API's clock decides, not this device's. Absent from an older API. */
+  previousBalance?: boolean;
+  /** A month that has not begun, which the office lets this account pay ahead. Not owed. Absent from an older API. */
+  advance?: boolean;
+  /** Monthly rent's due date under the office's billing rules. Absent from an older API. */
+  dueDate?: string | null;
+  /** The older period to pay first, when the office takes the oldest unpaid month first. Absent from an older API. */
+  payFirst?: string | null;
 }
 
 /** One day inside a daily-billed month, as the payor's own record of it. */
@@ -202,5 +228,23 @@ export class PortalApi {
         this.http.get<HistoryMonth[]>(`${API_BASE_URL}/api/payor/stalls/${stallId}/history`),
       )) ?? []
     );
+  }
+
+  /** What the shell's bell shows. It follows every read of the inbox, so marking a message read updates it at once. */
+  readonly unread = signal(0);
+
+  async inbox(): Promise<InboxPage> {
+    return this.followUnread(await firstValueFrom(this.http.get<InboxPage>(`${API_BASE_URL}/api/payor/inbox`)));
+  }
+
+  /** Marks one message read, or all of them when no id is given. */
+  async markRead(id?: string): Promise<InboxPage> {
+    const url = id ? `${API_BASE_URL}/api/payor/inbox/${id}/read` : `${API_BASE_URL}/api/payor/inbox/read`;
+    return this.followUnread(await firstValueFrom(this.http.post<InboxPage>(url, {})));
+  }
+
+  private followUnread(page: InboxPage): InboxPage {
+    this.unread.set(page.unread);
+    return page;
   }
 }

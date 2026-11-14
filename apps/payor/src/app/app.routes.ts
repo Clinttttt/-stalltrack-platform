@@ -37,6 +37,11 @@ export const appRoutes: Route[] = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/profile/profile').then((m) => m.Profile),
   },
+  {
+    path: 'notifications',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/notifications/notifications').then((m) => m.Notifications),
+  },
   // The gateway's own return addresses. The API builds them, and it keeps the path it has always used so the same
   // shape serves both payor portals while the Blazor one is retired; only the host differs.
   {

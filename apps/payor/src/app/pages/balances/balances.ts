@@ -24,6 +24,22 @@ export class Balances {
 
   protected readonly items = signal<PayableItem[]>([]);
 
+  /** Elapsed months are stated apart from the month in progress. No heading when there is nothing earlier to set them against. */
+  protected readonly groups = computed<{ title: string | null; items: PayableItem[] }[]>(() => {
+    const previous = this.items().filter((item) => item.previousBalance);
+    const ahead = this.items().filter((item) => item.advance);
+    const current = this.items().filter((item) => !item.previousBalance && !item.advance);
+    if (previous.length === 0 && ahead.length === 0) return [{ title: null, items: current }];
+    return [
+      { title: 'Previous balance', items: previous },
+      { title: 'This month', items: current },
+      { title: 'Pay ahead', items: ahead },
+    ].filter((group) => group.items.length > 0);
+  });
+
+  /** A month offered ahead is not owed, so it is not counted as outstanding. */
+  protected readonly owedCount = computed(() => this.items().filter((item) => !item.advance).length);
+
   /** Unpaid obligations of earlier accounts this payor was linked to by the office. Read-only: never offered for online payment. */
   protected readonly earlier = signal<HistoricalObligation[]>([]);
   protected readonly earlierTotal = computed(() => this.earlier().reduce((sum, r) => sum + r.balance, 0));
@@ -116,9 +132,17 @@ export class Balances {
         return 'Electricity and water';
       case 'NpmFish':
         return 'Fish day fees';
+      case 'Penalty':
+        return 'Fines and late penalties';
       default:
         return 'Monthly rent';
     }
+  }
+
+  /** Why a row cannot be paid here. The office takes its oldest month first, so a later month names the one to pay. */
+  protected offlineNote(item: PayableItem): string {
+    if (item.payFirst) return `Pay ${officeMonth(item.payFirst)} first`;
+    return item.kind === 'Penalty' ? 'Pay at the office' : 'Pay at the office or to your collector';
   }
 
   /** Only the month's stall rent is paid online; other charges are shown as balances to settle at the office or with the collector. */
@@ -150,6 +174,11 @@ export class Balances {
     // The market's stall rent is offered as the rest of the month, so no day count is stated.
     if (item.kind === 'NpmDaily') {
       return 'Balance for the month';
+    }
+
+    // A due date tells the payor something only while it is still ahead of them.
+    if (item.kind === 'Monthly' && item.dueDate && !item.previousBalance && !item.advance) {
+      return `Due ${officeDayShort(item.dueDate)}`;
     }
 
     return '';
