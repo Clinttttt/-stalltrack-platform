@@ -6,8 +6,8 @@
   },
   "carmen": {
     "name": "Carmen",
-    "status": "Upcoming",
-    "isActive": false
+    "status": "Active",
+    "isActive": true
   },
   "carrascal": {
     "name": "Carrascal",
