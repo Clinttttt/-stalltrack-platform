@@ -27,18 +27,19 @@ describe('MunicipalityService', () => {
   it('replaces stale snapshot rollout state with the live municipality registry', async () => {
     const service = TestBed.inject(MunicipalityService);
 
-    expect(service.getByCode('carmen')?.status).toBe('Upcoming');
+    // The snapshot is refreshed from the live API, so read Carmen's state from it and have the live registry say the opposite.
+    const wasActive = service.getByCode('carmen')?.active === true;
     expect(service.resolving()).toBe(true);
 
     http.expectOne(`${API_BASE_URL}/api/municipalities`).flush([
-      { code: 'CARMEN', name: 'Carmen', status: 'Active', isActive: true },
+      { code: 'CARMEN', name: 'Carmen', status: wasActive ? 'Upcoming' : 'Active', isActive: !wasActive },
     ]);
     await vi.waitFor(() => expect(service.resolving()).toBe(false));
 
     const carmen = service.getByCode('carmen');
-    expect(carmen?.status).toBe('Active');
-    expect(carmen?.active).toBe(true);
-    expect(carmen?.href).toBe(`${PORTAL_LOGIN_URL}?lgu=carmen`);
+    expect(carmen?.status).toBe(wasActive ? 'Upcoming' : 'Active');
+    expect(carmen?.active).toBe(!wasActive);
+    expect(carmen?.href).toBe(wasActive ? undefined : `${PORTAL_LOGIN_URL}?lgu=carmen`);
     expect(carmen?.image).toBe('/carcanmadcarlan/backgrounds/carmen-reference.png');
   });
 
